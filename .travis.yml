@@ -3,7 +3,6 @@ jdk: oraclejdk8
 sudo: false
 env:
   global:
-    - COVERALLS_REPO_TOKEN=JfS3DvELNkTt392Ex8pQB02tgflqqTdOM
     - CI_NAME=travis-ci
 android:
   components:
