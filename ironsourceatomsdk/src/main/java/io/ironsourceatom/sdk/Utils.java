@@ -6,17 +6,19 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Util class with heplers methods
+ * Util class with helper methods
  */
 
 class Utils {
 
     /**
      * helper function that extract a buffer from the given inputStream
+     *
      * @param in
      * @return
      * @throws IOException
@@ -35,6 +37,7 @@ class Utils {
     /**
      * IronSourceAtomFactory auth function
      * Exception could be: NoSuchAlgorithmException and InvalidKeyException
+     *
      * @param data
      * @param key
      * @return auth string
@@ -49,7 +52,7 @@ class Utils {
                 sb.append(String.format("%1$02x", b));
             }
             return sb.toString();
-        } catch(NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
             return "";
         }
     }

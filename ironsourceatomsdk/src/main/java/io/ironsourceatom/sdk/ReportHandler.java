@@ -1,10 +1,13 @@
 package io.ironsourceatom.sdk;
 
 import io.ironsourceatom.sdk.StorageService.*;
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+
 import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
@@ -21,8 +24,9 @@ import static java.lang.Math.ceil;
 class ReportHandler {
 
 
-    enum SendStatus { SUCCESS, DELETE, RETRY }
-    enum HandleStatus { HANDLED, RETRY }
+    enum SendStatus {SUCCESS, DELETE, RETRY}
+
+    enum HandleStatus {HANDLED, RETRY}
 
     private static final String TAG = "ReportHandler";
     private NetworkManager networkManager;
@@ -40,6 +44,7 @@ class ReportHandler {
     /**
      * handleReport responsible to handle the given ReportIntent based on the
      * event-type(that could be one of the 3: FLUSH, ENQUEUE or POST_SYNC).
+     *
      * @param intent
      * @return result of the handleReport if success true or failed false
      */
@@ -85,7 +90,7 @@ class ReportHandler {
                     }
             }
             // If there's something to flush, it'll not be empty.
-            for (Table table: tablesToFlush) flush(table);
+            for (Table table : tablesToFlush) flush(table);
         } catch (Exception e) {
             status = HandleStatus.RETRY;
             Logger.log(TAG, e.getMessage(), Logger.SDK_DEBUG);
@@ -99,6 +104,7 @@ class ReportHandler {
      * if the send failed, we stop here, and "continue later".
      * if everything goes-well, we do it recursively until wil drain and
      * delete the table.
+     *
      * @param table
      * @throws Exception
      */
@@ -132,6 +138,7 @@ class ReportHandler {
 
     /**
      * Prepare the giving object before sending it to IronSourceAtom(Do auth, etc..)
+     *
      * @param obj  - the given event to working on.
      * @param bulk - indicate if it need to add a bulk field.
      * @return
@@ -141,8 +148,12 @@ class ReportHandler {
         try {
             JSONObject clone = new JSONObject(obj.toString());
             String data = clone.getString(ReportIntent.DATA);
-            clone.put(ReportIntent.AUTH,
-                    Utils.auth(data, (String) clone.remove(ReportIntent.TOKEN)));
+            if (!clone.getString(ReportIntent.TOKEN).isEmpty()) {
+                clone.put(ReportIntent.AUTH,
+                        Utils.auth(data, (String) clone.remove(ReportIntent.TOKEN)));
+            } else {
+                clone.remove(ReportIntent.TOKEN);
+            }
             if (bulk) {
                 clone.put(ReportIntent.BULK, true);
             }
@@ -160,14 +171,17 @@ class ReportHandler {
      */
     protected SendStatus send(String data, String url) {
         int nRetry = config.getNumOfRetries();
+        Logger.log(TAG, "Tracking data:" + data, Logger.SDK_DEBUG);
         while (nRetry-- > 0) {
             try {
                 RemoteService.Response response = client.post(data, url);
                 if (response.code == HttpURLConnection.HTTP_OK) {
+                    Logger.log(TAG, "Server Response Status: " + response.code, Logger.SDK_DEBUG);
                     return SendStatus.SUCCESS;
                 }
                 if (response.code >= HttpURLConnection.HTTP_BAD_REQUEST &&
                         response.code < HttpURLConnection.HTTP_INTERNAL_ERROR) {
+                    Logger.log(TAG, "Server Response Status: " + response.code, Logger.SDK_DEBUG);
                     return SendStatus.DELETE;
                 }
             } catch (SocketTimeoutException | UnknownHostException | SocketException e) {
@@ -181,6 +195,7 @@ class ReportHandler {
 
     /**
      * Test if the handler can use the network.
+     *
      * @return
      */
     private boolean canUseNetwork() {
@@ -193,9 +208,20 @@ class ReportHandler {
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    protected RemoteService getClient() { return HttpClient.getInstance(); }
-    protected IsaConfig getConfig(Context context) { return IsaConfig.getInstance(context); }
-    protected StorageService getStorage(Context context) { return DbAdapter.getInstance(context); }
-    protected NetworkManager getNetManager(Context context) { return NetworkManager.getInstance(context); }
+    protected RemoteService getClient() {
+        return HttpClient.getInstance();
+    }
+
+    protected IsaConfig getConfig(Context context) {
+        return IsaConfig.getInstance(context);
+    }
+
+    protected StorageService getStorage(Context context) {
+        return DbAdapter.getInstance(context);
+    }
+
+    protected NetworkManager getNetManager(Context context) {
+        return NetworkManager.getInstance(context);
+    }
 
 }

@@ -7,7 +7,7 @@ class Logger {
     public static final int SDK_ERROR = 2;
     public static final int NORMAL = 3;
     public static final int SDK_DEBUG = 4;
-    private static final boolean mIsSuperDevMode = false;
+    private static final boolean mIsSuperDevMode = BuildConfig.IS_SUPER_DEV_MODE;
     private static final String LOG_TAG = Logger.class.getSimpleName();
 
     public static IsaConfig.LOG_TYPE logLevel = IsaConfig.LOG_TYPE.PRODUCTION;

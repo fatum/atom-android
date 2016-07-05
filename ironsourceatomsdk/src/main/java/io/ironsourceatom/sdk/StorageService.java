@@ -27,7 +27,7 @@ interface StorageService {
 
     /**
      * Table contains `name`, and `token` that represent
-     * an IronBeastSDK destination/table
+     * an ironSourceAtom destination/table
      */
     class Table {
         public String name;

@@ -4,8 +4,7 @@ import android.content.Context;
 import android.webkit.URLUtil;
 
 /**
- * This class is the entry point into this client API for work with low level putEvent() and putEvents() methods.
- *
+ * ironSource Atom low level API class, supports putEvent() and putEvents();
  */
 public class IronSourceAtom {
 
@@ -16,12 +15,12 @@ public class IronSourceAtom {
     /**
      * This class is the entry point into this client API for work with simple putEvent() and putEvents() methods.
      * </p>
-     * You should use <code>IronSourceAtomFactory.newAtom(String)</code> to create
+     * You should use <code>IronSourceAtomFactory.newAtom(Auth String)</code> to create
      * an instance of this class.
      * </p>
      *
      * @param context current context object
-     * @param auth pre shared auth key for Atom cluster
+     * @param auth    pre shared auth key for Atom cluster
      */
 
     protected IronSourceAtom(Context context, String auth) {
@@ -32,27 +31,27 @@ public class IronSourceAtom {
 
     /**
      * Sends a single event to IronSourceAtom stream
+     *
      * @param streamName the name on IronSourceAtom stream
-     * @param data JSON string of your event data
+     * @param data       JSON string of your event data
      */
-    public void putEvent(String streamName, String data){
+    public void putEvent(String streamName, String data) {
         openReport(context)
                 .setEnpoint(endpoint)
                 .setTable(streamName)
                 .setToken(token)
                 .setData(data)
                 .send();
-
     }
 
 
-
     /**
-     * Sends an array of events to IronSourceAtom stream
+     * Sends a bulk (Array) of events to IronSourceAtom stream
+     *
      * @param streamName the name on IronSourceAtom stream
-     * @param data JSON string of your event data
+     * @param data       JSON string of your event data
      */
-    public void putEvents(String streamName, String data){
+    public void putEvents(String streamName, String data) {
         openReport(context)
                 .setEnpoint(endpoint)
                 .setTable(streamName)
@@ -64,13 +63,14 @@ public class IronSourceAtom {
 
     /**
      * Set custom endpoint to send reports
+     *
      * @param url custom publisher destination url.
      */
     public void setEndPoint(String url) {
-        if (URLUtil.isValidUrl(url)){
-            this.endpoint=url;
-        } else  {
-            throw new IllegalArgumentException("Enpoint must be valid url");
+        if (URLUtil.isValidUrl(url)) {
+            this.endpoint = url;
+        } else {
+            throw new IllegalArgumentException("Endpoint must be valid url");
         }
     }
 
@@ -78,5 +78,5 @@ public class IronSourceAtom {
         return new SimpleReportIntent(context);
     }
 
-    }
+}
 

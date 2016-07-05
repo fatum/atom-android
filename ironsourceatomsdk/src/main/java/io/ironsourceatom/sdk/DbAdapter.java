@@ -3,6 +3,7 @@ package io.ironsourceatom.sdk;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,11 +13,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
 class DbAdapter implements StorageService {
-
-
-
-
-
 
 
     /**
@@ -43,6 +39,7 @@ class DbAdapter implements StorageService {
      * Insert event to "reports" table.
      * if it's the first member that related to the given Table, we create
      * a new destination/table(contains name and token) in the "tables" table.
+     *
      * @param table
      * @param data
      * @return number of rows in "records" related to the given table.
@@ -60,12 +57,12 @@ class DbAdapter implements StorageService {
             cv.put(KEY_DATA, data);
             cv.put(KEY_CREATED_AT, System.currentTimeMillis());
             db.insert(REPORTS_TABLE, null, cv);
-            String countQuery="SELECT COUNT(*) FROM "+ REPORTS_TABLE+" WHERE "+KEY_TABLE+"=?";
+            String countQuery = "SELECT COUNT(*) FROM " + REPORTS_TABLE + " WHERE " + KEY_TABLE + "=?";
             SQLiteStatement countStmt = db.compileStatement(countQuery);
             countStmt.bindString(1, table.name);
-            n=(int)countStmt.simpleQueryForLong();
+            n = (int) countStmt.simpleQueryForLong();
 
-            if (n  == 1) {
+            if (n == 1) {
                 cv = new ContentValues();
                 cv.put(KEY_TABLE, table.name);
                 cv.put(KEY_TOKEN, table.token);
@@ -83,6 +80,7 @@ class DbAdapter implements StorageService {
     /**
      * Get the number of records that sit in the "reports" table and related to
      * to the given table.
+     *
      * @param table
      * @return
      */
@@ -93,14 +91,14 @@ class DbAdapter implements StorageService {
             db = mDb.getReadableDatabase();
             String qs = "SELECT COUNT(*) FROM " + REPORTS_TABLE;
             if (table != null) {
-                qs += " WHERE "+KEY_TABLE+" = ?";
+                qs += " WHERE " + KEY_TABLE + " = ?";
             }
             SQLiteStatement stmt = db.compileStatement(qs);
             if (table != null) {
-                stmt.bindString(1,table.name);
+                stmt.bindString(1, table.name);
             }
 
-            n = (int)stmt.simpleQueryForLong();
+            n = (int) stmt.simpleQueryForLong();
         } catch (final SQLiteException e) {
             Logger.log(TAG, "Failed to count records in table: " + table.name, Logger.SDK_DEBUG);
             mDb.delete();
@@ -112,6 +110,7 @@ class DbAdapter implements StorageService {
 
     /**
      * Get table object and int as a limit, and return a "batch" of events.
+     *
      * @param table
      * @param limit
      * @return Batch object contains List of events and "lastId" as a String(that
@@ -123,8 +122,8 @@ class DbAdapter implements StorageService {
         List<String> events = null;
         try {
             final SQLiteDatabase db = mDb.getReadableDatabase();
-            String whereParams=KEY_TABLE+"=?";
-            String orderParam = KEY_CREATED_AT+" ASC";
+            String whereParams = KEY_TABLE + "=?";
+            String orderParam = KEY_CREATED_AT + " ASC";
             c = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam, String.valueOf(limit));
 
             events = new ArrayList<>();
@@ -150,6 +149,7 @@ class DbAdapter implements StorageService {
 
     /**
      * Get list of all "destinations/tables" that sit in "tables" table.
+     *
      * @return List of tables contains "name" and "token"
      */
     public List<Table> getTables() {
@@ -175,6 +175,7 @@ class DbAdapter implements StorageService {
     /**
      * Remove events from records table that related to the given "table/destination"
      * and with an id that less than or equal to the "lastId"
+     *
      * @param table
      * @param lastId
      * @return the number of rows affected
@@ -183,7 +184,7 @@ class DbAdapter implements StorageService {
         int n = 0;
         try {
             final SQLiteDatabase db = mDb.getWritableDatabase();
-            String deleteParams = KEY_TABLE+"=? AND "+REPORTS_TABLE+"_id <= ?";
+            String deleteParams = KEY_TABLE + "=? AND " + REPORTS_TABLE + "_id <= ?";
             n = db.delete(REPORTS_TABLE, deleteParams,
                     new String[]{table.name, lastId});
         } catch (final SQLiteException e) {
@@ -197,12 +198,13 @@ class DbAdapter implements StorageService {
 
     /**
      * Getting table object and delete it from the "destinations/tables" table.
+     *
      * @param table
      */
     public void deleteTable(Table table) {
         try {
             final SQLiteDatabase db = mDb.getWritableDatabase();
-            String deleteParams=KEY_TABLE+"=?";
+            String deleteParams = KEY_TABLE + "=?";
             db.delete(TABLES_TABLE, deleteParams, new String[]{table.name});
         } catch (final SQLiteException e) {
             Logger.log(TAG, "Failed to delete table:" + table.name, Logger.SDK_DEBUG);
@@ -225,7 +227,7 @@ class DbAdapter implements StorageService {
             String qs = "DELETE FROM " + REPORTS_TABLE +
                     " WHERE " + id + " IN (SELECT " + id +
                     " FROM " + REPORTS_TABLE +
-                    " ORDER BY "+ KEY_CREATED_AT + " ASC" +
+                    " ORDER BY " + KEY_CREATED_AT + " ASC" +
                     " LIMIT ?)";
             SQLiteStatement deleteStmt = db.compileStatement(qs);
             deleteStmt.bindLong(1, limit);
@@ -245,8 +247,13 @@ class DbAdapter implements StorageService {
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    protected boolean belowDatabaseLimit() { return mDb.belowDatabaseLimit(); }
-    protected DatabaseHandler getSQLHandler(Context context) { return new DatabaseHandler(context); }
+    protected boolean belowDatabaseLimit() {
+        return mDb.belowDatabaseLimit();
+    }
+
+    protected DatabaseHandler getSQLHandler(Context context) {
+        return new DatabaseHandler(context);
+    }
 
     private static final Object sInstanceLock = new Object();
     private static DbAdapter sInstance;
@@ -270,6 +277,7 @@ class DbAdapter implements StorageService {
 
         private final File databaseFile;
         private final IsaConfig mConfig;
+
         DatabaseHandler(Context context) {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
             databaseFile = context.getDatabasePath(DATABASE_NAME);
@@ -289,17 +297,17 @@ class DbAdapter implements StorageService {
         public void onCreate(SQLiteDatabase db) {
             Logger.log(TAG, "Creating the IronBeastSdk database", Logger.SDK_DEBUG);
 
-            String reportQuery="CREATE TABLE "+REPORTS_TABLE +" ("+REPORTS_TABLE+"_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    KEY_DATA+" STRING NOT NULL, "+KEY_TABLE+" STRING NOT NULL, "+KEY_CREATED_AT+" INTEGER NOT NULL);";
+            String reportQuery = "CREATE TABLE " + REPORTS_TABLE + " (" + REPORTS_TABLE + "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    KEY_DATA + " STRING NOT NULL, " + KEY_TABLE + " STRING NOT NULL, " + KEY_CREATED_AT + " INTEGER NOT NULL);";
             SQLiteStatement reportStmt = db.compileStatement(reportQuery);
             reportStmt.execute();
 
-            String tableQuery="CREATE TABLE "+TABLES_TABLE+" ("+TABLES_TABLE+"_id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    KEY_TABLE+" STRING NOT NULL UNIQUE, "+KEY_TOKEN+" STRING NOT NULL);";
+            String tableQuery = "CREATE TABLE " + TABLES_TABLE + " (" + TABLES_TABLE + "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    KEY_TABLE + " STRING NOT NULL UNIQUE, " + KEY_TOKEN + " STRING NOT NULL);";
             SQLiteStatement tableStmt = db.compileStatement(tableQuery);
             tableStmt.execute();
 
-            String indexQuery="CREATE INDEX IF NOT EXISTS time_idx ON "+REPORTS_TABLE+" ("+KEY_CREATED_AT+");";
+            String indexQuery = "CREATE INDEX IF NOT EXISTS time_idx ON " + REPORTS_TABLE + " (" + KEY_CREATED_AT + ");";
             SQLiteStatement indexStmt = db.compileStatement(indexQuery);
             indexStmt.execute();
         }
@@ -329,6 +337,7 @@ class DbAdapter implements StorageService {
         /**
          * Test if the persistent data amount below the "databaseLimit" only if
          * there is not enough free space in the storage capacity of the device.
+         *
          * @return
          */
         public boolean belowDatabaseLimit() {

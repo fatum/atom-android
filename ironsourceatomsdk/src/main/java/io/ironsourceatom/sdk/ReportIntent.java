@@ -60,6 +60,8 @@ class ReportIntent implements Report {
         return this;
     }
 
-    public Intent getIntent() { return intent; }
+    public Intent getIntent() {
+        return intent;
+    }
 
 }

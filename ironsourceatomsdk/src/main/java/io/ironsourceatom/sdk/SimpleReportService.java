@@ -1,13 +1,11 @@
 package io.ironsourceatom.sdk;
 
-import android.app.AlarmManager;
 import android.app.IntentService;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
 /**
- * Intent service to handle simple report (for methods putEvent() and putEvents())
+ * Intent service to handle simple report (for putEvent() and putEvents() methods)
  */
 public class SimpleReportService extends IntentService {
 
@@ -15,7 +13,7 @@ public class SimpleReportService extends IntentService {
     private SimpleReportHandler handler;
 
 
-    public SimpleReportService () {
+    public SimpleReportService() {
         super(TAG);
     }
 

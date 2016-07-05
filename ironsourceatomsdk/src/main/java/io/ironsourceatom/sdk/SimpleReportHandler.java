@@ -14,10 +14,9 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 /**
- * Handle send data when putEvent or putEvent method called
+ * Handles sent data when low level putEvent or putEvents methods are called
  */
 public class SimpleReportHandler {
-
 
     private static final String TAG = "SimpleReportHandler";
     private RemoteService client;
@@ -25,12 +24,12 @@ public class SimpleReportHandler {
     private boolean bulk;
 
     public SimpleReportHandler(Context context) {
-    this.client = getClient();
+        this.client = getClient();
+    }
 
-
-}
     /**
      * handleReport responsible to handle the given SimpleReportIntent
+     *
      * @param intent
      */
     public synchronized void handleReport(Intent intent) {
@@ -41,7 +40,7 @@ public class SimpleReportHandler {
             JSONObject dataObject = new JSONObject();
             try {
                 endpoint = (String) bundle.get(ReportIntent.ENDPOINT);
-                if(null!=bundle.get(ReportIntent.BULK)&&!"".equals((String)bundle.get(ReportIntent.BULK))) {
+                if (null != bundle.get(ReportIntent.BULK) && !"".equals((String) bundle.get(ReportIntent.BULK))) {
                     bulk = Boolean.valueOf((String) bundle.get(ReportIntent.BULK));
                 }
                 String[] fields = {ReportIntent.TABLE, ReportIntent.TOKEN, ReportIntent.DATA};
@@ -63,6 +62,7 @@ public class SimpleReportHandler {
 
     /**
      * Prepare the giving object before sending it to IronSourceAtom(Do auth, etc..)
+     *
      * @param obj  - the given event to working on.
      * @param bulk - indicate if it need to add a bulk field.
      * @return
@@ -72,8 +72,12 @@ public class SimpleReportHandler {
         try {
             JSONObject clone = new JSONObject(obj.toString());
             String data = clone.getString(ReportIntent.DATA);
-            clone.put(SimpleReportIntent.AUTH,
-                    Utils.auth(data, (String) clone.remove(SimpleReportIntent.TOKEN)));
+            if (!clone.getString(SimpleReportIntent.TOKEN).isEmpty()) {
+                clone.put(SimpleReportIntent.AUTH,
+                        Utils.auth(data, (String) clone.remove(SimpleReportIntent.TOKEN)));
+            } else {
+                clone.remove(SimpleReportIntent.TOKEN);
+            }
             if (bulk) {
                 clone.put(SimpleReportIntent.BULK, true);
             }
@@ -81,6 +85,7 @@ public class SimpleReportHandler {
         } catch (Exception e) {
             Logger.log(TAG, "Failed create message" + e, Logger.SDK_DEBUG);
         }
+        Logger.log(TAG, "Sending msg:" + message, Logger.SDK_DEBUG);
         return message;
     }
 
@@ -90,18 +95,18 @@ public class SimpleReportHandler {
      * @return sendStatus ENUM that indicate what to do later on.
      */
     protected void send(String data, String url) {
-            {
+        {
             try {
                 RemoteService.Response response = new RemoteService.Response();
 
-                response=client.post(data, url);
+                response = client.post(data, url);
 
                 if (response.code == HttpURLConnection.HTTP_OK) {
-                    Logger.log(TAG, "Status: " + response.code, Logger.SDK_DEBUG);
+                    Logger.log(TAG, "Server Response Status: " + response.code, Logger.SDK_DEBUG);
                 }
                 if (response.code >= HttpURLConnection.HTTP_BAD_REQUEST &&
                         response.code < HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                    Logger.log(TAG, "Status: " + response.code, Logger.SDK_DEBUG);
+                    Logger.log(TAG, "Server Response Status: " + response.code, Logger.SDK_DEBUG);
                 }
             } catch (SocketTimeoutException | UnknownHostException | SocketException e) {
                 Logger.log(TAG, "Connectivity error: " + e, Logger.SDK_DEBUG);
@@ -116,8 +121,9 @@ public class SimpleReportHandler {
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    protected RemoteService getClient() { return HttpClient.getInstance(); }
-
+    protected RemoteService getClient() {
+        return HttpClient.getInstance();
+    }
 
 
 }

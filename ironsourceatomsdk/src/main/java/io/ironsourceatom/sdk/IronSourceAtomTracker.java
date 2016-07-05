@@ -2,12 +2,14 @@ package io.ironsourceatom.sdk;
 
 import android.content.Context;
 import android.webkit.URLUtil;
+
 import org.json.JSONObject;
+
 import java.util.Map;
 
 
 /**
- * This class is the entry point into this client API to work with tracker.
+ * This class is the High Level SDK for ironSource Atom (with tracker)
  */
 public class IronSourceAtomTracker {
 
@@ -17,16 +19,16 @@ public class IronSourceAtomTracker {
     private IsaConfig config;
 
     /**
-     * This class is the entry point into this client API to work with tracker.
+     * This class is the High Level SDK for ironSource Atom (with tracker).
      * </p>
-     * You should use <code>IronSourceAtomFactory.newTracker(String)</code> to create
+     * You should use <code>IronSourceAtomFactory.newTracker(Auth String)</code> to create
      * an instance of this class.
      * </p>
-     * While tracking events, IronSourceAtomTracker will queue them to disk (using SQLite),
-     * and each period of time it upload it as a batch to IronSourceAtom.
+     * While tracking events, IronSourceAtomTracker will queue them to disk (using SQLite)
+     * and each period of time or batch count/length it will track the events to IronSourceAtom.
      *
      * @param context current context object
-     * @param auth pre shared auth key for Atom cluster
+     * @param auth    pre shared auth key for Atom cluster
      */
     IronSourceAtomTracker(Context context, String auth) {
         this.context = context;
@@ -35,11 +37,12 @@ public class IronSourceAtomTracker {
     }
 
     /**
-     * Track an event that already stringify send data mechanism is controlled by sendNow parameter.
+     * Track an event that's already stringified,
+     * send data mechanism is controlled by sendNow parameter.
      *
-     * @param streamName   The name on IronSourceAtom stream.
-     * @param data    String, containing the data to send.
-     * @param sendNow flag if true report will send immediately else will postponed
+     * @param streamName The name on IronSourceAtom stream.
+     * @param data       String, containing the data to send.
+     * @param sendNow    flag if true report will send immediately else will postponed
      */
     public void track(String streamName, String data, boolean sendNow) {
         openReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE)
@@ -52,9 +55,9 @@ public class IronSourceAtomTracker {
     /**
      * Track an event, send data mechanism is controlled by sendNow parameter.
      *
-     * @param streamName   The name on IronSourceAtom stream.
-     * @param data    Map, containing the data to send.
-     * @param sendNow Send flag if true report will send immediately else will postponed
+     * @param streamName The name on IronSourceAtom stream.
+     * @param data       Map, containing the data to send.
+     * @param sendNow    Send flag if true report will send immediately else will postponed
      */
     public void track(String streamName, Map<String, ?> data, boolean sendNow) {
         track(streamName, new JSONObject(data), sendNow);
@@ -63,9 +66,9 @@ public class IronSourceAtomTracker {
     /**
      * Track an event, send data mechanism is controlled by sendNow parameter.
      *
-     * @param streamName   The name on IronSourceAtom stream.
-     * @param data    JSONObject, containing the data to send.
-     * @param sendNow Send flag if true report will send immediately else will postponed
+     * @param streamName The name on IronSourceAtom stream.
+     * @param data       JSONObject, containing the data to send.
+     * @param sendNow    Send flag if true report will send immediately else will postponed
      */
     public void track(String streamName, JSONObject data, boolean sendNow) {
         track(streamName, data.toString(), sendNow);
@@ -74,8 +77,8 @@ public class IronSourceAtomTracker {
     /**
      * Track an event that already stringify send data postponed.
      *
-     * @param streamName   The name on IronSourceAtom stream.
-     * @param data    String, containing the data to send.
+     * @param streamName The name on IronSourceAtom stream.
+     * @param data       String, containing the data to send.
      */
     public void track(String streamName, String data) {
         track(streamName, data, false);
@@ -84,8 +87,8 @@ public class IronSourceAtomTracker {
     /**
      * Track an event, send data postponed.
      *
-     * @param table   IronSourceAtomFactory destination.
-     * @param data    Map, containing the data to send.
+     * @param table IronSourceAtomFactory destination.
+     * @param data  Map, containing the data to send.
      */
     public void track(String table, Map<String, ?> data) {
         track(table, new JSONObject(data), false);
@@ -94,12 +97,13 @@ public class IronSourceAtomTracker {
     /**
      * Track an event, send data postponed.
      *
-     * @param streamName   The name on IronSourceAtom stream.
-     * @param data    JSONObject, containing the data to send.
+     * @param streamName The name on IronSourceAtom stream.
+     * @param data       JSONObject, containing the data to send.
      */
     public void track(String streamName, JSONObject data) {
         track(streamName, data.toString(), false);
     }
+
     /**
      * Flush immediately all reports
      */

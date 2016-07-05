@@ -20,7 +20,7 @@ class IsaConfig {
     protected static final int DEFAULT_MAX_REQUEST_LIMIT = KILOBYTE * KILOBYTE;
     protected static final int DEFAUL_MAX_DATABASE_LIMIT = KILOBYTE * KILOBYTE * 10;
     protected static final int DEFAULT_ALLOWED_NETWORK_TYPES = ~0;
-    //SharedPreferences keys for metadata
+    // SharedPreferences keys for metadata
     protected static final String KEY_BULK_SIZE = "bulk_size";
     protected static final String KEY_IB_END_POINT = "ib_end_point";
     protected static final String KEY_FLUSH_INTERVAL = "flush_interval";
@@ -31,8 +31,8 @@ class IsaConfig {
     protected static final String KEY_ALLOWED_OVER_ROAMING = "allow_roaming_flush";
     protected static final String KEY_ALLOWED_NETWORK_TYPES = "allowed_network_types";
     // IronSourceAtomFactory sTracker configuration
-    protected static String IRONBEAST_TRACKER_TABLE = "ironbeast_sdk";
-    protected static String IRONBEAST_TRACKER_TOKEN = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt";
+    protected static String ATOM_TRACKER_TABLE = "ironbeast_sdk";
+    protected static String ATOM_TRACKER_TOKEN = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt";
     private static IsaConfig sInstance;
 
     IsaPrefService isaPrefService;
@@ -267,8 +267,4 @@ class IsaConfig {
     protected IsaPrefService getPrefService(Context context) {
         return IsaPrefService.getInstance(context);
     }
-
-
-
-
 }

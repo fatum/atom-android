@@ -56,6 +56,7 @@ public class NetworkManager {
 
     /**
      * Indicates whether the device is currently roaming on this network.
+     *
      * @return
      */
     public boolean isDataRoamingEnabled() {
@@ -66,6 +67,7 @@ public class NetworkManager {
     /**
      * Get IronSourceAtomFactory network type based on the returned conectivity
      * network type.
+     *
      * @return
      */
     public int getNetworkIBType() {

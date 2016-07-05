@@ -10,12 +10,11 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
 /**
-*Factory to produce working atom instance to process tracker or low level API
-*/
+ * Factory to produce an instance of IronSourceAtom Class or IronSourceAtomTracker Class
+ */
 public class IronSourceAtomFactory {
-
-
 
     private IsaConfig config;
     private Context context;
@@ -24,8 +23,8 @@ public class IronSourceAtomFactory {
     private static IronSourceAtomFactory sInstance;
     final static Object sInstanceLockObject = new Object();
     private static final String TAG = "IronSourceAtomFactory";
-    public static final int NETWORK_MOBILE = 1 << 0;
-    public static final int NETWORK_WIFI = 1 << 1;
+    public static final int NETWORK_MOBILE = 1;
+    public static final int NETWORK_WIFI = 2;
 
     /**
      * Do not call directly.
@@ -56,8 +55,9 @@ public class IronSourceAtomFactory {
      * Create IronSourceAtomTracker with your YOUR_AUTH_KEY.
      * Example:
      * <code>
-     *      IronSourceAtomTracker tracker = IronSourceAtomFactory.newTracker("YOUR_AUTH_KEY");
+     * IronSourceAtomTracker tracker = IronSourceAtomFactory.newTracker("YOUR_AUTH_KEY");
      * </code>
+     *
      * @param auth your IronSourceAtomFactory auth key
      * @return IronSourceAtomTracker
      */
@@ -81,8 +81,9 @@ public class IronSourceAtomFactory {
      * Create IronSourceAtom with your YOUR_AUTH_KEY.
      * Example:
      * <code>
-     *      IronSourceAtom sender = IronSourceAtomFactory.newAtom("YOUR_AUTH_KEY");
+     * IronSourceAtom sender = IronSourceAtomFactory.newAtom("YOUR_AUTH_KEY");
      * </code>
+     *
      * @param auth your IronSourceAtomFactory auth key
      * @return IronSourceAtom
      */
@@ -105,10 +106,13 @@ public class IronSourceAtomFactory {
     /**
      * Enable the SDK error-tracker.
      */
-    public void enableErrorReporting() { config.enableErrorReporting(); }
+    public void enableErrorReporting() {
+        config.enableErrorReporting();
+    }
 
     /**
      * Set whether the SDK can keep sending over a roaming connection.
+     *
      * @param allowed
      */
     public void setAllowedOverRoaming(boolean allowed) {
@@ -118,6 +122,7 @@ public class IronSourceAtomFactory {
     /**
      * Restrict the types of networks over which this SDK can keep making HTTP requests.
      * By default, all network types are allowed
+     *
      * @param flags
      */
     public void setAllowedNetworkTypes(int flags) {
@@ -126,10 +131,11 @@ public class IronSourceAtomFactory {
 
     /**
      * Set the SDK log level.
+     *
      * @param logType
      */
     public void setLogType(IsaConfig.LOG_TYPE logType) {
-        Logger.logLevel  = logType;
+        Logger.logLevel = logType;
     }
 
     /**
@@ -161,14 +167,15 @@ public class IronSourceAtomFactory {
 
     /**
      * Track all SDK-errors/crashes when error-tracker enabled.
+     *
      * @param str
      */
     protected void trackError(String str) {
-        String token = IsaConfig.IRONBEAST_TRACKER_TOKEN;
+        String token = IsaConfig.ATOM_TRACKER_TOKEN;
         if (!sAvailableTrackers.containsKey(token) && config.isErrorReportingEnabled()) {
             sAvailableTrackers.put(token, new IronSourceAtomTracker(context, token));
         }
-        IronSourceAtomTracker sdkTracker = sAvailableTrackers.get(IsaConfig.IRONBEAST_TRACKER_TOKEN);
+        IronSourceAtomTracker sdkTracker = sAvailableTrackers.get(IsaConfig.ATOM_TRACKER_TOKEN);
         try {
             JSONObject report = new JSONObject();
             report.put("details", str);
@@ -178,7 +185,7 @@ public class IronSourceAtomFactory {
             report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
             report.put("platform", "Android");
             report.put("os", String.valueOf(Build.VERSION.SDK_INT));
-            sdkTracker.track(IsaConfig.IRONBEAST_TRACKER_TABLE, report, false);
+            sdkTracker.track(IsaConfig.ATOM_TRACKER_TABLE, report, false);
         } catch (Exception e) {
             Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
         }
