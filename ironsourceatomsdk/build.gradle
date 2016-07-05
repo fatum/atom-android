@@ -6,7 +6,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:2.1.2'
         classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0x"
 
     }
@@ -34,7 +34,7 @@ dependencies {
 
 android {
     compileSdkVersion 22
-    buildToolsVersion "21.1.1"
+    buildToolsVersion "21.1.2"
 
 
     defaultConfig {
@@ -58,31 +58,23 @@ android {
             buildConfigField(STRING, "DEFAULT_URL", '"http://sdk.ironsourceatom.io"')
             buildConfigField(STRING, "DEFAULT_BULK_URL", '"http://sdk.ironsourceatom.io/bulk"')
             buildConfigField(BOOLEAN, "IS_SUPER_DEV_MODE", FALSE)
-
-
         }
         debug {
             buildConfigField(STRING, "DEFAULT_URL", '"http://track.atom-data.io"')
             buildConfigField(STRING, "DEFAULT_BULK_URL", '"http://track.atom-data.io/bulk"')
             buildConfigField(BOOLEAN, "IS_SUPER_DEV_MODE", TRUE)
-
-
-
         }
         debugGoogleEmulator {
             buildConfigField(STRING, "DEFAULT_URL", '"http://track.atom-data.io"')
             buildConfigField(STRING, "DEFAULT_BULK_URL", '"http://track.atom-data.io/bulk"')
             buildConfigField(BOOLEAN, "IS_SUPER_DEV_MODE", TRUE)
             testCoverageEnabled = true
-
-
         }
 
         debugGenyMotionEmulator {
             buildConfigField(STRING, "DEFAULT_URL", '"http://track.atom-data.io"')
             buildConfigField(STRING, "DEFAULT_BULK_URL", '"http://track.atom-data.io/bulk"')
             buildConfigField(BOOLEAN, "IS_SUPER_DEV_MODE", TRUE)
-
 
         }
 
@@ -124,16 +116,14 @@ task makeReleaseJar(type: Copy) {
     from('build/intermediates/bundles/release/')
     into('../output/')
     include('classes.jar')
-    rename ('classes.jar', "${archivesBaseName}-${version}.jar")
+    rename('classes.jar', "${archivesBaseName}-${version}.jar")
 }
 task makeDebugJar(type: Copy) {
     from('build/intermediates/bundles/debug/')
     into('../output/')
     include('classes.jar')
-    rename ('classes.jar', "${archivesBaseName}-${version}_debug.jar")
+    rename('classes.jar', "${archivesBaseName}-${version}_debug.jar")
 }
-
-
 
 // Define coverage source.
 // If you have rs/aidl etc... add them here.
@@ -144,27 +134,26 @@ def coverageSourceDirs = [
 task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest") {
     group = "Reporting"
     description = "Generate Jacoco coverage reports after running tests."
-        reports {
-            xml.enabled true
-            csv.enabled false
-            html.destination "${buildDir}/reports/jacoco/html"
-        }
+    reports {
+        xml.enabled true
+        csv.enabled false
+        html.destination "${buildDir}/reports/jacoco/html"
+    }
 
     classDirectories = fileTree(
             dir: './build/intermediates/classes/debug/io/ironsourceatom/sdk',
             excludes: [
-                       'SdkEvent.class',
-                       'SimpleReportService.class',
-                       'ReportService.class',
-                       'Consts.class',
-                       'SimpleReportHandler.class',
-                       'SdkEvent.class',
-                       'Report.class',
-                       'Logger.class',
-                       'ReportIntent.class',
-                       'RemoteService.class',
-                       'ExternalVars'
-
+                    'SdkEvent.class',
+                    'SimpleReportService.class',
+                    'ReportService.class',
+                    'Consts.class',
+                    'SimpleReportHandler.class',
+                    'SdkEvent.class',
+                    'Report.class',
+                    'Logger.class',
+                    'ReportIntent.class',
+                    'RemoteService.class',
+                    'ExternalVars'
 
 
             ])
