@@ -85,7 +85,7 @@ class BackOff {
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    public long currentTimeMillis() {
+    protected long currentTimeMillis() {
         return System.currentTimeMillis();
     }
 
