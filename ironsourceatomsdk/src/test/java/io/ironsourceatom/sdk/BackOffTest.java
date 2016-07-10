@@ -67,7 +67,7 @@ public class BackOffTest {
     @Test public void testReset() {
         backOff.reset();
         verify(sharedPref, times(1)).save(anyString(), eq(backOff.INITIAL_RETRY_VALUE));
-        verify(sharedPref, times(1)).save(anyString(), eq(currentMills));
+        verify(sharedPref, times(1)).delete(anyString());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
+
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -8,7 +9,6 @@ import java.util.concurrent.TimeUnit;
  * Persistence exponential backoff service.
  */
 class BackOff {
-
 
     private int retry;
     private IsaConfig config;
@@ -37,14 +37,18 @@ class BackOff {
     }
 
     /**
-     * Returns the next milliseconds and advances the counter.
-     * @return
+     * Calculates and Returns the next milliseconds and advances the counter.
+     * nextTick - the next clock tick that the function returns
+     * scheduledNextTick - The last known nextTick (used to store the state)
+     *
+     * @return nextTick - next clock tick.
      */
     synchronized long next() {
-        long nextTick, curr = currentTimeMillis();
-        long lastTick = prefService.load(KEY_LAST_TICK, curr);
-        nextTick = curr + getMills(retry);
-        if (curr - lastTick >= 0) {
+        long nextTick, currentTime = currentTimeMillis();
+        long scheduledNextTick = prefService.load(KEY_LAST_TICK, currentTime);
+        long temp = getMills(retry);
+        nextTick = currentTime + temp; // set the nextTick
+        if (currentTime > scheduledNextTick) {
             prefService.save(KEY_RETRY_COUNT, ++retry);
         }
         prefService.save(KEY_LAST_TICK, nextTick);
@@ -53,6 +57,7 @@ class BackOff {
 
     /**
      * Get milliseconds number based on the given n.
+     *
      * @param n
      * @return
      */
@@ -70,7 +75,7 @@ class BackOff {
     void reset() {
         retry = INITIAL_RETRY_VALUE;
         prefService.save(KEY_RETRY_COUNT, retry);
-        prefService.save(KEY_LAST_TICK, currentTimeMillis());
+        prefService.delete(KEY_LAST_TICK);
     }
 
     public boolean hasNext() {
@@ -80,10 +85,14 @@ class BackOff {
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    protected long currentTimeMillis() { return System.currentTimeMillis(); }
+    public long currentTimeMillis() {
+        return System.currentTimeMillis();
+    }
+
     protected IsaPrefService getPrefService(Context context) {
         return IsaPrefService.getInstance(context);
     }
+
     protected IsaConfig getConfig(Context context) {
         return IsaConfig.getInstance(context);
     }

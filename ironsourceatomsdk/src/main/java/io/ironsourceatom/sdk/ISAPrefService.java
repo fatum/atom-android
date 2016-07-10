@@ -2,6 +2,7 @@ package io.ironsourceatom.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.StrictMode;
 
 class IsaPrefService {
 
@@ -62,6 +63,14 @@ class IsaPrefService {
             editor.putString(key, value.toString());
             editor.apply();
         }
+    }
+
+    public boolean delete(String key) {
+        SharedPreferences pr = mContext.getSharedPreferences(Consts.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+        if (null != pr) {
+            return pr.edit().remove(key).commit();
+        }
+        return false;
     }
 
 }
