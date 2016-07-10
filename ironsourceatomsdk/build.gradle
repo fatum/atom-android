@@ -43,7 +43,7 @@ android {
         versionCode 1
         versionName "1.0.0"
         project.version = versionName
-        project.archivesBaseName = "atomandroid"
+        project.archivesBaseName = "atom-android"
     }
 
     buildTypes {
@@ -54,9 +54,9 @@ android {
 
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'mobileCore.pro'
-            buildConfigField(STRING, "DEFAULT_URL", '"http://sdk.ironsourceatom.io"')
-            buildConfigField(STRING, "DEFAULT_BULK_URL", '"http://sdk.ironsourceatom.io/bulk"')
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'atomSDK.pro'
+            buildConfigField(STRING, "DEFAULT_URL", '"http://track.atom-data.io"')
+            buildConfigField(STRING, "DEFAULT_BULK_URL", '"http://track.atom-data.io/bulk"')
             buildConfigField(BOOLEAN, "IS_SUPER_DEV_MODE", FALSE)
         }
         debug {
@@ -80,7 +80,7 @@ android {
 
     }
 
-    //release type by default so for test we need to set debug
+    // Release type by default so for test we need to set debug
     defaultPublishConfig "debug"
 
 
@@ -170,6 +170,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
         }
     }
 }
+
 coveralls {
     //sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
     jacocoReportPath = "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"

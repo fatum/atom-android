@@ -6,6 +6,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import java.sql.Time;
+
 /**
  * Intent service to handle tracker functionality
  */
@@ -46,7 +48,7 @@ public class ReportService extends IntentService {
     }
 
     protected void setAlarm(long triggerMills) {
-        Logger.log(TAG, "Setting alarm", Logger.SDK_DEBUG);
+        Logger.log(TAG, "Setting alarm, Will send in: " + (triggerMills - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
         ReportIntent report = new ReportIntent(this, SdkEvent.FLUSH_QUEUE);
         PendingIntent intent = PendingIntent.getService(this, 0, report.getIntent(),
                 PendingIntent.FLAG_UPDATE_CURRENT);

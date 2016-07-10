@@ -259,7 +259,7 @@ class DbAdapter implements StorageService {
     private static DbAdapter sInstance;
     private final DatabaseHandler mDb;
     private static final int DATABASE_VERSION = 4;
-    private static final String DATABASE_NAME = "ironbeast";
+    private static final String DATABASE_NAME = "atomSDK";
     private static final String TAG = "DbAdapter";
     public static final String KEY_DATA = "data";
     public static final String KEY_TOKEN = "token";
@@ -295,7 +295,7 @@ class DbAdapter implements StorageService {
          */
         @Override
         public void onCreate(SQLiteDatabase db) {
-            Logger.log(TAG, "Creating the IronBeastSdk database", Logger.SDK_DEBUG);
+            Logger.log(TAG, "Creating the atomSDK database", Logger.SDK_DEBUG);
 
             String reportQuery = "CREATE TABLE " + REPORTS_TABLE + " (" + REPORTS_TABLE + "_id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     KEY_DATA + " STRING NOT NULL, " + KEY_TABLE + " STRING NOT NULL, " + KEY_CREATED_AT + " INTEGER NOT NULL);";
@@ -320,7 +320,7 @@ class DbAdapter implements StorageService {
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             if (oldVersion != newVersion) {
-                Logger.log(TAG, "Upgrading the IronBeastSdk database", Logger.SDK_DEBUG);
+                Logger.log(TAG, "Upgrading the atomSDK database", Logger.SDK_DEBUG);
 
                 String dropTablesQuery = "DROP TABLE IF EXISTS " + TABLES_TABLE;
                 SQLiteStatement dropTablesStmt = db.compileStatement(dropTablesQuery);

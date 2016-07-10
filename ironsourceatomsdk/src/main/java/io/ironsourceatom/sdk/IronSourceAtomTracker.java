@@ -125,4 +125,12 @@ public class IronSourceAtomTracker {
         if (URLUtil.isValidUrl(url)) config.setISAEndPoint(auth, url);
     }
 
+    /**
+     * Set custom bulk endpoint to send reports
+     * @param url
+     */
+    public void setISABulkEndPoint(String url) {
+        if (URLUtil.isValidUrl(url)) config.setISAEndPointBulk(auth, url);
+    }
+
 }

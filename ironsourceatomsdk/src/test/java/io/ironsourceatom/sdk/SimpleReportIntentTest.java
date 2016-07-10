@@ -23,10 +23,6 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.mock;
 
-/**
- * Created by kirill.bokhanov on 6/6/16.
- */
-
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleReportIntentTest {
 
@@ -39,7 +35,7 @@ public class SimpleReportIntentTest {
 
 
     @Test
-    public void testSetEnpoint(){
+    public void testSetEndPoint(){
 
         report = new SimpleReportIntent(context);
         report.setEnpoint("bla");

@@ -36,7 +36,7 @@ public class IronSourceAtomFactory {
     }
 
     public static IronSourceAtomFactory getInstance() {
-        return  sInstance;
+        return sInstance;
     }
 
     public static IronSourceAtomFactory getInstance(Context context) {
