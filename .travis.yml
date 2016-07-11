@@ -7,7 +7,7 @@ env:
 android:
   components:
   - android-22
-  - build-tools-21.1.1
+  - build-tools-23.0.3
 cache:
   directories:
   - "$HOME/.gradle/caches/"
@@ -15,8 +15,3 @@ script:
 - "./gradlew clean build jacocoTestReport coveralls"
 after_success:
 - bash <(curl -s https://codecov.io/bash)
-#deploy:
-#  provider: script
-#  script: "./gradlew bintrayUpload"
-#  on:
-#    tags: true

@@ -109,7 +109,6 @@ task clearJar(type: Delete) {
     delete "../output/${archivesBaseName}-${version}_debug.jar"
 }
 
-
 task makeReleaseJar(type: Copy) {
     from('build/intermediates/bundles/release/')
     into('../output/')
@@ -134,8 +133,8 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
     description = "Generate Jacoco coverage reports after running tests."
     reports {
         html.enabled = true
-        xml.enabled true
-        csv.enabled false
+        xml.enabled = true
+        csv.enabled = false
     }
 
     classDirectories = fileTree(
@@ -168,30 +167,6 @@ tasks.coveralls {
     description = 'Uploads the aggregated coverage report to Coveralls'
 
     dependsOn 'jacocoTestReport'
-}
-
-
-task createPom {
-    pom {
-        project {
-            groupId 'com.ironsrc.atom'
-            artifactId 'atomandroid'
-            version "${version}"
-
-            inceptionYear '2016'
-
-            licenses {
-                license {
-                    name 'MIT'
-                    url 'http://opensource.org/licenses/MIT'
-
-                    distribution 'repo'
-                }
-            }
-
-
-        }
-    }.writeTo("../output/${version}.pom")
 }
 
 assembleRelease.dependsOn(clearJar, makeReleaseJar)
