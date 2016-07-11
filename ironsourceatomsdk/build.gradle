@@ -4,13 +4,12 @@ buildscript {
 //        mavenCentral()
 //        maven { url 'https://plugins.gradle.org/m2' }
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.2'
-        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3" // coveralls integration
-    }
 }
 
-
+plugins {
+    id 'jacoco'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
+}
 
 /**
  * The first line in the build configuration applies the Android plugin for
@@ -21,12 +20,6 @@ buildscript {
 // For creating android library project (lib != app)
 // http://tools.android.com/tech-docs/new-build-system/user-guide
 apply plugin: 'com.android.library'
-
-// Jacoco coverage plugin
-apply plugin: 'jacoco'
-
-// Coveralls plugin
-apply plugin: 'com.github.kt3k.coveralls'
 
 /**
  * The android {} block is where you configure all your Android-specific
@@ -211,9 +204,9 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
     group = "Reporting"
     description = "Generate Jacoco coverage reports after running tests."
     reports {
-        html.enabled = true
-        xml.enabled = true
-        csv.enabled = false
+        html.enabled true
+        xml.enabled true
+        csv.enabled false
     }
 
     classDirectories = fileTree(
@@ -237,7 +230,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
 }
 
 coveralls {
-    //sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
+//    sourceDirs = publishedProjects.sourceSets.main.allSource.srcDirs.flatten()
     jacocoReportPath = "${buildDir}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
 }
 
