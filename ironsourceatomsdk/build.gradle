@@ -1,61 +1,101 @@
 buildscript {
     repositories {
         jcenter()
-        mavenCentral()
-        maven { url 'https://plugins.gradle.org/m2' }
+//        mavenCentral()
+//        maven { url 'https://plugins.gradle.org/m2' }
     }
-//    dependencies {
-//        classpath ':2.1.2'
-//        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3" // coveralls integration
-//
-//    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.1.2'
+        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3" // coveralls integration
+    }
 }
 
-plugins {
-    id "com.github.kt3k.coveralls" version "2.6.3"
-    id "com.android.tools.build:gradle" version "2.1.2"
-}
 
-// todo: add plugins {}
 
-apply plugin: 'com.github.kt3k.coveralls'
+/**
+ * The first line in the build configuration applies the Android plugin for
+ * Gradle to this build and makes the android {} block available to specify
+ * Android-specific build options.
+ */
+
+// For creating android library project (lib != app)
+// http://tools.android.com/tech-docs/new-build-system/user-guide
 apply plugin: 'com.android.library'
+
+// Jacoco coverage plugin
 apply plugin: 'jacoco'
-apply plugin: 'maven'
 
-dependencies {
+// Coveralls plugin
+apply plugin: 'com.github.kt3k.coveralls'
 
-    // Unit testing dependencies
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:1.10.19'
-    testCompile('org.robolectric:robolectric:3.0-rc2') {
-        exclude group: 'commons-logging', module: 'commons-logging'
-        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
-    }
-    // JSONObject should be available in tests too
-    testCompile 'org.json:json:20090211'
-}
-
+/**
+ * The android {} block is where you configure all your Android-specific
+ * build options.
+ */
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "21.1.2"
 
+    /**
+     * compileSdkVersion specifies the Android API level Gradle should use to
+     * compile your app. This means your app can use the API features included in
+     * this API level and lower.
+     *
+     * buildToolsVersion specifies the version of the SDK build tools, command-line
+     * utilities, and compiler that Gradle should use to build your app. You need to
+     * download the build tools using the SDK Manager.
+     */
+    compileSdkVersion 22
+    buildToolsVersion "23.0.3"
+
+    /**
+     * The defaultConfig {} block encapsulates default settings and entries for all
+     * build variants, and can override some attributes in main/AndroidManifest.xml
+     * dynamically from the build system. You can configure product flavors to override
+     * these values for different versions of your app.
+     */
 
     defaultConfig {
+
+        /**
+         * applicationId uniquely identifies the package for publishing.
+         * However, your source code should still reference the package name
+         * defined by the package attribute in the main/AndroidManifest.xml file.
+         */
+
+        // Defines the minimum API level required to run the app.
         minSdkVersion 10
+
+        // Specifies the API level used to test the app.
         targetSdkVersion 22
+
+        // Defines the version number of your app.
         versionCode 1
+
+        // Defines a user-friendly version name for your app.
         versionName "1.0.0"
+
         project.version = versionName
         project.archivesBaseName = "atom-android"
     }
+
+    /**
+     * The buildTypes {} block is where you can configure multiple build types.
+     * By default, the build system defines two build types: debug and release. The
+     * debug build type is not explicitly shown in the default build configuration,
+     * but it includes debugging tools and is signed with the debug key. The release
+     * build type applies Proguard settings and is not signed by default.
+     */
 
     buildTypes {
         def BOOLEAN = "boolean"
         def TRUE = "true"
         def FALSE = "false"
         def STRING = "String"
+
+        /**
+         * By default, Android Studio configures the release build type to enable code
+         * shrinking, using minifyEnabled, and specifies the Proguard settings file.
+         */
 
         release {
             minifyEnabled false
@@ -85,9 +125,36 @@ android {
 
     }
 
-    // Release type by default so for test we need to set debug
+    /**
+     By default a library only publishes its release variant.
+     This variant will be used by all projects referencing the library,
+     no matter which variant they build themselves.
+     overwrite release variant:
+     * */
     defaultPublishConfig "debug"
 
+    /**
+     You can run lint for a specific variant (see below),
+     e.g. ./gradlew lintRelease, or for all variants (./gradlew lint),
+     in which case it produces a report which describes which specific
+     variants a given issue applies to.
+     You can configure lint by adding a lintOptions section like following.
+     * */
+
+    lintOptions {
+        abortOnError false
+    }
+
+    /**
+     The android.jar file that is used to run unit tests does not contain any actual code -
+     that is provided by the Android system image on real devices.
+     Instead, all methods throw exceptions (by default). This is to make sure your unit tests
+     only test your code and do not depend on any particular behaviour of the
+     Android platform (that you have not explicitly mocked e.g. using Mockito).
+     */
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 
     sourceSets {
         main {
@@ -100,16 +167,21 @@ android {
         }
     }
 
-    lintOptions {
-        abortOnError false
-    }
 
-    // Configure tests
-    testOptions {
-        unitTests.returnDefaultValues = true
-    }
 }
 
+dependencies {
+
+    // Unit testing dependencies
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile('org.robolectric:robolectric:3.0-rc2') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+        exclude group: 'org.apache.httpcomponents', module: 'httpclient'
+    }
+    // JSONObject should be available in tests too
+    testCompile 'org.json:json:20090211'
+}
 
 task clearJar(type: Delete) {
     delete "../output/${archivesBaseName}-${version}.jar"
@@ -179,5 +251,11 @@ tasks.coveralls {
 assembleRelease.dependsOn(clearJar, makeReleaseJar)
 assembleDebug.dependsOn(clearJar, makeDebugJar)
 
+//plugins {
+//    id 'jacoco'
+//    id "com.github.kt3k.coveralls" version "2.6.3"
+//    id "com.android.tools.build:gradle" version "2.1.2"
+//}
 
+// todo: add plugins {}
 
