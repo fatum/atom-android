@@ -44,3 +44,4 @@ Thumbs.db
 build/
 tasks
 output/
+.coveralls.yml
