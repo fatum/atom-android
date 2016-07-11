@@ -6,6 +6,8 @@ env:
     - CI_NAME=travis-ci
 android:
   components:
+  - platform-tools
+  - tools
   - android-22
   - build-tools-23.0.3
 cache:
