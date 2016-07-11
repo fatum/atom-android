@@ -4,12 +4,19 @@ buildscript {
         mavenCentral()
         maven { url 'https://plugins.gradle.org/m2' }
     }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.2'
-        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3" // coveralls integration
-
-    }
+//    dependencies {
+//        classpath ':2.1.2'
+//        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3" // coveralls integration
+//
+//    }
 }
+
+plugins {
+    id "com.github.kt3k.coveralls" version "2.6.3"
+    id "com.android.tools.build:gradle" version "2.1.2"
+}
+
+// todo: add plugins {}
 
 apply plugin: 'com.github.kt3k.coveralls'
 apply plugin: 'com.android.library'
