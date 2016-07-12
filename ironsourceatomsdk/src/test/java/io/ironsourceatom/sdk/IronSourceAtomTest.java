@@ -16,10 +16,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Created by kirill.bokhanov on 6/6/16.
- */
-
 @RunWith(MockitoJUnitRunner.class)
 public class IronSourceAtomTest {
     private final Context context = mock(Context.class);

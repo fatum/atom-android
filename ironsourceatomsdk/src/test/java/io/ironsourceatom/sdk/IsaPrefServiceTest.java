@@ -9,9 +9,6 @@ import org.junit.Test;
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-/**
- * Created by kirill.bokhanov on 6/7/16.
- */
 public class IsaPrefServiceTest {
 
     final Context context = mock(MockContext.class);
