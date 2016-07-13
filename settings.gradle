@@ -1,4 +1,0 @@
-// Top level settings file
-include ':ironsourceatom-samples'
-include ':ironsourceatomsdk'
-project(':ironsourceatom-samples').projectDir = new File('ironsourceatom-samples')
