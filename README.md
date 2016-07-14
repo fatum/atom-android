@@ -7,9 +7,14 @@
 
 Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-management) SDK for the Android.
 
+- [Signup](https://atom.ironsrc.com/#/signup)
+- [Documentation][docs-url]
+- [Installation](#Installation)
+- [Sending an event](#Tracker-usage)
+
 ###Installation
 
-Currently, there is one way to integrate. soon, it will be available on jcenter and Github as well.
+Download the JAR from here: 
 
 1. Add the SDK jar into libs directory.
 
@@ -19,9 +24,15 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
 ```
+
+The SDK is divided into 2 separate services:
+
+1. High level Tracker - contains a local db and tracks events based on certain parameters.
+2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.
+
 ###Tracker usage
 
- Add the following lines to AndroidManifest.xml
+Add the following lines to AndroidManifest.xml
 ```java
         <service android:name="io.ironsourceatom.sdk.ReportService" />
 ```
@@ -35,7 +46,9 @@ import io.ironsourceatom.sdk.IronSourceAtomEventSender;
 
 public class BaseMainActivity extends Activity {
     private IronSourceAtom ironSourceAtom;
+    // Your atom stream name, for example: "cluster.schema.table"
     private final String STREAM="YOUR_IRONSOURCEATOM_STREAM_NAME";
+    
     @Override
        protected void onCreate(Bundle savedInstanceState) {
             ...
@@ -49,27 +62,32 @@ public class BaseMainActivity extends Activity {
                JSONObject events = new JSONObject();
                events.put("action", "click on ...");
                events.put("user_id", user.id);
-               tracker.track("STREAM", event);
+               tracker.track(STREAM, event);
            } catch (JSONException e) {
                ...
            }
            ...
-        
     }
 ```
 
-The tracker process:
-You can use track() methods in order to track the evnets to Atom.
-The tracker accumulates the event.
-Once the flushInterval / bulkLength or bulkSize is reached you flush a batch of records to the inFlight queue.
-Batches in the inFlight queue will be sent in parallel.
-In case of failure each batch will have its own exponential back-off mechanism.
+The Tracker process:
 
-### Low level API usage
-You can also use low level api to simple send single event with method putEvent() or array of events with method putEvents() as shown below.
-This methods start new service and execute httpPost to the pipeline in it.
+You can use track() method in order to track the events to an Atom Stream.
+The tracker accumulates events and flushes them when it meets one of the following conditions:
+ 
+1. Flush Interval is reached (default: 10 seconds).
+2. Bulk Length is reached (default: 4 events).
+3. Maximum Request Limit is reached (default: 1MB).
 
- Add the following lines to AndroidManifest.xml
+In case of failure the tracker will preform an exponential backoff with jitter.
+The tracker stores events in a local SQLITE database.
+
+### Low level API Usage
+
+The Low level SDK method putEvent() or array of events with method putEvents() as shown below.
+This methods start new service and execute http post to the pipeline in it.
+
+Add the following lines to AndroidManifest.xml
 ```java
         <service android:name="io.ironsourceatom.sdk.SimpleReportService" />
 ```
@@ -82,6 +100,7 @@ import io.ironsourceatom.sdk.IronSourceAtom;
 
 public class BaseMainActivity extends Activity {
     private IronSourceAtomFactory ironSourceAtomFactory;
+    // Your atom stream name, for example: "cluster.schema.table"
     private final String STREAM="YOUR_IRONSOURCEATOM_STREAM_NAME";
     
     @Override
@@ -91,23 +110,21 @@ public class BaseMainActivity extends Activity {
 
         // Create and config IronSourceAtom instance
         ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
-         String url = "https://track.atom-data.io/";
-         IronSourceAtom atom = ironSourceAtomFactory.newAtom("YOUR_AUTH_KEY"");
+        String url = "https://track.atom-data.io/";
+        IronSourceAtom atom = ironSourceAtomFactory.newAtom("YOUR_AUTH_KEY"");
         atom.setEndPoint(url);
          
-         JSONObject params = new JSONObject();
+        JSONObject params = new JSONObject();
          
-         try {
-               params.put("action", "Action 1");
-               params.put("id", "1");
-              } catch (JSONException e) {
-                 Log.d("TAG", "Failed to put your json");
-              }
-           atom.putEvent(STREAM, params.toString());
-                
+        try {
+                params.put("action", "Action 1");
+                params.put("id", "1");
+            } catch (JSONException e) {
+                Log.d("TAG", "Failed to put your json");
+            }
+        atom.putEvent(STREAM, params.toString());      
     }
 ```
-Make sure you have replaced "YOUR_AUTH_KEY with your IronSourceAtom auth key, and "YOUR_IRONSOURCEATOM_STREAM_NAME" to the desired destination (e.g: “cluster.schema.table”)
 
 ### Example
 
