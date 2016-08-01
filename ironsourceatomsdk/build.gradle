@@ -5,6 +5,7 @@ buildscript {
 }
 
 plugins {
+    id 'maven'
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.4.0x'
 }
@@ -243,4 +244,15 @@ tasks.coveralls {
     group = 'Coverage reports'
     description = 'Uploads the aggregated coverage report to Coveralls'
     dependsOn 'jacocoTestReport'
+}
+uploadArchives {
+    repositories.mavenDeployer {
+        def deployPath = file('../mvn-repo-tmp')
+        repository(url: "file://${deployPath.absolutePath}")
+        pom.project {
+            groupId 'io.ironsourceatom.sdk'
+            artifactId 'atom-sdk'
+            version "1.1.0"
+        }
+    }
 }
