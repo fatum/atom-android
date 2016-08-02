@@ -64,7 +64,7 @@ android {
         versionCode 1
 
         // Defines a user-friendly version name for your app.
-        versionName "1.0.0"
+        versionName "1.1.0"
 
         project.version = versionName
         project.archivesBaseName = "atom-android"
@@ -252,6 +252,7 @@ tasks.coveralls {
     description = 'Uploads the aggregated coverage report to Coveralls'
     dependsOn 'jacocoTestReport'
 }
+
 uploadArchives {
     repositories.mavenDeployer {
         def deployPath = file('../mvn-repo-tmp')
@@ -259,7 +260,11 @@ uploadArchives {
         pom.project {
             groupId 'io.ironsourceatom.sdk'
             artifactId 'atom-sdk'
-            version "1.1.0"
+            version "${version}"
+
         }
+        pom.whenConfigured({
+            pom -> pom.packaging = "jar";
+        });
     }
 }
