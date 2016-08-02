@@ -228,7 +228,14 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
                     'Logger.class',
                     'ReportIntent.class',
                     'RemoteService.class',
-                    'ExternalVars.class'
+                    'ExternalVars.class',
+                    'Utils.class',
+                    'Db*.class',
+                    'IronSourceAtomFactory.class',
+                    'IronSourceAtomTracker.class',
+                    'Isa*.class',
+                    'IS*.class',
+                    'ReportHandler.class'
             ])
 
     sourceDirectories = files(coverageSourceDirs)

@@ -1,9 +1,9 @@
 # ironSource.atom SDK for Android
 [![License][license-image]][license-url]
 [![Docs][docs-image]][docs-url]
-[![Coverage Status][coveralls-image]][coveralls-url]
 [![Build status][travis-image]][travis-url]
-
+[![Coverage Status][coveralls-image]][coveralls-url]
+[![Maven Status][maven-image]][maven-url]
 
 Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-management) SDK for the Android.
 
@@ -14,15 +14,44 @@ Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-
 
 ###Installation
 
-Download the JAR from here: 
+## Instalation for Gradle Project
+Add repository for you gradle config file
+```java
+repositories {
+   maven { url "https://raw.github.com/ironSource/atom-android/mvn-repo/" }
+}
 
-1. Add the SDK jar into libs directory.
-
-2. Add dependency to app/build.gradle
+```
+and add dependency for Atom SDK
 ```java
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+   compile 'io.ironsourceatom.sdk:atom-sdk:1.1.0'
 }
+```
+
+## Installation for Maven Project
+Add repository for you pom.xml
+```xml
+<repositories>
+    <repository>
+        <id>atom-java</id>
+        <url>https://raw.github.com/ironSource/atom-android/mvn-repo/</url>
+        <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+        </snapshots>
+    </repository>
+</repositories>
+```
+and add dependency for Atom SDK
+```xml
+<dependencies>
+    <dependency>
+        <groupId>io.ironsourceatom.sdk</groupId>
+        <artifactId>atom-sdk</artifactId>
+        <version>1.1.0</version>
+    </dependency>
+</dependencies>
 ```
 
 The SDK is divided into 2 separate services:
@@ -145,3 +174,5 @@ You can use our [example][example-url] for sending data to Atom:
 [coveralls-url]: https://coveralls.io/github/ironSource/atom-android?branch=master
 [docs-image]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-url]: https://ironsource.github.io/atom-android/
+[maven-image]: https://img.shields.io/badge/maven%20build-v1.1.0-green.svg
+[maven-url]: https://github.com/ironSource/atom-android/tree/mvn-repo
