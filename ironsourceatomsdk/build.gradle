@@ -5,6 +5,7 @@ buildscript {
 }
 
 plugins {
+    id 'maven'
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.4.0x'
 }
@@ -63,7 +64,7 @@ android {
         versionCode 1
 
         // Defines a user-friendly version name for your app.
-        versionName "1.0.0"
+        versionName "1.1.0"
 
         project.version = versionName
         project.archivesBaseName = "atom-android"
@@ -227,7 +228,14 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
                     'Logger.class',
                     'ReportIntent.class',
                     'RemoteService.class',
-                    'ExternalVars.class'
+                    'ExternalVars.class',
+                    'Utils.class',
+                    'Db*.class',
+                    'IronSourceAtomFactory.class',
+                    'IronSourceAtomTracker.class',
+                    'Isa*.class',
+                    'IS*.class',
+                    'ReportHandler.class'
             ])
 
     sourceDirectories = files(coverageSourceDirs)
@@ -243,4 +251,17 @@ tasks.coveralls {
     group = 'Coverage reports'
     description = 'Uploads the aggregated coverage report to Coveralls'
     dependsOn 'jacocoTestReport'
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        def deployPath = file('../mvn-repo-tmp')
+        repository(url: "file://${deployPath.absolutePath}")
+        pom.project {
+            groupId 'io.ironsourceatom.sdk'
+            artifactId 'atom-sdk'
+            version "${version}"
+
+        }
+    }
 }
