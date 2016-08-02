@@ -40,8 +40,12 @@ public class BaseMainActivity extends Activity {
         int id = v.getId();
         String stream = "zeev";
         // Default ip for the Android studio VM.
-        String url = "http://10.0.2.2:3000";
-        String bulkURL = "http://10.0.2.2:3000/bulk";
+        // String bulkURL = "http://10.0.2.2:3000/bulk";
+        // String url = "http://10.0.2.2:3000";
+
+        // atom tracking url
+        String url = "http://track.atom-data.io";
+        String bulkURL = "http://track.atom-data.io/bulk";
         String authKey = ""; // Pre-shared HMAC auth key
 
         // Configure sender to use methods putEvent() or putEvents()
