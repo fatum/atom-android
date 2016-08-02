@@ -268,3 +268,10 @@ uploadArchives {
         });
     }
 }
+
+task makeUploadJar(type: Copy) {
+    from('build/intermediates/bundles/release/')
+    into("../mvn-repo-tmp/io/ironsourceatom/sdk/atom-sdk/${version}/")
+    include('classes.jar')
+    rename('classes.jar', "${archivesBaseName}-${version}.jar")
+}

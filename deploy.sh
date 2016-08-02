@@ -1,4 +1,5 @@
 ./gradlew uploadArchives
+./gradlew makeUploadJar
 
 TARGET_BRANCH="mvn-repo"
 mkdir $TARGET_BRANCH
