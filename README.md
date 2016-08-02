@@ -54,13 +54,11 @@ and add dependency for Atom SDK
 </dependencies>
 ```
 
-The SDK is divided into 2 separate services:
-
+## The SDK is divided into 2 separate services:
 1. High level Tracker - contains a local db and tracks events based on certain parameters.
 2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.
 
-###Tracker usage
-
+## Tracker usage
 Add the following lines to AndroidManifest.xml
 ```java
         <service android:name="io.ironsourceatom.sdk.ReportService" />
@@ -111,8 +109,7 @@ The tracker accumulates events and flushes them when it meets one of the followi
 In case of failure the tracker will preform an exponential backoff with jitter.
 The tracker stores events in a local SQLITE database.
 
-### Low level API Usage
-
+## Low level API Usage
 The Low level SDK method putEvent() or array of events with method putEvents() as shown below.
 This methods start new service and execute http post to the pipeline in it.
 
@@ -155,8 +152,7 @@ public class BaseMainActivity extends Activity {
     }
 ```
 
-### Example
-
+## Example
 You can use our [example][example-url] for sending data to Atom:
 
 ![alt text][example]
