@@ -12,8 +12,6 @@ Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-
 - [Installation](#Installation)
 - [Sending an event](#Tracker-usage)
 
-###Installation
-
 ## Instalation for Gradle Project
 Add repository for you gradle config file
 ```java
@@ -157,7 +155,7 @@ You can use our [example][example-url] for sending data to Atom:
 
 ![alt text][example]
 
-### License
+## License
 [MIT][license-url]
 
 [example-url]: https://github.com/ironSource/atom-android/tree/master/ironsourceatom-samples
