@@ -1,5 +1,5 @@
 # ironSource.atom SDK for Android
-[![License][license-image]][license-url]
+[![License][license-image]](LICENSE)
 [![Docs][docs-image]][docs-url]
 [![Build status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
@@ -7,12 +7,15 @@
 
 Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-management) SDK for the Android.
 
-- [Signup](https://atom.ironsrc.com/#/signup)
+- [Sign up](https://atom.ironsrc.com/#/signup)
 - [Documentation][docs-url]
-- [Installation](#Installation)
-- [Sending an event](#Tracker-usage)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Example](#example)
 
-## Instalation for Gradle Project
+## Installation
+
+### Installation for Gradle project
 Add repository for you gradle config file
 ```java
 repositories {
@@ -27,7 +30,7 @@ dependencies {
 }
 ```
 
-## Installation for Maven Project
+### Installation for Maven Project
 Add repository for you pom.xml
 ```xml
 <repositories>
@@ -52,47 +55,79 @@ and add dependency for Atom SDK
 </dependencies>
 ```
 
-## The SDK is divided into 2 separate services:
+## Usage
+
+### The SDK is divided into 2 separate services:
 1. High level Tracker - contains a local db and tracks events based on certain parameters.
 2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.
 
-## Tracker usage
+### Tracker usage
 Add the following lines to AndroidManifest.xml
 ```java
-        <service android:name="io.ironsourceatom.sdk.ReportService" />
+<service android:name="io.ironsourceatom.sdk.ReportService" />
 ```
 
 Add IronSourceAtom to your main activity. For example:
 ```java
-...
-import io.ironsourceatom.sdk.HttpMethod;
-import io.ironsourceatom.sdk.IronSourceAtom;
-import io.ironsourceatom.sdk.IronSourceAtomEventSender;
+import io.ironsourceatom.sdk.IronSourceAtomFactory;
+import io.ironsourceatom.sdk.IronSourceAtomTracker;
 
 public class BaseMainActivity extends Activity {
-    private IronSourceAtom ironSourceAtom;
-    // Your atom stream name, for example: "cluster.schema.table"
-    private final String STREAM="YOUR_IRONSOURCEATOM_STREAM_NAME";
-    
+    private IronSourceAtomFactory ironSourceAtomFactory;
+    private static final String TAG = "SDK_EXAMPLE";
+
     @Override
-       protected void onCreate(Bundle savedInstanceState) {
-            ...
-            // Configure IronSourceAtom
-           ironSourceAtom = IronSourceAtom.getInstance(this);
-           ironSourceAtom.setAllowedNetworkTypes(ironSourceAtom.NETWORK_MOBILE | ironSourceAtom.NETWORK_WIFI);
-           ironSourceAtom.setAllowedOverRoaming(true);
-           // Create and config ironSourceAtomTracker
-           ironSourceAtomTracker tracker = ironSourceAtom.newTracker("YOUR_AUTH_KEY");
-           try {
-               JSONObject events = new JSONObject();
-               events.put("action", "click on ...");
-               events.put("user_id", user.id);
-               tracker.track(STREAM, event);
-           } catch (JSONException e) {
-               ...
-           }
-           ...
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main_v2);
+
+        // Create and config IronSourceAtomFactory instance
+        ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
+        ironSourceAtomFactory.enableErrorReporting();
+        ironSourceAtomFactory.setBulkSize(5);
+        ironSourceAtomFactory.setFlushInterval(3000);
+        ironSourceAtomFactory.setAllowedNetworkTypes(IronSourceAtomFactory.NETWORK_MOBILE | IronSourceAtomFactory.NETWORK_WIFI);
+        ironSourceAtomFactory.setAllowedOverRoaming(true);
     }
+
+    public void sendReport(View v) {
+        int id = v.getId();
+        String stream = "your.atom.stream";
+        
+        // Atom tracking url
+        String url = "http://track.atom-data.io";
+        String bulkURL = "http://track.atom-data.io/bulk";
+        String authKey = ""; // Pre-shared HMAC auth key
+
+        // Configure tracker
+        IronSourceAtomTracker tracker = ironSourceAtomFactory.newTracker(authKey);
+        tracker.setISAEndPoint(url);
+        tracker.setISABulkEndPoint(bulkURL);
+        
+        // Android Tracker Example
+        JSONObject params = new JSONObject();
+        try {
+            params.put("event_name", "ANDROID_TRACKER");
+            params.put("id", "" + (int) (100 * Math.random()));
+        } catch (JSONException e) {
+            Log.d(TAG, "Failed to track your json");
+        }
+        Log.d("[Tracking event]", params.toString());
+        tracker.track(stream, params);
+        
+        // Will send this event immediately
+        try {
+            params.put("event_name", "ANDROID_TRACKER_SEND_NOW");
+            params.put("id", "" + (int) (100 * Math.random()));
+        } catch (JSONException e) {
+            Log.d(TAG, "Failed to track your json");
+        }
+        Log.d("[TRACKER_SEND_NOW]", params.toString());
+        tracker.track(stream, params, true);
+        Log.d("[TRACKER_FLUSH]", "FLUSHING TRACKED EVENTS");
+        tracker.flush();
+    }
+}
 ```
 
 The Tracker process:
@@ -107,47 +142,66 @@ The tracker accumulates events and flushes them when it meets one of the followi
 In case of failure the tracker will preform an exponential backoff with jitter.
 The tracker stores events in a local SQLITE database.
 
-## Low level API Usage
+### Low level API Usage
 The Low level SDK method putEvent() or array of events with method putEvents() as shown below.
 This methods start new service and execute http post to the pipeline in it.
 
 Add the following lines to AndroidManifest.xml
 ```java
-        <service android:name="io.ironsourceatom.sdk.SimpleReportService" />
+<service android:name="io.ironsourceatom.sdk.SimpleReportService" />
 ```
 Add IronSourceAtom to your main activity. For example:
 
 ```java
-...
 import io.ironsourceatom.sdk.IronSourceAtomFactory;
 import io.ironsourceatom.sdk.IronSourceAtom;
 
 public class BaseMainActivity extends Activity {
     private IronSourceAtomFactory ironSourceAtomFactory;
-    // Your atom stream name, for example: "cluster.schema.table"
-    private final String STREAM="YOUR_IRONSOURCEATOM_STREAM_NAME";
-    
+    private static final String TAG = "SDK_EXAMPLE";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        .....
+        setContentView(R.layout.activity_main_v2);
 
-        // Create and config IronSourceAtom instance
+        // Create and config IronSourceAtomFactory instance
         ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
-        String url = "https://track.atom-data.io/";
-        IronSourceAtom atom = ironSourceAtomFactory.newAtom("YOUR_AUTH_KEY"");
-        atom.setEndPoint(url);
-         
-        JSONObject params = new JSONObject();
-         
-        try {
-                params.put("action", "Action 1");
-                params.put("id", "1");
-            } catch (JSONException e) {
-                Log.d("TAG", "Failed to put your json");
-            }
-        atom.putEvent(STREAM, params.toString());      
+        ironSourceAtomFactory.enableErrorReporting();
+        ironSourceAtomFactory.setAllowedNetworkTypes(IronSourceAtomFactory.NETWORK_MOBILE | IronSourceAtomFactory.NETWORK_WIFI);
+        ironSourceAtomFactory.setAllowedOverRoaming(true);
     }
+
+    public void sendReport(View v) {
+        String stream = "your.stream.name";
+
+        // Atom tracking url
+        String url = "http://track.atom-data.io";
+        String authKey = ""; // Pre-shared HMAC auth key
+
+        // Configure sender to use methods putEvent() or putEvents()
+        IronSourceAtom atom = ironSourceAtomFactory.newAtom(authKey); // SET AUTH KEY HERE
+        atom.setEndPoint(url);
+
+        JSONObject params = new JSONObject();
+        try {
+            params.put("event_name", "ANDROID_PUT_EVENT");
+            params.put("id", "" + (int) (100 * Math.random()));
+        } catch (JSONException e) {
+            Log.d(TAG, "Failed to track your json");
+        }
+        Log.d("[putEvent]", params.toString());
+        atom.putEvent(stream, params.toString());
+        
+        Gson gson = new Gson(); // Used for Array to json conversion.
+        List<ExampleData> bulkList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            bulkList.add(new ExampleData((int) (Math.random() * 100), "ANDROID_PUT_EVENTS"));
+        }
+        Log.d("[putEvents]", gson.toJson(bulkList));
+        atom.putEvents(stream, gson.toJson(bulkList));
+    }
+}
 ```
 
 ## Example
@@ -156,12 +210,11 @@ You can use our [example][example-url] for sending data to Atom:
 ![alt text][example]
 
 ## License
-[MIT][license-url]
+[MIT](LICENSE)
 
 [example-url]: https://github.com/ironSource/atom-android/tree/master/ironsourceatom-samples
 [example]: https://cloud.githubusercontent.com/assets/7361100/16713929/212a5496-46be-11e6-9ff7-0f5ed2c29844.png "example"
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
-[license-url]: https://github.com/ironSource/atom-android/blob/master/LICENSE
 [travis-image]: https://travis-ci.org/ironSource/atom-android.svg?branch=master
 [travis-url]: https://travis-ci.org/ironSource/atom-android
 [coveralls-image]: https://coveralls.io/repos/github/ironSource/atom-android/badge.svg?branch=master
