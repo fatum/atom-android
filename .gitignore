@@ -43,5 +43,5 @@ Thumbs.db
 .gradle
 build/
 tasks
-output/
 .coveralls.yml
+projectFilesBackup/
