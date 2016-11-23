@@ -4,7 +4,7 @@ import android.content.Context;
 import android.webkit.URLUtil;
 
 /**
- * ironSource Atom low level API class, supports putEvent() and putEvents();
+ * ironSource Atom low level API class. supports putEvent() and putEvents()
  */
 public class IronSourceAtom {
 
@@ -13,16 +13,13 @@ public class IronSourceAtom {
     private String endpoint;
 
     /**
-     * This class is the entry point into this client API for work with simple putEvent() and putEvents() methods.
-     * </p>
-     * You should use <code>IronSourceAtomFactory.newAtom(Auth String)</code> to create
-     * an instance of this class.
-     * </p>
+     * This class is the entry point into the client API for working with simple putEvent() and putEvents() methods
+     * To instantiate:
+     * <code>IronSourceAtomFactory.newAtom(Auth String)</code>
      *
      * @param context current context object
      * @param auth    pre shared auth key for Atom cluster
      */
-
     protected IronSourceAtom(Context context, String auth) {
         this.context = context;
         this.token = auth;
@@ -33,7 +30,7 @@ public class IronSourceAtom {
      * Sends a single event to IronSourceAtom stream
      *
      * @param streamName the name on IronSourceAtom stream
-     * @param data       JSON string of your event data
+     * @param data       JSON string (stringified JSON) of your event data
      */
     public void putEvent(String streamName, String data) {
         openReport(context)
@@ -49,7 +46,7 @@ public class IronSourceAtom {
      * Sends a bulk (Array) of events to IronSourceAtom stream
      *
      * @param streamName the name on IronSourceAtom stream
-     * @param data       JSON string of your event data
+     * @param data       JSON string (stringified JSON array) of your event data
      */
     public void putEvents(String streamName, String data) {
         openReport(context)

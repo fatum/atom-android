@@ -205,14 +205,13 @@ public class BaseMainActivity extends Activity {
 ```
 
 ## Example
-You can use our [example][example-url] for sending data to Atom:
+You can use our [example(sample)](ironsourceatom-samples) for sending data to Atom:
 
 ![alt text][example]
 
 ## License
 [MIT](LICENSE)
 
-[example-url]: https://github.com/ironSource/atom-android/tree/master/ironsourceatom-samples
 [example]: https://cloud.githubusercontent.com/assets/7361100/16713929/212a5496-46be-11e6-9ff7-0f5ed2c29844.png "example"
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
 [travis-image]: https://travis-ci.org/ironSource/atom-android.svg?branch=master

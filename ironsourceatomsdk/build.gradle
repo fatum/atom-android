@@ -37,7 +37,7 @@ android {
      * download the build tools using the SDK Manager.
      */
     compileSdkVersion 22
-    buildToolsVersion "23.0.3"
+    buildToolsVersion "25.0.0"
 
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
@@ -194,9 +194,6 @@ task makeDebugJar(type: Copy) {
 }
 
 
-assembleRelease.dependsOn(clearJar, makeReleaseJar)
-assembleDebug.dependsOn(clearJar, makeDebugJar)
-
 /* Coverage and tests section */
 
 // Define coverage source.
@@ -228,7 +225,6 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
                     'Logger.class',
                     'ReportIntent.class',
                     'RemoteService.class',
-                    'ExternalVars.class',
                     'Utils.class',
                     'Db*.class',
                     'IronSourceAtomFactory.class',

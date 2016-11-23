@@ -65,13 +65,15 @@ public class NetworkManager {
     }
 
     /**
-     * Get IronSourceAtomFactory network type based on the returned conectivity
+     * Get IronSourceAtomFactory network type based on the returned connectivity
      * network type.
      *
      * @return
      */
     public int getNetworkIBType() {
         NetworkInfo info = getNetworkInfo();
+        // info.getType returns one of TYPE_MOBILE, TYPE_WIFI
+        // or other types defined by ConnectivityManager
         int networkType = info != null ? info.getType() : 0;
         switch (networkType) {
             case ConnectivityManager.TYPE_MOBILE:

@@ -35,8 +35,7 @@ public class ReportService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         try {
-            if (handler.handleReport(intent) == ReportHandler.HandleStatus.RETRY &&
-                    backOff.hasNext()) {
+            if (handler.handleReport(intent) == ReportHandler.HandleStatus.RETRY && backOff.hasNext()) {
                 setAlarm(backOff.next());
             } else {
                 backOff.reset();

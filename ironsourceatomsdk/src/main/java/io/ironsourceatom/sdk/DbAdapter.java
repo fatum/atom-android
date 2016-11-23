@@ -12,9 +12,10 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
+/**
+ * Db Adapter class for local SQLite DB
+ */
 class DbAdapter implements StorageService {
-
-
     /**
      * Do not call directly. You should use DbAdapter.getInstance()
      */
@@ -37,11 +38,11 @@ class DbAdapter implements StorageService {
 
     /**
      * Insert event to "reports" table.
-     * if it's the first member that related to the given Table, we create
+     * if it's the first member that is related to the given table, we create
      * a new destination/table(contains name and token) in the "tables" table.
      *
-     * @param table
-     * @param data
+     * @param table db table
+     * @param data  data to insert
      * @return number of rows in "records" related to the given table.
      */
     public int addEvent(Table table, String data) {
@@ -78,11 +79,11 @@ class DbAdapter implements StorageService {
     }
 
     /**
-     * Get the number of records that sit in the "reports" table and related to
+     * Get number of records that sit in the "reports" table and relate to
      * to the given table.
      *
-     * @param table
-     * @return
+     * @param table db table
+     * @return number of records that sit in the "reports" table and related to the given table
      */
     public int count(Table table) {
         int n = 0;
@@ -111,9 +112,9 @@ class DbAdapter implements StorageService {
     /**
      * Get table object and int as a limit, and return a "batch" of events.
      *
-     * @param table
-     * @param limit
-     * @return Batch object contains List of events and "lastId" as a String(that
+     * @param table db table
+     * @param limit number of events to get
+     * @return Batch object contains List of events and "lastId" as a String (that
      * will be used later to clean up this batch).
      */
     public Batch getEvents(Table table, int limit) {
@@ -148,7 +149,7 @@ class DbAdapter implements StorageService {
     }
 
     /**
-     * Get list of all "destinations/tables" that sit in "tables" table.
+     * Get list of all "destinations/tables/streams" that sit in "tables" table.
      *
      * @return List of tables contains "name" and "token"
      */
@@ -174,10 +175,10 @@ class DbAdapter implements StorageService {
 
     /**
      * Remove events from records table that related to the given "table/destination"
-     * and with an id that less than or equal to the "lastId"
+     * and with an id that is less than or equal to the "lastId"
      *
-     * @param table
-     * @param lastId
+     * @param table  db table
+     * @param lastId remove all events that are less than or equal to this id
      * @return the number of rows affected
      */
     public int deleteEvents(Table table, String lastId) {
@@ -199,7 +200,7 @@ class DbAdapter implements StorageService {
     /**
      * Getting table object and delete it from the "destinations/tables" table.
      *
-     * @param table
+     * @param table db table
      */
     public void deleteTable(Table table) {
         try {

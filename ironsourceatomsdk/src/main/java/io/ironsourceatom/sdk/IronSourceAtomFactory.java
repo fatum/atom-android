@@ -168,7 +168,7 @@ public class IronSourceAtomFactory {
     /**
      * Track all SDK-errors/crashes when error-tracker enabled.
      *
-     * @param str
+     * @param str string that contains an sdk error
      */
     protected void trackError(String str) {
         String token = IsaConfig.ATOM_TRACKER_TOKEN;

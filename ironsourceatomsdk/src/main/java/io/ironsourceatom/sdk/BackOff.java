@@ -6,13 +6,14 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Persistence exponential backoff service.
+ * Persistent exponential backoff service.
  */
 class BackOff {
 
     private int retry;
     private IsaConfig config;
     private IsaPrefService prefService;
+    private Random random;
     private final String KEY_LAST_TICK = "retry_last_tick";
     private final String KEY_RETRY_COUNT = "retry_count";
     protected final int MAX_RETRY_COUNT = 8;
@@ -25,6 +26,7 @@ class BackOff {
         config = getConfig(context);
         prefService = getPrefService(context);
         retry = prefService.load(KEY_RETRY_COUNT, INITIAL_RETRY_VALUE);
+        random = new Random();
     }
 
     public static BackOff getInstance(Context context) {
@@ -37,18 +39,19 @@ class BackOff {
     }
 
     /**
-     * Calculates and Returns the next milliseconds and advances the counter.
+     * Calculates and returns the next retry time in milliseconds and advances the counter.
      * nextTick - the next clock tick that the function returns
-     * scheduledNextTick - The last known nextTick (used to store the state)
+     * lastTick - The last known tick (used to store the state)
      *
-     * @return nextTick - next clock tick.
+     * @return nextTick - next clock tick for backoff service
      */
     synchronized long next() {
         long nextTick, currentTime = currentTimeMillis();
-        long scheduledNextTick = prefService.load(KEY_LAST_TICK, currentTime);
+        long lastTick = prefService.load(KEY_LAST_TICK, currentTime);
         long temp = getMills(retry);
         nextTick = currentTime + temp; // set the nextTick
-        if (currentTime > scheduledNextTick) {
+        // If there are no retries this should be false
+        if (currentTime > lastTick) {
             prefService.save(KEY_RETRY_COUNT, ++retry);
         }
         prefService.save(KEY_LAST_TICK, nextTick);
@@ -56,12 +59,13 @@ class BackOff {
     }
 
     /**
-     * Get milliseconds number based on the given n.
+     * Get milliseconds number based on the given n (retry number)
      *
-     * @param n
-     * @return
+     * @param n retry number
+     * @return new retry time in milliseconds
      */
     private long getMills(int n) {
+        Logger.log("BackOff", "Retry count: " + n, Logger.SDK_DEBUG);
         if (n <= INITIAL_RETRY_VALUE) {
             return config.getFlushInterval();
         }
@@ -76,6 +80,7 @@ class BackOff {
         retry = INITIAL_RETRY_VALUE;
         prefService.save(KEY_RETRY_COUNT, retry);
         prefService.delete(KEY_LAST_TICK);
+        random = new Random();
     }
 
     public boolean hasNext() {

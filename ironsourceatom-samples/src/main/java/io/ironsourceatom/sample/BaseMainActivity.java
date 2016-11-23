@@ -30,23 +30,23 @@ public class BaseMainActivity extends Activity {
         // Create and config IronSourceAtomFactory instance
         ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
         ironSourceAtomFactory.enableErrorReporting();
-        ironSourceAtomFactory.setBulkSize(5);
-        ironSourceAtomFactory.setFlushInterval(3000);
+        ironSourceAtomFactory.setBulkSize(123);
+        ironSourceAtomFactory.setFlushInterval(5000);
         ironSourceAtomFactory.setAllowedNetworkTypes(IronSourceAtomFactory.NETWORK_MOBILE | IronSourceAtomFactory.NETWORK_WIFI);
         ironSourceAtomFactory.setAllowedOverRoaming(true);
     }
 
     public void sendReport(View v) {
         int id = v.getId();
-        String stream = "zeev";
+        String stream = "YOU.STREAM.NAME";
+        String authKey = "YOUR.STREAM.HMAC.AUTH.KEY"; // Pre-shared HMAC auth key
         // Default ip for the Android studio VM.
-        // String bulkURL = "http://10.0.2.2:3000/bulk";
-        // String url = "http://10.0.2.2:3000";
+         String bulkURL = "http://10.0.2.2:3000/bulk";
+         String url = "http://10.0.2.2:3000";
 
         // atom tracking url
-        String url = "http://track.atom-data.io";
-        String bulkURL = "http://track.atom-data.io/bulk";
-        String authKey = ""; // Pre-shared HMAC auth key
+//        String url = "http://track.atom-data.io";
+//        String bulkURL = "http://track.atom-data.io/bulk";
 
         // Configure sender to use methods putEvent() or putEvents()
         IronSourceAtom atom = ironSourceAtomFactory.newAtom(authKey); // SET AUTH KEY HERE

@@ -28,7 +28,7 @@ public class SimpleReportHandler {
     }
 
     /**
-     * handleReport responsible to handle the given SimpleReportIntent
+     * handleReport responsible for handling the given SimpleReportIntent
      *
      * @param intent
      */
