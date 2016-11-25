@@ -193,10 +193,6 @@ task makeDebugJar(type: Copy) {
     rename('classes.jar', "${archivesBaseName}-${version}_debug.jar")
 }
 
-
-assembleRelease.dependsOn(clearJar, makeReleaseJar)
-assembleDebug.dependsOn(clearJar, makeDebugJar)
-
 /* Coverage and tests section */
 
 // Define coverage source.
