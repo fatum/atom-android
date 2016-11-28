@@ -8,13 +8,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.fail;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class IronSourceAtomTest {
@@ -51,7 +46,7 @@ public class IronSourceAtomTest {
         Report report=myAtom.openReport(context);
         report.setData("data");
         report.setBulk(true);
-        report.setEnpoint("data");
+        report.setEndPoint("data");
         report.setTable("data");
         report.setToken("data");
 

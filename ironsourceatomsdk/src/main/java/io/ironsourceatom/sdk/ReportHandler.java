@@ -53,7 +53,7 @@ class ReportHandler {
         boolean isOnline = networkManager.isOnline() && canUseNetwork();
         try {
             if (null == intent.getExtras()) return status;
-            int event = intent.getIntExtra(ReportIntent.EXTRA_SDK_EVENT, SdkEvent.ERROR);
+            int sdkEvent = intent.getIntExtra(ReportIntent.EXTRA_SDK_EVENT, SdkEvent.ERROR);
             Bundle bundle = intent.getExtras();
             JSONObject dataObject = new JSONObject();
             try {
@@ -63,10 +63,10 @@ class ReportHandler {
                     dataObject.put(key, value);
                 }
             } catch (Exception e) {
-                Logger.log(TAG, "Failed extracting the data from Intent", Logger.SDK_ERROR);
+                Logger.log(TAG, "Failed extracting the data from Intent", Logger.SDK_DEBUG);
             }
             List<Table> tablesToFlush = new ArrayList<>();
-            switch (event) {
+            switch (sdkEvent) {
                 case SdkEvent.FLUSH_QUEUE:
                     if (isOnline) {
                         tablesToFlush = storage.getTables();

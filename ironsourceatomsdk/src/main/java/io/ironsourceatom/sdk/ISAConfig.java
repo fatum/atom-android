@@ -20,6 +20,8 @@ class IsaConfig {
     protected static final int DEFAULT_MAX_REQUEST_LIMIT = KILOBYTE * KILOBYTE;
     protected static final int DEFAUL_MAX_DATABASE_LIMIT = KILOBYTE * KILOBYTE * 10;
     protected static final int DEFAULT_ALLOWED_NETWORK_TYPES = ~0;
+    protected static final String DEFAULT_SDK_ERROR_STREAM = "ironbeast_sdk"; // Error tracking stream
+    protected static final String DEFAULT_SDK_ERROR_STREAM_AUTH_KEY = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt"; // Error tracking
     // SharedPreferences keys for metadata
     protected static final String KEY_BULK_SIZE = "bulk_size";
     protected static final String KEY_IB_END_POINT = "ib_end_point";
@@ -30,13 +32,12 @@ class IsaConfig {
     protected static final String KEY_ENABLE_ERROR_REPORTING = "sdk_tracker_enabled";
     protected static final String KEY_ALLOWED_OVER_ROAMING = "allow_roaming_flush";
     protected static final String KEY_ALLOWED_NETWORK_TYPES = "allowed_network_types";
-    // IronSourceAtomFactory sTracker configuration
-    protected static String ATOM_TRACKER_TABLE = "ironbeast_sdk";
-    protected static String ATOM_TRACKER_TOKEN = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt";
+    protected static final String KEY_ERROR_STREAM = "error_stream";
+    protected static final String KEY_ERROR_STREAM_AUTH = "error_stream_auth";
     private static IsaConfig sInstance;
 
     IsaPrefService isaPrefService;
-    private boolean isEnableErrorReporting;
+    private boolean isEnableErrorReporting = false;
     private boolean isAllowedOverRoaming;
     private int allowedNetworkTypes;
     private int bulkSize;
@@ -45,6 +46,8 @@ class IsaConfig {
     private HashMap<String, String> isaEndPointBulk;
     private long maximumRequestLimit;
     private long maximumDatabaseLimit;
+    private String sdkErrorStream;
+    private String sdkErrorStreamAuthKey;
 
     public enum LOG_TYPE {
         PRODUCTION, DEBUG
@@ -79,6 +82,8 @@ class IsaConfig {
         maximumRequestLimit = isaPrefService.load(KEY_MAX_REQUEST_LIMIT, DEFAULT_MAX_REQUEST_LIMIT);
         maximumDatabaseLimit = isaPrefService.load(KEY_MAX_DATABASE_LIMIT, DEFAUL_MAX_DATABASE_LIMIT);
         bulkSize = isaPrefService.load(KEY_BULK_SIZE, DEFAULT_BULK_SIZE);
+        sdkErrorStream = isaPrefService.load(KEY_ERROR_STREAM, DEFAULT_SDK_ERROR_STREAM);
+        sdkErrorStreamAuthKey = isaPrefService.load(KEY_ERROR_STREAM_AUTH, DEFAULT_SDK_ERROR_STREAM_AUTH_KEY);
     }
 
     /**
@@ -123,8 +128,10 @@ class IsaConfig {
         String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT_BULK, token));
         if (URLUtil.isValidUrl(url)) {
             isaEndPointBulk.put(token, url);
+            Logger.log(TAG, "SENDING TO URL: " + url, Logger.SDK_DEBUG);
             return url;
         }
+        Logger.log(TAG, "SENDING TO DEFAULT URL: " + DEFAULT_BULK_URL, Logger.SDK_DEBUG);
         return DEFAULT_BULK_URL;
     }
 
@@ -246,6 +253,24 @@ class IsaConfig {
 
     protected int getAllowedNetworkTypes() {
         return allowedNetworkTypes;
+    }
+
+    public String getSdkErrorStream() {
+        return sdkErrorStream;
+    }
+
+    public void setSdkErrorStream(String sdkErrorStream) {
+        this.sdkErrorStream = sdkErrorStream;
+        isaPrefService.save(KEY_ERROR_STREAM, sdkErrorStream);
+    }
+
+    public String getSdkErrorStreamAuthKey() {
+        return sdkErrorStreamAuthKey;
+    }
+
+    public void setSdkErrorStreamAuthKey(String sdkErrorStreamAuthKey) {
+        this.sdkErrorStreamAuthKey = sdkErrorStreamAuthKey;
+        isaPrefService.save(KEY_ERROR_STREAM_AUTH, sdkErrorStreamAuthKey);
     }
 
     @Override

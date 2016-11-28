@@ -107,6 +107,7 @@ public class IronSourceAtomFactory {
      * Enable the SDK error-tracker.
      */
     public void enableErrorReporting() {
+        Logger.log(TAG, "Error reporting enabled", Logger.SDK_DEBUG);
         config.enableErrorReporting();
     }
 
@@ -166,28 +167,53 @@ public class IronSourceAtomFactory {
     }
 
     /**
+     * Setter for error stream
+     *
+     * @param errorStream
+     */
+    public void setErrorStream(String errorStream) {
+        config.setSdkErrorStream(errorStream);
+    }
+
+    /**
+     * Setter for error stream auth
+     *
+     * @param errorStreamAuth
+     */
+    public void setErrorStreamAuth(String errorStreamAuth) {
+        config.setSdkErrorStreamAuthKey(errorStreamAuth);
+    }
+
+    /**
      * Track all SDK-errors/crashes when error-tracker enabled.
      *
-     * @param str
+     * @param errorString error info string
      */
-    protected void trackError(String str) {
-        String token = IsaConfig.ATOM_TRACKER_TOKEN;
-        if (!sAvailableTrackers.containsKey(token) && config.isErrorReportingEnabled()) {
-            sAvailableTrackers.put(token, new IronSourceAtomTracker(context, token));
-        }
-        IronSourceAtomTracker sdkTracker = sAvailableTrackers.get(IsaConfig.ATOM_TRACKER_TOKEN);
-        try {
-            JSONObject report = new JSONObject();
-            report.put("details", str);
-            report.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
-                    .format(Calendar.getInstance().getTime()));
-            report.put("sdk_version", Consts.VER);
-            report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
-            report.put("platform", "Android");
-            report.put("os", String.valueOf(Build.VERSION.SDK_INT));
-            sdkTracker.track(IsaConfig.ATOM_TRACKER_TABLE, report, false);
-        } catch (Exception e) {
-            Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
+    protected void trackError(String errorString) {
+        if (config.isErrorReportingEnabled()) {
+            String stream = config.getSdkErrorStream();
+            String authKey = config.getSdkErrorStreamAuthKey();
+            Logger.log(TAG, "TRACKING ERROR TO: " + stream + " / " + authKey, Logger.SDK_DEBUG);
+            if (!sAvailableTrackers.containsKey(authKey)) {
+                Logger.log(TAG, "CREATING NEW TRACKER FOR ERROR TRACKING", Logger.SDK_DEBUG);
+                IronSourceAtomTracker tempTracker = this.newTracker(authKey);
+                sAvailableTrackers.put(authKey, tempTracker);
+            }
+            IronSourceAtomTracker sdkTracker = sAvailableTrackers.get(authKey);
+            try {
+                JSONObject report = new JSONObject();
+                report.put("details", errorString);
+                report.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+                        .format(Calendar.getInstance().getTime()));
+                report.put("sdk_version", Consts.VER);
+                report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
+                report.put("platform", "Android");
+                report.put("os", String.valueOf(Build.VERSION.SDK_INT));
+                // TODO: 28/11/2016 change to simple http request, this can cause loops!
+                sdkTracker.track(stream, report, false);
+            } catch (Exception e) {
+                Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
+            }
         }
     }
 

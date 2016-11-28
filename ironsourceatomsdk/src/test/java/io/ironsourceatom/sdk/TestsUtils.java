@@ -37,7 +37,7 @@ public class TestsUtils {
         }
 
         @Override
-        public Report setEnpoint(String endpoint) {
+        public Report setEndPoint(String endpoint) {
             return null;
         }
 

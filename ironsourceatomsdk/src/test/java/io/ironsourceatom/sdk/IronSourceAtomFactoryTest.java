@@ -154,8 +154,8 @@ public class IronSourceAtomFactoryTest {
     TestsUtils.MockReport mSpyReport = spy(new TestsUtils.MockReport());
     final IronSourceAtomTracker mTracker =  new IronSourceAtomTracker(mock(MockContext.class), mToken) {
         @Override
-        public Report openReport(Context context, int event) {
-            mSpyReport.mType = event;
+        public Report openReport(Context context, int event_code) {
+            mSpyReport.mType = event_code;
             return mSpyReport;
         }
     };

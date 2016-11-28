@@ -61,6 +61,14 @@ and add dependency for Atom SDK
 1. High level Tracker - contains a local db and tracks events based on certain parameters.
 2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.
 
+### Error tracking:
+the sdk supports an option to track internal errors to a separate stream in order to be able  
+to debug errors at the client side.
+To enable and setup the debug:
+```java
+
+```
+
 ### Tracker usage
 Add the following lines to AndroidManifest.xml
 ```java

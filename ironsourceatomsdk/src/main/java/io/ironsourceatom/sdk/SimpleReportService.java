@@ -30,7 +30,7 @@ public class SimpleReportService extends IntentService {
         try {
             handler.handleReport(intent);
         } catch (Throwable th) {
-            Logger.log(TAG, "failed to handle intent: " + th, Logger.SDK_ERROR);
+            Logger.log(TAG, "failed to handle intent: " + th, Logger.SDK_DEBUG);
         }
 
     }

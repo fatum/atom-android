@@ -37,7 +37,7 @@ class SimpleReportIntent implements Report {
     }
 
     @Override
-    public SimpleReportIntent setEnpoint(String endpoint) {
+    public SimpleReportIntent setEndPoint(String endpoint) {
         intent.putExtra(ENDPOINT, endpoint);
         return this;
     }

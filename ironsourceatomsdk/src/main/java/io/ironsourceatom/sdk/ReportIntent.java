@@ -39,7 +39,7 @@ class ReportIntent implements Report {
     }
 
     @Override
-    public Report setEnpoint(String endpoint) {
+    public Report setEndPoint(String endpoint) {
         intent.putExtra(ENDPOINT, endpoint);
         return this;
     }

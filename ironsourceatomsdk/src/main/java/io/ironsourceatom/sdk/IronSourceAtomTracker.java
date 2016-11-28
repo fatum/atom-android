@@ -112,8 +112,8 @@ public class IronSourceAtomTracker {
                 .send();
     }
 
-    protected Report openReport(Context context, int event) {
-        return new ReportIntent(context, event);
+    protected Report openReport(Context context, int event_code) {
+        return new ReportIntent(context, event_code);
     }
 
     /**

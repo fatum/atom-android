@@ -37,7 +37,7 @@ public class IronSourceAtom {
      */
     public void putEvent(String streamName, String data) {
         openReport(context)
-                .setEnpoint(endpoint)
+                .setEndPoint(endpoint)
                 .setTable(streamName)
                 .setToken(token)
                 .setData(data)
@@ -53,7 +53,7 @@ public class IronSourceAtom {
      */
     public void putEvents(String streamName, String data) {
         openReport(context)
-                .setEnpoint(endpoint)
+                .setEndPoint(endpoint)
                 .setTable(streamName)
                 .setToken(token)
                 .setData(data)

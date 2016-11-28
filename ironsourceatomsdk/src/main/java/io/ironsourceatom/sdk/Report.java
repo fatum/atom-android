@@ -9,7 +9,7 @@ interface Report {
 
     Report setToken(String token);
 
-    Report setEnpoint(String endpoint);
+    Report setEndPoint(String endpoint);
 
     Report setBulk(boolean b);
 
