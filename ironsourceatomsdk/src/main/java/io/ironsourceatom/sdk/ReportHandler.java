@@ -74,10 +74,12 @@ class ReportHandler {
                     }
                     return HandleStatus.RETRY;
                 case SdkEvent.POST_SYNC:
+                case SdkEvent.REPORT_ERROR:
                     if (isOnline) {
                         String message = createMessage(dataObject, false);
                         String url = config.getISAEndPoint(dataObject.getString(ReportIntent.TOKEN));
-                        if (SendStatus.RETRY != send(message, url)) break;
+                        if (send(message, url) != SendStatus.RETRY || sdkEvent == SdkEvent.REPORT_ERROR)
+                            break;
                     }
                 case SdkEvent.ENQUEUE:
                     Table table = new Table(dataObject.getString(ReportIntent.TABLE),
@@ -159,7 +161,7 @@ class ReportHandler {
             }
             message = clone.toString();
         } catch (Exception e) {
-            Logger.log(TAG, "Failed create message" + e, Logger.SDK_DEBUG);
+            Logger.log(TAG, "Failed to create message" + e, Logger.SDK_DEBUG);
         }
         return message;
     }

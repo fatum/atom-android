@@ -100,7 +100,7 @@ class DbAdapter implements StorageService {
 
             n = (int) stmt.simpleQueryForLong();
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to count records in table: " + table.name, Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to count records in table: " + table.name, Logger.SDK_DEBUG);
             mDb.delete();
         } finally {
             if (null != db) db.close();

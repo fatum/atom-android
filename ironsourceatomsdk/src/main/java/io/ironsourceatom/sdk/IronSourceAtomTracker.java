@@ -112,6 +112,17 @@ public class IronSourceAtomTracker {
                 .send();
     }
 
+    /**
+     * Flush error info to error stream
+     */
+    public void trackError(String streamName, JSONObject data) {
+        openReport(context, SdkEvent.REPORT_ERROR)
+                .setTable(streamName)
+                .setToken(auth)
+                .setData(data.toString())
+                .send();
+    }
+
     protected Report openReport(Context context, int event_code) {
         return new ReportIntent(context, event_code);
     }
@@ -127,6 +138,7 @@ public class IronSourceAtomTracker {
 
     /**
      * Set custom bulk endpoint to send reports
+     *
      * @param url
      */
     public void setISABulkEndPoint(String url) {

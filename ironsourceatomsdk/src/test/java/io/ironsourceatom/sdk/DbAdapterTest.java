@@ -36,7 +36,7 @@ public class DbAdapterTest {
     };
     final DatabaseHandler handler = mock(DatabaseHandler.class);
     final Context context = mock(MockContext.class);
-    final DbAdapter adapter = new DbAdapter(context) {
+    final DbAdapter dbAdapter = new DbAdapter(context) {
         @Override
         protected DatabaseHandler getSQLHandler(Context context) {
             return handler;
@@ -62,7 +62,7 @@ public class DbAdapterTest {
         when(db.compileStatement(anyString())).thenReturn(stmt);
         when(stmt.simpleQueryForLong()).thenReturn(10L);
         when(handler.getReadableDatabase()).thenReturn(db);
-        assertEquals(adapter.count(table), 10);
+        assertEquals(dbAdapter.count(table), 10);
         verify(db, times(1)).close();
     }
 
@@ -73,7 +73,7 @@ public class DbAdapterTest {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(db.compileStatement(anyString())).thenThrow(new SQLiteException());
         when(handler.getReadableDatabase()).thenReturn(db);
-        assertEquals(adapter.count(table), 0);
+        assertEquals(dbAdapter.count(table), 0);
         verify(db, times(1)).close();
         verify(handler, times(1)).delete();
     }
@@ -89,7 +89,7 @@ public class DbAdapterTest {
         // 3 iterations
         when(cursor.moveToNext()).thenReturn(true, true, true, false);
         when(cursor.getString(anyInt())).thenReturn("table1", "token1", "table2", "token2", "table3", "token3");
-        List<Table> tables = adapter.getTables();
+        List<Table> tables = dbAdapter.getTables();
         assertEquals(tables.size(), 3);
         int i = 1;
         for (Table table : tables) {
@@ -104,7 +104,7 @@ public class DbAdapterTest {
     public void deleteTable() {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(handler.getWritableDatabase()).thenReturn(db);
-        adapter.deleteTable(table);
+        dbAdapter.deleteTable(table);
         verify(db, times(1)).delete(eq(DbAdapter.TABLES_TABLE), anyString(), any(String[].class));
     }
 
@@ -121,7 +121,7 @@ public class DbAdapterTest {
         when(cursor.isLast()).thenReturn(false, true);
         // DATA, ID, DATA
         when(cursor.getString(anyInt())).thenReturn("foo", "2", "bar");
-        Batch batch = adapter.getEvents(table, 1);
+        Batch batch = dbAdapter.getEvents(table, 1);
         assertEquals(batch.events.toString(), "[foo, bar]");
         assertEquals(batch.lastId, "2");
     }
@@ -130,7 +130,7 @@ public class DbAdapterTest {
     public void deleteEvents() {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(handler.getWritableDatabase()).thenReturn(db);
-        adapter.deleteEvents(table, "100");
+        dbAdapter.deleteEvents(table, "100");
         verify(db, times(1)).delete(eq(DbAdapter.REPORTS_TABLE), anyString(), any(String[].class));
     }
 
@@ -143,7 +143,7 @@ public class DbAdapterTest {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(handler.getWritableDatabase()).thenReturn(db);
         when(db.compileStatement(anyString())).thenReturn(stmt);
-        assertEquals(adapter.addEvent(table, "foo bar"), 29);
+        assertEquals(dbAdapter.addEvent(table, "foo bar"), 29);
         verify(db, times(1)).insert(eq(DbAdapter.REPORTS_TABLE), isNull(String.class),
                 any(ContentValues.class));
     }
@@ -156,7 +156,7 @@ public class DbAdapterTest {
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(handler.getWritableDatabase()).thenReturn(db);
         when(db.compileStatement(anyString())).thenReturn(stmt);
-        adapter.addEvent(table, "foo bar");
+        dbAdapter.addEvent(table, "foo bar");
         verify(db, times(1)).insert(eq(DbAdapter.REPORTS_TABLE), isNull(String.class),
                 any(ContentValues.class));
         verify(db, times(1)).insertWithOnConflict(eq(DbAdapter.TABLES_TABLE),

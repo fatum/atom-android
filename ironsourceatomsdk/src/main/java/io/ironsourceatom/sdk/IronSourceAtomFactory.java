@@ -194,12 +194,7 @@ public class IronSourceAtomFactory {
             String stream = config.getSdkErrorStream();
             String authKey = config.getSdkErrorStreamAuthKey();
             Logger.log(TAG, "TRACKING ERROR TO: " + stream + " / " + authKey, Logger.SDK_DEBUG);
-            if (!sAvailableTrackers.containsKey(authKey)) {
-                Logger.log(TAG, "CREATING NEW TRACKER FOR ERROR TRACKING", Logger.SDK_DEBUG);
-                IronSourceAtomTracker tempTracker = this.newTracker(authKey);
-                sAvailableTrackers.put(authKey, tempTracker);
-            }
-            IronSourceAtomTracker sdkTracker = sAvailableTrackers.get(authKey);
+            IronSourceAtomTracker sdkTracker = this.newTracker(authKey);
             try {
                 JSONObject report = new JSONObject();
                 report.put("details", errorString);
@@ -209,8 +204,7 @@ public class IronSourceAtomFactory {
                 report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
                 report.put("platform", "Android");
                 report.put("os", String.valueOf(Build.VERSION.SDK_INT));
-                // TODO: 28/11/2016 change to simple http request, this can cause loops!
-                sdkTracker.track(stream, report, false);
+                sdkTracker.trackError(stream, report);
             } catch (Exception e) {
                 Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
             }
