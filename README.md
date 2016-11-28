@@ -59,14 +59,32 @@ and add dependency for Atom SDK
 
 ### The SDK is divided into 2 separate services:
 1. High level Tracker - contains a local db and tracks events based on certain parameters.
-2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.
+2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.  
+**NOTE:** The low level service will be removed on the upcoming version (1.5.0).  
+Check the example to see how to use the Tracker in order to immediately flush, if that is your use case.
 
 ### Error tracking:
-the sdk supports an option to track internal errors to a separate stream in order to be able  
+The sdk supports an option to track internal errors to a separate stream in order to be able  
 to debug errors at the client side.
-To enable and setup the debug:
-```java
 
+Create the following table at your Redshift DB:
+```sql
+CREATE TABLE schema.table (
+  details CHARACTER VARYING(1200),
+  timestamp TIMESTAMP WITHOUT TIME ZONE,
+  sdk_version CHARACTER VARYING(10),
+  connection CHARACTER VARYING(20),
+  platform CHARACTER VARYING(20),
+  currencycode CHARACTER VARYING(10),
+  os CHARACTER VARYING(40)
+);
+```
+
+Setup and enable debug:
+```java
+ironSourceAtomFactory.setErrorStream("YOUR.ATOM.ERROR.STREAM");
+ironSourceAtomFactory.setErrorStreamAuth("YOU.AUTH.KEY");
+ironSourceAtomFactory.enableErrorReporting();
 ```
 
 ### Tracker usage
