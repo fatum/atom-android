@@ -24,29 +24,41 @@ public class BackOffTest {
     final IsaPrefService sharedPref = mock(IsaPrefService.class);
     BackOff backOff = new BackOff(context) {
         @Override
-        protected IsaPrefService getPrefService(Context context) { return sharedPref; }
+        protected IsaPrefService getPrefService(Context context) {
+            return sharedPref;
+        }
+
         @Override
-        protected IsaConfig getConfig(Context context) { return config; }
+        protected IsaConfig getConfig(Context context) {
+            return config;
+        }
+
         @Override
-        protected long currentTimeMillis() { return currentMills; }
+        protected long currentTimeMillis() {
+            return currentMills;
+        }
     };
 
-    @Before public void clearMocks() {
+    @Before
+    public void clearMocks() {
         reset(sharedPref, config);
     }
 
-    @Test public void testHasNext() {
+    @Test
+    public void testHasNext() {
         assertEquals(backOff.hasNext(), true);
     }
 
-    @Test public void testFirstValue() {
+    @Test
+    public void testFirstValue() {
         backOff.reset();
         int n = 99;
         when(config.getFlushInterval()).thenReturn(n);
         assertEquals(backOff.next(), n);
     }
 
-    @Test public void testNext() {
+    @Test
+    public void testNext() {
         backOff.reset();
         when(config.getFlushInterval()).thenReturn(10000);
         when(sharedPref.load(anyString(), anyLong())).thenReturn(0L);
@@ -64,7 +76,8 @@ public class BackOffTest {
         when(sharedPref.load(anyString(), anyLong())).thenReturn(t3);
     }
 
-    @Test public void testReset() {
+    @Test
+    public void testReset() {
         backOff.reset();
         verify(sharedPref, times(1)).save(anyString(), eq(backOff.INITIAL_RETRY_VALUE));
         verify(sharedPref, times(1)).delete(anyString());
@@ -73,8 +86,8 @@ public class BackOffTest {
     @Test
     public void getInstanceTest() {
         BackOff backOff1 = BackOff.getInstance(context);
-        BackOff backOff2= BackOff.getInstance(context);
-        assertTrue(backOff1==backOff2);
+        BackOff backOff2 = BackOff.getInstance(context);
+        assertTrue(backOff1 == backOff2);
 
     }
 

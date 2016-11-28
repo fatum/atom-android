@@ -1,13 +1,17 @@
 package io.ironsourceatom.sdk;
 
 import static io.ironsourceatom.sdk.TestsUtils.newReport;
+
 import android.content.Context;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import static junit.framework.Assert.*;
+
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
@@ -22,11 +26,13 @@ import java.util.Map;
 @Config(constants = BuildConfig.class, emulateSdk = 18, manifest = Config.NONE)
 public class ReportHandlerIntegrationTest {
 
-    @Before public void reset() {
+    @Before
+    public void reset() {
         mClient.mBackedMock.clear();
     }
 
-    @Test public void testPostSuccess() throws Exception {
+    @Test
+    public void testPostSuccess() throws Exception {
         mHandler.handleReport(newReport(SdkEvent.POST_SYNC, event1));
         mHandler.handleReport(newReport(SdkEvent.POST_SYNC, event2));
         assertEquals(mClient.get(TABLE1), new JSONArray("[{" +
@@ -43,7 +49,8 @@ public class ReportHandlerIntegrationTest {
                 .toString());
     }
 
-    @Test public void testPostFailed() {
+    @Test
+    public void testPostFailed() {
         mClient.setNext(503);
         mHandler.handleReport(newReport(SdkEvent.POST_SYNC, event1));
         mHandler.handleReport(newReport(SdkEvent.POST_SYNC, event2));
@@ -51,7 +58,8 @@ public class ReportHandlerIntegrationTest {
         assertEquals(mAdapter.getTables().size(), 2);
     }
 
-    @Test public void testTrackEvent() {
+    @Test
+    public void testTrackEvent() {
         mConfig.setBulkSize(Integer.MAX_VALUE);
         for (int i = 1; i <= 10; i++) {
             mHandler.handleReport(newReport(SdkEvent.ENQUEUE, event1));
@@ -60,7 +68,19 @@ public class ReportHandlerIntegrationTest {
         assertEquals(mAdapter.getTables().size(), 1);
     }
 
-    @Test public void testTrackTriggerFlush() throws Exception {
+    @Test
+    public void testTrackError() throws JSONException {
+        mHandler.handleReport(newReport(SdkEvent.REPORT_ERROR, event1));
+        assertEquals(mClient.get(TABLE1), new JSONArray("[{" +
+                "\"data\":\"ib-data\"," +
+                "\"table\":\"ib_test\"," +
+                "\"auth\":\"fbc254c2e706a3dc3a0b35985f220a66a2e05a25011bcbbe245671a2f54c1e8c\"" +
+                "}]")
+                .toString());
+    }
+
+    @Test
+    public void testTrackTriggerFlush() throws Exception {
         mConfig.setBulkSize(2);
         for (int i = 1; i <= 10; i++) {
             final Map<String, String> event = new HashMap<>(event1);
@@ -97,7 +117,8 @@ public class ReportHandlerIntegrationTest {
                 "}]").toString());
     }
 
-    @Test public void testFlush() {
+    @Test
+    public void testFlush() {
         mConfig.setBulkSize(5);
         for (int i = 1; i <= 10; i++) {
             final Map<String, String> event = new HashMap<>(event1);
@@ -115,12 +136,12 @@ public class ReportHandlerIntegrationTest {
     // Events to test
     final String TABLE1 = "ib_test", TOKEN1 = "ib_token", DATA1 = "ib-data";
     final String TABLE2 = "ic_test", TOKEN2 = "ic_token", DATA2 = "ic-data";
-    final Map<String, String> event1 = new HashMap<String, String>(){{
+    final Map<String, String> event1 = new HashMap<String, String>() {{
         put(ReportIntent.DATA, DATA1);
         put(ReportIntent.TOKEN, TOKEN1);
         put(ReportIntent.TABLE, TABLE1);
     }};
-    final Map<String, String> event2 = new HashMap<String, String>(){{
+    final Map<String, String> event2 = new HashMap<String, String>() {{
         put(ReportIntent.DATA, DATA2);
         put(ReportIntent.TOKEN, TOKEN2);
         put(ReportIntent.TABLE, TABLE2);
@@ -131,9 +152,14 @@ public class ReportHandlerIntegrationTest {
     final StorageService mAdapter = new DbAdapter(RuntimeEnvironment.application);
     final ReportHandler mHandler = new ReportHandler(RuntimeEnvironment.application) {
         @Override
-        protected StorageService getStorage(Context context) { return mAdapter; }
+        protected StorageService getStorage(Context context) {
+            return mAdapter;
+        }
+
         @Override
-        protected RemoteService getClient() { return mClient; }
+        protected RemoteService getClient() {
+            return mClient;
+        }
     };
 
 }

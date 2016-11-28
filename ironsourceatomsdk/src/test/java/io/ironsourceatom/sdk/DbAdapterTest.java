@@ -14,6 +14,7 @@ import android.test.mock.MockContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import static junit.framework.Assert.*;
 
 import org.mockito.runners.MockitoJUnitRunner;
@@ -83,7 +84,7 @@ public class DbAdapterTest {
         Cursor cursor = mock(Cursor.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(db.query(anyString(), any(String[].class), anyString(),
-                any(String[].class), anyString(),anyString(),
+                any(String[].class), anyString(), anyString(),
                 anyString())).thenReturn(cursor);
         when(handler.getReadableDatabase()).thenReturn(db);
         // 3 iterations
@@ -113,7 +114,7 @@ public class DbAdapterTest {
         Cursor cursor = mock(Cursor.class);
         SQLiteDatabase db = mock(SQLiteDatabase.class);
         when(db.query(anyString(), any(String[].class), anyString(),
-                any(String[].class), anyString(),anyString(),
+                any(String[].class), anyString(), anyString(),
                 anyString(), anyString())).thenReturn(cursor);
         when(handler.getReadableDatabase()).thenReturn(db);
         // 2 iterations

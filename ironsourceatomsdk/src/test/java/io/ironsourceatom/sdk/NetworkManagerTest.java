@@ -2,6 +2,7 @@ package io.ironsourceatom.sdk;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -15,13 +16,15 @@ import static org.mockito.Mockito.when;
 
 public class NetworkManagerTest {
 
-    @Before public void startClear() {
+    @Before
+    public void startClear() {
         final ConnectivityManager connectivityManager = mock(ConnectivityManager.class);
         when(connectivityManager.getActiveNetworkInfo()).thenReturn(mNetworkInfo);
         when(mContext.getSystemService(Context.CONNECTIVITY_SERVICE)).thenReturn(connectivityManager);
     }
 
-    @Test public void isOnlineTest() {
+    @Test
+    public void isOnlineTest() {
         // #1
         when(mNetworkInfo.isConnected()).thenReturn(true);
         assertTrue(mNetManager.isOnline());
@@ -33,7 +36,8 @@ public class NetworkManagerTest {
         assertTrue(mNetManager.isOnline());
     }
 
-    @Test public void getNetworkTypeTest() {
+    @Test
+    public void getNetworkTypeTest() {
         // #1
         when(mNetworkInfo.isConnected()).thenReturn(false);
         assertEquals(mNetManager.getConnectedNetworkType(), "unknown");
@@ -43,7 +47,8 @@ public class NetworkManagerTest {
         assertEquals(mNetManager.getConnectedNetworkType(), "a8m");
     }
 
-    @Test public void isDataRoamingEnabledTest() {
+    @Test
+    public void isDataRoamingEnabledTest() {
         // #1
         when(mNetworkInfo.isRoaming()).thenReturn(false);
         assertFalse(mNetManager.isDataRoamingEnabled());
@@ -52,7 +57,8 @@ public class NetworkManagerTest {
         assertTrue(mNetManager.isDataRoamingEnabled());
     }
 
-    @Test public void getNetworkIBTypeTest() {
+    @Test
+    public void getNetworkIBTypeTest() {
         // #1
         when(mNetworkInfo.getType()).thenReturn(ConnectivityManager.TYPE_WIFI);
         assertEquals(mNetManager.getNetworkIBType(), IronSourceAtomFactory.NETWORK_WIFI);

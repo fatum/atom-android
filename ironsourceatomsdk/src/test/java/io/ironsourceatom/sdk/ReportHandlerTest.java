@@ -1,9 +1,11 @@
 package io.ironsourceatom.sdk;
 
 import java.util.*;
+
 import android.content.Context;
 import android.content.Intent;
 import android.test.mock.MockContext;
+
 import org.json.JSONObject;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.junit.Before;
@@ -23,8 +25,14 @@ import io.ironsourceatom.sdk.StorageService.Table;
 public class ReportHandlerTest {
 
     // Two different responses
-    final Response ok = new RemoteService.Response() {{ code = 200; body = "OK"; }};
-    final Response fail = new RemoteService.Response() {{ code = 503; body = "Service Unavailable"; }};
+    final Response ok = new RemoteService.Response() {{
+        code = 200;
+        body = "OK";
+    }};
+    final Response fail = new RemoteService.Response() {{
+        code = 503;
+        body = "Service Unavailable";
+    }};
     // Mocking
     final Context context = mock(MockContext.class);
     final NetworkManager netManager = mock(NetworkManager.class);
@@ -33,16 +41,27 @@ public class ReportHandlerTest {
     final IsaConfig config = mock(IsaConfig.class);
     final ReportHandler handler = new ReportHandler(context) {
         @Override
-        protected RemoteService getClient() { return client; }
+        protected RemoteService getClient() {
+            return client;
+        }
+
         @Override
-        protected IsaConfig getConfig(Context context) { return config; }
+        protected IsaConfig getConfig(Context context) {
+            return config;
+        }
+
         @Override
-        protected StorageService getStorage(Context context) { return storage; }
+        protected StorageService getStorage(Context context) {
+            return storage;
+        }
+
         @Override
-        protected NetworkManager getNetManager(Context context) { return netManager; }
+        protected NetworkManager getNetManager(Context context) {
+            return netManager;
+        }
     };
     final String TABLE = "ib_table", TOKEN = "ib_token", DATA = "hello world";
-    final Map<String, String> reportMap = new HashMap<String, String>(){{
+    final Map<String, String> reportMap = new HashMap<String, String>() {{
         put(ReportIntent.DATA, DATA);
         put(ReportIntent.TOKEN, TOKEN);
         put(ReportIntent.TABLE, TABLE);
@@ -55,7 +74,8 @@ public class ReportHandlerTest {
         }
     };
 
-    @Before public void startClear() {
+    @Before
+    public void startClear() {
         // reset mocks
         reset(storage, client, config);
         // add default configuration
@@ -66,7 +86,8 @@ public class ReportHandlerTest {
     }
 
     // When you tracking an event.
-    @Test public void trackOnly() throws Exception {
+    @Test
+    public void trackOnly() throws Exception {
         config.setBulkSize(Integer.MAX_VALUE);
         Intent intent = newReport(SdkEvent.ENQUEUE, reportMap);
         handler.handleReport(intent);
@@ -77,7 +98,8 @@ public class ReportHandlerTest {
     // When handler get a post-event and everything goes well(connection available, and IronSourceAtomFactory responds OK).
     // Should call "isOnline()" and "post()" (with the given event), NOT add the event to the
     // persistence data storage, and returns true
-    @Test public void postSuccess() throws Exception {
+    @Test
+    public void postSuccess() throws Exception {
         String url = "http://host.com/post";
         when(client.post(anyString(), anyString())).thenReturn(ok);
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
@@ -90,7 +112,8 @@ public class ReportHandlerTest {
 
     // When handler get a post-event and we get an authentication error(40X) from Poster
     // Should discard the event, NOT add it to thr storage and returns true.
-    @Test public void postAuthFailed() throws Exception {
+    @Test
+    public void postAuthFailed() throws Exception {
         String url = "http://host.com";
         when(config.getNumOfRetries()).thenReturn(10);
         when(config.getISAEndPoint(TOKEN)).thenReturn(url);
@@ -107,7 +130,8 @@ public class ReportHandlerTest {
 
     // When handler get a post-event(or flush), but the device not connected to internet.
     // Should try to post "n" times, add it to storage if it's failed, and returns false.
-    @Test public void postWithoutNetwork() throws Exception {
+    @Test
+    public void postWithoutNetwork() throws Exception {
         when(netManager.isOnline()).thenReturn(false);
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
         // no idle time, but should try it out 10 times
@@ -120,7 +144,8 @@ public class ReportHandlerTest {
 
     // When handler get a post-event(or flush), and the device is on ROAMING_MODE.
     // It should try to send only if its has a permission to it.
-    @Test public void postOnRoaming() throws Exception {
+    @Test
+    public void postOnRoaming() throws Exception {
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
         when(config.isAllowedOverRoaming()).thenReturn(false, false, true);
         when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
@@ -133,7 +158,8 @@ public class ReportHandlerTest {
 
     // When handler get a post-event(or flush), should test if the
     // network type allowing it to make a network transaction before trying to make it.
-    @Test public void isNetworkTypeAllowed() throws Exception {
+    @Test
+    public void isNetworkTypeAllowed() throws Exception {
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
         int WIFI = IronSourceAtomFactory.NETWORK_WIFI, MOBILE = IronSourceAtomFactory.NETWORK_MOBILE;
         // List of scenarios, each member contains:
@@ -147,7 +173,7 @@ public class ReportHandlerTest {
         scenarios.add(new TestScenario(WIFI, MOBILE, HandleStatus.RETRY));
         scenarios.add(new TestScenario(MOBILE, WIFI, HandleStatus.RETRY));
         when(client.post(anyString(), anyString())).thenReturn(ok);
-        for (TestScenario test: scenarios) {
+        for (TestScenario test : scenarios) {
             when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
             when(netManager.getNetworkIBType()).thenReturn(test.networkStatus);
             assertEquals(handler.handleReport(intent), test.expected);
@@ -156,7 +182,8 @@ public class ReportHandlerTest {
 
     // When handler get a flush-event and there's no items in the queue.
     // Should do nothing and return true.
-    @Test public void flushNothing() {
+    @Test
+    public void flushNothing() {
         Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
         assertEquals(handler.handleReport(intent), HandleStatus.HANDLED);
         verify(storage, times(1)).getTables();
@@ -165,7 +192,8 @@ public class ReportHandlerTest {
     // When handler get a flush-event, it should ask for the all tables with `getTables`,
     // and then call `getEvents` for each of them with `maximumBulkSize`.
     // If everything goes well, it should drain the table, and then delete it.
-    @Test public void flushSuccess() throws Exception {
+    @Test
+    public void flushSuccess() throws Exception {
         // Config this situation
         when(config.getBulkSize()).thenReturn(2);
         when(config.getMaximumRequestLimit()).thenReturn((long) (1024));
@@ -177,7 +205,10 @@ public class ReportHandlerTest {
                 return this.name.equals(table.name) && this.token.equals(table.token);
             }
         };
-        List<Table> tables = new ArrayList<Table>() {{ add(mTable); add(mTable1); }};
+        List<Table> tables = new ArrayList<Table>() {{
+            add(mTable);
+            add(mTable1);
+        }};
         when(storage.getTables()).thenReturn(tables);
         // table batch result
         when(storage.getEvents(mTable, config.getBulkSize()))
@@ -213,7 +244,8 @@ public class ReportHandlerTest {
 
     // When handler get a flush-event, and there's no tables to drain(i.e: no event)
     // Should do-nothing, and return true
-    @Test public void flushNoItems() throws Exception {
+    @Test
+    public void flushNoItems() throws Exception {
         Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
         assertEquals(handler.handleReport(intent), HandleStatus.HANDLED);
         verify(storage, times(1)).getTables();
@@ -222,7 +254,8 @@ public class ReportHandlerTest {
 
     // When handler try to flush a batch, and it encounter an error(e.g: connectivity)
     // should stop-flushing, and return false
-    @Test public void flushFailed() throws Exception {
+    @Test
+    public void flushFailed() throws Exception {
         Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
         // Batch result
         when(storage.getEvents(mTable, config.getBulkSize()))
@@ -242,7 +275,8 @@ public class ReportHandlerTest {
 
     // When tracking an event(record) to some table and the count number
     // is greater or equal to bulk-size, should flush the queue.
-    @Test public void trackCauseFlush() {
+    @Test
+    public void trackCauseFlush() {
         config.setBulkSize(2);
         when(storage.addEvent(mTable, DATA)).thenReturn(2);
         Intent intent = newReport(SdkEvent.ENQUEUE, reportMap);
@@ -256,7 +290,8 @@ public class ReportHandlerTest {
     // Ask for events with limit of 2 and the batch is too large.
     // handler decrease the bulkSize(limit) and ask for limit of 1.
     // in this situation it doesn't have another choice except sending this batch(of length 1).
-    @Test public void maxRequestLimit() throws Exception {
+    @Test
+    public void maxRequestLimit() throws Exception {
         when(config.getBulkSize()).thenReturn(2);
         when(config.getMaximumRequestLimit()).thenReturn((long) (1024 * 1024 + 1));
         final String chunk = new String(new char[1024 * 1024]).replace('\0', 'b');
@@ -283,7 +318,8 @@ public class ReportHandlerTest {
 
     // Test data format
     // Should omit the "token" field and add "auth"
-    @Test public void dataFormat() throws Exception {
+    @Test
+    public void dataFormat() throws Exception {
         when(client.post(any(String.class), any(String.class))).thenReturn(ok);
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
         assertEquals(handler.handleReport(intent), HandleStatus.HANDLED);
@@ -295,7 +331,6 @@ public class ReportHandlerTest {
     }
 
     // Constant report arguments for testing
-
 
 
     // Helper class, used inside "isNetworkAllowed" test case.

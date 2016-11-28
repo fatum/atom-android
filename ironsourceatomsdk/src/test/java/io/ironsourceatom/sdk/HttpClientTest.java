@@ -20,7 +20,8 @@ import static org.junit.Assert.*;
 public class HttpClientTest {
 
     // Test post behavior
-    @Test public void postTest() throws Exception {
+    @Test
+    public void postTest() throws Exception {
         DataOutputStream outMock = mock(DataOutputStream.class);
         InputStream inMock = mock(InputStream.class);
         when(mMockConn.getOutputStream()).thenReturn(outMock);
@@ -51,6 +52,7 @@ public class HttpClientTest {
 
 
     }
+
     @Test
     public void createConnectionTest() throws IOException {
         HttpClient mClient = new HttpClient();
@@ -62,8 +64,8 @@ public class HttpClientTest {
     @Test
     public void getInstanceTest() {
         HttpClient client1 = HttpClient.getInstance();
-        HttpClient client2=HttpClient.getInstance();
-        assertTrue(client1==client2);
+        HttpClient client2 = HttpClient.getInstance();
+        assertTrue(client1 == client2);
 
     }
 

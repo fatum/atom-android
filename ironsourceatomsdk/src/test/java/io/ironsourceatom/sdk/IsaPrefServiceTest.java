@@ -32,13 +32,14 @@ public class IsaPrefServiceTest {
 
     @Test
     public void testLoadIntDef() {
-        service=IsaPrefService.getInstance(context);
+        service = IsaPrefService.getInstance(context);
         assertEquals(service.load("test key", 12), 12);
 
     }
+
     @Test
-    public void testLoadLongDef(){
-        service=IsaPrefService.getInstance(context);
+    public void testLoadLongDef() {
+        service = IsaPrefService.getInstance(context);
         assertEquals(service.load("test key", 12L), 12L);
     }
 
@@ -48,7 +49,7 @@ public class IsaPrefServiceTest {
         when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs);
         when(sharedPrefs.getString(anyString(), anyString())).thenReturn("test return");
 
-        service=IsaPrefService.getInstance(context);
+        service = IsaPrefService.getInstance(context);
         assertEquals(service.load("test key", 12), 12);
     }
 
@@ -58,13 +59,13 @@ public class IsaPrefServiceTest {
         when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs);
         when(sharedPrefs.getString(anyString(), anyString())).thenReturn("test return");
 
-        service=IsaPrefService.getInstance(context);
+        service = IsaPrefService.getInstance(context);
         assertEquals(service.load("test key", 12L), 12L);
     }
 
     @Test
     public void testDeleteFalse() {
-        service=IsaPrefService.getInstance(context);
+        service = IsaPrefService.getInstance(context);
         assertEquals(service.delete("test key"), false);
     }
 
@@ -79,7 +80,7 @@ public class IsaPrefServiceTest {
 
         when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs);
 
-        service=IsaPrefService.getInstance(context);
+        service = IsaPrefService.getInstance(context);
         assertEquals(service.delete("test key"), true);
     }
 }

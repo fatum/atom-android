@@ -20,7 +20,9 @@ public class TestsUtils {
 
     static class MockReport implements Report {
         @Override
-        public void send() {}
+        public void send() {
+        }
+
         @Override
         public MockReport setData(String value) {
             return this;
@@ -88,10 +90,11 @@ public class TestsUtils {
         // Hack to ignore keys ordering
         public String get(String key) {
             JSONArray events = new JSONArray();
-            for (String event :mBackedMock.get(key)) {
+            for (String event : mBackedMock.get(key)) {
                 try {
                     events.put(new JSONObject(event));
-                } catch(JSONException e) {}
+                } catch (JSONException e) {
+                }
             }
             return events.toString();
         }
@@ -108,7 +111,7 @@ public class TestsUtils {
         when(intent.getIntExtra(ReportIntent.EXTRA_SDK_EVENT, SdkEvent.ERROR))
                 .thenReturn(event);
         Bundle bundle = mock(Bundle.class);
-        for (String key: report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
+        for (String key : report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
         when(intent.getExtras()).thenReturn(bundle);
         return intent;
     }
@@ -118,7 +121,7 @@ public class TestsUtils {
     public static Intent newSimpleReport(Map<String, String> report) {
         Intent intent = mock(Intent.class);
         Bundle bundle = mock(Bundle.class);
-        for (String key: report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
+        for (String key : report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
         when(intent.getExtras()).thenReturn(bundle);
         return intent;
     }

@@ -1,6 +1,7 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
+import android.net.NetworkInfo;
 import android.test.mock.MockContext;
 
 import org.json.JSONException;
@@ -23,11 +24,24 @@ import static junit.framework.Assert.*;
 @RunWith(MockitoJUnitRunner.class)
 public class IronSourceAtomFactoryTest {
 
-    @Before public void Reset() {
+    @Before
+    public void Reset() {
         reset(mSpyReport);
     }
 
-    @Test public void testGetInstance() {
+    // Configure test
+    final String mToken = "token";
+    TestsUtils.MockReport mSpyReport = spy(new TestsUtils.MockReport());
+    final IronSourceAtomTracker mTracker = new IronSourceAtomTracker(mock(MockContext.class), mToken) {
+        @Override
+        public Report openReport(Context context, int event_code) {
+            mSpyReport.mType = event_code;
+            return mSpyReport;
+        }
+    };
+
+    @Test
+    public void testGetInstance() {
         MockContext context = mock(MockContext.class);
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
 
@@ -38,27 +52,28 @@ public class IronSourceAtomFactoryTest {
         assertTrue("should initialized new tracker", tracker1 != tracker3 || tracker2 != tracker3);
     }
 
-    @Test(expected =IllegalArgumentException.class)
-    public void testWrongArgsGetFactory(){
+    @Test(expected = IllegalArgumentException.class)
+    public void testWrongArgsGetFactory() {
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(null);
     }
 
-    @Test(expected =IllegalArgumentException.class)
-    public void testWrongArgsGetAtom(){
+    @Test(expected = IllegalArgumentException.class)
+    public void testWrongArgsGetAtom() {
         MockContext context = mock(MockContext.class);
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
         ironSourceAtomFactory.newAtom(null);
     }
 
-    @Test(expected =IllegalArgumentException.class)
-    public void testWrongArgsGetTracker(){
+    @Test(expected = IllegalArgumentException.class)
+    public void testWrongArgsGetTracker() {
         MockContext context = mock(MockContext.class);
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
         ironSourceAtomFactory.newTracker(null);
     }
 
 
-    @Test public void testGetAtom() {
+    @Test
+    public void testGetAtom() {
         MockContext context = mock(MockContext.class);
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
 
@@ -69,7 +84,8 @@ public class IronSourceAtomFactoryTest {
         assertTrue("should initialized new atom", atom1 != atom3 || atom2 != atom3);
     }
 
-    @Test public void trackStringEvent() {
+    @Test
+    public void trackStringEvent() {
         for (int i = 0; i < 10; i++) {
             mTracker.track("table", "hello world");
         }
@@ -80,7 +96,8 @@ public class IronSourceAtomFactoryTest {
         assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
     }
 
-    @Test public void trackJSONEvent() throws JSONException {
+    @Test
+    public void trackJSONEvent() throws JSONException {
         JSONObject event = new JSONObject();
         event.put("hello", "world");
         for (int i = 0; i < 10; i++) {
@@ -93,7 +110,8 @@ public class IronSourceAtomFactoryTest {
         assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
     }
 
-    @Test public void trackMapEvent() throws JSONException {
+    @Test
+    public void trackMapEvent() throws JSONException {
         Map<String, String> event = new HashMap<>();
         event.put("hello", "world");
         for (int i = 0; i < 10; i++) {
@@ -106,7 +124,8 @@ public class IronSourceAtomFactoryTest {
         assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
     }
 
-    @Test public void postStringEvent() {
+    @Test
+    public void postStringEvent() {
         for (int i = 0; i < 10; i++) {
             mTracker.track("table", "hello world", true);
         }
@@ -117,7 +136,8 @@ public class IronSourceAtomFactoryTest {
         assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
     }
 
-    @Test public void postJSONEvent() throws JSONException {
+    @Test
+    public void postJSONEvent() throws JSONException {
         JSONObject event = new JSONObject();
         event.put("hello", "world");
         for (int i = 0; i < 10; i++) {
@@ -130,7 +150,8 @@ public class IronSourceAtomFactoryTest {
         assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
     }
 
-    @Test public void postMapEvent() throws JSONException {
+    @Test
+    public void postMapEvent() throws JSONException {
         Map<String, String> event = new HashMap<>();
         event.put("hello", "world");
         for (int i = 0; i < 10; i++) {
@@ -143,32 +164,21 @@ public class IronSourceAtomFactoryTest {
         assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
     }
 
-    @Test public void flushEvents() {
+    @Test
+    public void flushEvents() {
         mTracker.flush();
         verify(mSpyReport, times(1)).send();
         assertEquals(mSpyReport.mType, SdkEvent.FLUSH_QUEUE);
     }
 
-    // Configure test
-    final String mToken = "token";
-    TestsUtils.MockReport mSpyReport = spy(new TestsUtils.MockReport());
-    final IronSourceAtomTracker mTracker =  new IronSourceAtomTracker(mock(MockContext.class), mToken) {
-        @Override
-        public Report openReport(Context context, int event_code) {
-            mSpyReport.mType = event_code;
-            return mSpyReport;
-        }
-    };
     @Test
-    public void trackErrorTest(){
-        MockContext context = mock(MockContext.class);
-        IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
-        ironSourceAtomFactory.trackError("hdhdhd");
-
+    public void trackErrorTest() throws JSONException {
+        mTracker.trackError("test", new JSONObject().put("key", "val"));
+        verify(mSpyReport, times(1)).send();
     }
 
     @Test
-    public void settersTest(){
+    public void settersTest() {
         MockContext context = mock(MockContext.class);
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
         ironSourceAtomFactory.setAllowedNetworkTypes(1);
@@ -179,14 +189,13 @@ public class IronSourceAtomFactoryTest {
         ironSourceAtomFactory.setFlushInterval(2000);
         ironSourceAtomFactory.setMaximumRequestLimit(3000);
 
-
     }
 
     @Test
     public void getInstanceTest() {
         IronSourceAtomFactory fac1 = IronSourceAtomFactory.getInstance();
         IronSourceAtomFactory fac2 = IronSourceAtomFactory.getInstance();
-        assertTrue(fac1==fac2);
+        assertTrue(fac1 == fac2);
 
     }
 }

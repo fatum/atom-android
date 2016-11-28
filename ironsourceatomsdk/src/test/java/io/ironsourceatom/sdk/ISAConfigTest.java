@@ -17,12 +17,14 @@ import static junit.framework.Assert.*;
 @Config(constants = BuildConfig.class, emulateSdk = 18, manifest = Config.NONE)
 public class ISAConfigTest {
 
-    @Before public void reset() {
+    @Before
+    public void reset() {
         Mockito.reset(mPrefService);
     }
 
     // When the custom url was not set previous, it should return the DEFAULT_URL.
-    @Test public void testGetIBEndPoint() throws Exception {
+    @Test
+    public void testGetIBEndPoint() throws Exception {
         String token = "token";
         String prefKey = String.format("%s_%s", IsaConfig.KEY_IB_END_POINT, token);
         when(mPrefService.load(startsWith(prefKey))).thenReturn("");
@@ -33,7 +35,8 @@ public class ISAConfigTest {
     // When the custom url was save previous but not loaded yet, it
     // should first load it from PreferencesService, store it in the
     // HashTable, and in the second time fetch it from there.
-    @Test public void testGetIBEndPoint2Times() throws Exception {
+    @Test
+    public void testGetIBEndPoint2Times() throws Exception {
         String token = "token";
         String customUrl = "http://foo.com/blah_blah";
         String prefKey = String.format("%s_%s", IsaConfig.KEY_IB_END_POINT, token);
@@ -45,7 +48,8 @@ public class ISAConfigTest {
 
     // When the custom url was not set before, it should
     // return the DEFAULT_URL_BULK.
-    @Test public void testGetIBEndPointBulk() throws Exception {
+    @Test
+    public void testGetIBEndPointBulk() throws Exception {
         String token = "token";
         when(mPrefService.load(anyString())).thenReturn("");
         assertEquals(isaConfig.getISAEndPointBulk(token), IsaConfig.DEFAULT_BULK_URL);
@@ -56,7 +60,8 @@ public class ISAConfigTest {
     // When the custom url was save previous but not loaded yet, it
     // should first load it from PreferencesService, store it in the
     // HashTable, and in the second time fetch it from there.
-    @Test public void testGetEndPointBulk2Times() throws Exception {
+    @Test
+    public void testGetEndPointBulk2Times() throws Exception {
         String token = "token";
         String customUrl = "http://foo.com/blah_blah";
         String prefKey = String.format("%s_%s", IsaConfig.KEY_IB_END_POINT_BULK, token);
@@ -66,7 +71,8 @@ public class ISAConfigTest {
         verify(mPrefService, times(1)).load(anyString());
     }
 
-    @Test public void testNotValidUrlWasSavedEndPoint() throws Exception {
+    @Test
+    public void testNotValidUrlWasSavedEndPoint() throws Exception {
         String token = "token";
         String customUrl = "blabla.com";
         String prefKey = String.format("%s_%s", IsaConfig.KEY_IB_END_POINT, token);
@@ -74,7 +80,8 @@ public class ISAConfigTest {
         assertEquals(isaConfig.getISAEndPoint(token), IsaConfig.DEFAULT_URL);
     }
 
-    @Test public void testNotValidUrlWasSavedEndPointBulk() throws Exception {
+    @Test
+    public void testNotValidUrlWasSavedEndPointBulk() throws Exception {
         String token = "token";
         String customUrl = "blabla.com";
         String prefKey = String.format("%s_%s", IsaConfig.KEY_IB_END_POINT_BULK, token);

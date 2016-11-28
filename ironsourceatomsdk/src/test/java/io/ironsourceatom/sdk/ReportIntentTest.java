@@ -20,23 +20,24 @@ public class ReportIntentTest {
 
 
     @Test
-    public void testSetters(){
-        ReportIntent report= new ReportIntent(context);
+    public void testSetters() {
+        ReportIntent report = new ReportIntent(context);
         report.setEndPoint("bla");
         report.setTable("bla");
         report.setToken("bla");
         report.setData("bla");
         report.setBulk(true);
     }
+
     @Test
-    public void testSend(){
-        ReportIntent report= new ReportIntent(context);
+    public void testSend() {
+        ReportIntent report = new ReportIntent(context);
         report.send();
     }
 
     @Test
-    public void testConstructor(){
-        ReportIntent report= new ReportIntent(context);
+    public void testConstructor() {
+        ReportIntent report = new ReportIntent(context);
         assertNotNull(report);
     }
 

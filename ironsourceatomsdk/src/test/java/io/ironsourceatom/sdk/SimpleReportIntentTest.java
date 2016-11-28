@@ -26,7 +26,7 @@ public class SimpleReportIntentTest {
 
 
     @Test
-    public void testSetEndPoint(){
+    public void testSetEndPoint() {
 
         report = new SimpleReportIntent(context);
         report.setEndPoint("bla");

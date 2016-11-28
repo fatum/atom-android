@@ -46,8 +46,9 @@ public class BaseMainActivity extends Activity {
         // String bulkURL = "http://10.0.2.2:3000/bulk";
         // String url = "http://10.0.2.2:3000";
 
-        // atom tracking url
+        // Atom tracking url
         String url = "http://track.atom-data.io";
+        String bulkURL = "http://track.atom-data.io/bulk";
 
         // Configure sender to use methods putEvent() or putEvents()
         IronSourceAtom atom = ironSourceAtomFactory.newAtom(authKey); // SET AUTH KEY HERE
@@ -55,8 +56,8 @@ public class BaseMainActivity extends Activity {
 
         // Configure tracker
         IronSourceAtomTracker tracker = ironSourceAtomFactory.newTracker(authKey);
-//        tracker.setISAEndPoint(url);
-//        tracker.setISABulkEndPoint(bulkURL);
+        tracker.setISAEndPoint(url);
+        tracker.setISABulkEndPoint(bulkURL);
 
         JSONObject params = new JSONObject();
         switch (id) {
