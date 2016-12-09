@@ -16,7 +16,7 @@ Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-
 ## Installation
 
 ### Installation for Gradle project
-Add repository for you gradle config file
+Add repository for you gradle config file 
 ```ruby
 repositories {
    maven { url "https://raw.github.com/ironSource/atom-android/mvn-repo/" }
