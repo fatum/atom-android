@@ -17,14 +17,14 @@ Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-
 
 ### Installation for Gradle project
 Add repository for you gradle config file
-```java
+```ruby
 repositories {
    maven { url "https://raw.github.com/ironSource/atom-android/mvn-repo/" }
 }
 
 ```
 and add dependency for Atom SDK
-```java
+```rubys
 dependencies {
    compile 'io.ironsourceatom.sdk:atom-sdk:1.1.0'
 }
@@ -59,10 +59,15 @@ and add dependency for Atom SDK
 
 The SDK provides a tracker class which contains a local db and tracks events based on certain parameters.
 
+The Report Job Service should be added from Android API version 21 and above:
+ ```xml
+<service android:name="io.ironsourceatom.sdk.ReportJobService"
+         android:exported="true"
+         android:permission="android.permission.BIND_JOB_SERVICE" />
+```
 
-
-Add the following lines to AndroidManifest.xml
-```java
+or Report Service for API version less than:
+```xml
 <service android:name="io.ironsourceatom.sdk.ReportService" />
 ```
 

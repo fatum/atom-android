@@ -58,30 +58,10 @@ public class IronSourceAtomFactoryTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testWrongArgsGetAtom() {
-        MockContext context = mock(MockContext.class);
-        IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
-        ironSourceAtomFactory.newAtom(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testWrongArgsGetTracker() {
         MockContext context = mock(MockContext.class);
         IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
         ironSourceAtomFactory.newTracker(null);
-    }
-
-
-    @Test
-    public void testGetAtom() {
-        MockContext context = mock(MockContext.class);
-        IronSourceAtomFactory ironSourceAtomFactory = IronSourceAtomFactory.getInstance(context);
-
-        IronSourceAtom atom1 = ironSourceAtomFactory.newAtom("token1");
-        IronSourceAtom atom2 = ironSourceAtomFactory.newAtom("token1");
-        assertTrue("should not initialized new atoms with the same token", atom1 == atom2);
-        IronSourceAtom atom3 = ironSourceAtomFactory.newAtom("token2");
-        assertTrue("should initialized new atom", atom1 != atom3 || atom2 != atom3);
     }
 
     @Test
@@ -169,12 +149,6 @@ public class IronSourceAtomFactoryTest {
         mTracker.flush();
         verify(mSpyReport, times(1)).send();
         assertEquals(mSpyReport.mType, SdkEvent.FLUSH_QUEUE);
-    }
-
-    @Test
-    public void trackErrorTest() throws JSONException {
-        mTracker.trackError("test", new JSONObject().put("key", "val"));
-        verify(mSpyReport, times(1)).send();
     }
 
     @Test

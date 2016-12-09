@@ -257,7 +257,6 @@ uploadArchives {
             groupId 'io.ironsourceatom.sdk'
             artifactId 'atom-sdk'
             version "${version}"
-
         }
     }
 }
