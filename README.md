@@ -71,7 +71,7 @@ or Report Service for API version less than:
 <service android:name="io.ironsourceatom.sdk.ReportService" />
 ```
 
-Add IronSourceAtom to your main activity. For example:
+Add IronSourceAtom to your main activity. For example: 
 ```java
 import io.ironsourceatom.sdk.IronSourceAtomFactory;
 import io.ironsourceatom.sdk.IronSourceAtomTracker;
