@@ -18,13 +18,12 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
  * Used for processing requests to endpoint
  */
 public class HttpClient implements RemoteService {
-
-
-    private static HttpClient sInstance;
     private static final Object sInstanceLock = new Object();
     private static final String TAG = "HttpService";
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 15 * 1000; // 15s
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000; // 10s
+
+    private static HttpClient sInstance;
 
     public static HttpClient getInstance() {
         synchronized (sInstanceLock) {
@@ -50,23 +49,27 @@ public class HttpClient implements RemoteService {
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setDoOutput(true);
+
             out = new DataOutputStream(connection.getOutputStream());
             out.write(data.getBytes("UTF-8"));
             out.flush();
             out.close();
             out = null;
+
             in = connection.getInputStream();
             response.body = new String(Utils.getBytes(in), Charset.forName("UTF-8"));
             response.code = connection.getResponseCode();
             in.close();
             in = null;
-        } catch (final IOException e) {
+        }  catch (final IOException e) {
             if (connection != null &&
                     (response.code = connection.getResponseCode()) >= HTTP_BAD_REQUEST) {
                 Logger.log(TAG, "Failed post to IB. StatusCode: " + response.code, Logger.SDK_DEBUG);
             } else {
                 throw e;
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         } finally {
             if (null != connection) connection.disconnect();
             if (null != out) out.close();

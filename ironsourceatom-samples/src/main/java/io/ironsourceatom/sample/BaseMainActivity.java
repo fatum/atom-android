@@ -6,16 +6,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 
-import com.google.gson.Gson;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.ironsourceatom.sdk.IronSourceAtomFactory;
-import io.ironsourceatom.sdk.IronSourceAtom;
 import io.ironsourceatom.sdk.IronSourceAtomTracker;
 
 public class BaseMainActivity extends Activity {
@@ -26,6 +20,8 @@ public class BaseMainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_v2);
+
+
 
         // Create and config IronSourceAtomFactory instance
         ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
@@ -50,10 +46,6 @@ public class BaseMainActivity extends Activity {
         String url = "http://track.atom-data.io";
         String bulkURL = "http://track.atom-data.io/bulk";
 
-        // Configure sender to use methods putEvent() or putEvents()
-        IronSourceAtom atom = ironSourceAtomFactory.newAtom(authKey); // SET AUTH KEY HERE
-        atom.setEndPoint(url);
-
         // Configure tracker
         IronSourceAtomTracker tracker = ironSourceAtomFactory.newTracker(authKey);
         tracker.setISAEndPoint(url);
@@ -61,26 +53,6 @@ public class BaseMainActivity extends Activity {
 
         JSONObject params = new JSONObject();
         switch (id) {
-            case R.id.btnPutEvent:
-                try {
-                    params.put("event_name", "ANDROID_PUT_EVENT");
-                    params.put("id", "" + (int) (100 * Math.random()));
-                } catch (JSONException e) {
-                    Log.d(TAG, "Failed to track your json");
-                }
-                Log.d("[putEvent]", params.toString());
-                atom.putEvent(atomStream, params.toString());
-                break;
-
-            case R.id.btnPutEvents:
-                Gson gson = new Gson(); // Used for Array to json conversion.
-                List<ExampleData> bulkList = new ArrayList<>();
-                for (int i = 0; i < 10; i++) {
-                    bulkList.add(new ExampleData((int) (Math.random() * 100), "ANDROID_PUT_EVENTS"));
-                }
-                Log.d("[putEvents]", gson.toJson(bulkList));
-                atom.putEvents(atomStream, gson.toJson(bulkList));
-                break;
             case R.id.btnTrackReport:
                 try {
                     params.put("event_name", "ANDROID_TRACKER");

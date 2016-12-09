@@ -4,10 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 
 class ReportIntent implements Report {
-
-
-    private Context context;
-    private Intent intent;
+    protected static final String EXTRA_SDK_EVENT = "sdk_event";
 
     public static final String TABLE = "table";
     public static final String TOKEN = "token";
@@ -15,7 +12,9 @@ class ReportIntent implements Report {
     public static final String DATA = "data";
     public static final String AUTH = "auth";
     public static final String ENDPOINT = "endpoint";
-    protected static final String EXTRA_SDK_EVENT = "sdk_event";
+
+    private Context context;
+    private Intent intent;
 
     ReportIntent(Context context, int sdkEvent) {
         this.context = context;

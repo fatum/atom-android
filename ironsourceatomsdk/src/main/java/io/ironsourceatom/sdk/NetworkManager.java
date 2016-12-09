@@ -8,12 +8,12 @@ import android.net.NetworkInfo;
  * A connectivity utility class for internal use in this library.
  */
 public class NetworkManager {
-
-
-    private Context context;
-    private static NetworkManager sInstance;
     private static final Object sInstanceLock = new Object();
     private static final String TAG = "NetworkManager";
+
+    private static NetworkManager sInstance;
+
+    private Context context;
 
     NetworkManager(Context context) {
         this.context = context;

@@ -17,7 +17,10 @@
         android:theme="@style/AppTheme">
 
         <service android:name="io.ironsourceatom.sdk.ReportService" />
-        <service android:name="io.ironsourceatom.sdk.SimpleReportService" />
+        <service
+            android:name="io.ironsourceatom.sdk.ReportJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
 
         <activity
             android:name="io.ironsourceatom.sample.MainActivity"

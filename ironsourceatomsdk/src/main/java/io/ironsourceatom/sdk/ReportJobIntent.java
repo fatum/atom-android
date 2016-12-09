@@ -1,17 +1,15 @@
 package io.ironsourceatom.sdk;
 
+
 import android.content.Context;
 import android.content.Intent;
 
 /**
- * Implementation of Report for using with SimpleReportService
+ * Created by valentine.pavchuk on 12/8/16.
  */
 
-class SimpleReportIntent implements Report {
-
-
-    private Context context;
-    private Intent intent;
+public class ReportJobIntent implements Report {
+    protected static final String EXTRA_SDK_EVENT = "sdk_event";
 
     public static final String TABLE = "table";
     public static final String TOKEN = "token";
@@ -20,28 +18,34 @@ class SimpleReportIntent implements Report {
     public static final String AUTH = "auth";
     public static final String ENDPOINT = "endpoint";
 
+    private Context context;
+    private Intent intent;
 
-    SimpleReportIntent(Context context) {
+    ReportJobIntent(Context context, int sdkEvent) {
         this.context = context;
-        intent = new Intent(context, SimpleReportService.class);
+        intent = new Intent(context, ReportJobService.class);
+        intent.putExtra(EXTRA_SDK_EVENT, sdkEvent);
+    }
 
+    ReportJobIntent(Context context) {
+        this.context = context;
+        intent = new Intent(context, ReportJobService.class);
     }
 
     public void send() {
         context.startService(intent);
     }
 
-    public SimpleReportIntent setToken(String token) {
+    public ReportJobIntent setToken(String token) {
         intent.putExtra(TOKEN, token);
         return this;
     }
 
     @Override
-    public SimpleReportIntent setEndPoint(String endpoint) {
+    public Report setEndPoint(String endpoint) {
         intent.putExtra(ENDPOINT, endpoint);
         return this;
     }
-
 
     @Override
     public Report setBulk(boolean b) {
@@ -49,12 +53,12 @@ class SimpleReportIntent implements Report {
         return this;
     }
 
-    public SimpleReportIntent setTable(String table) {
+    public ReportJobIntent setTable(String table) {
         intent.putExtra(TABLE, table);
         return this;
     }
 
-    public SimpleReportIntent setData(String value) {
+    public ReportJobIntent setData(String value) {
         intent.putExtra(DATA, value);
         return this;
     }
@@ -62,5 +66,4 @@ class SimpleReportIntent implements Report {
     public Intent getIntent() {
         return intent;
     }
-
 }

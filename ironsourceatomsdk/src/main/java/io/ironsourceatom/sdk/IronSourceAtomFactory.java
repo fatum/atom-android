@@ -15,16 +15,18 @@ import java.util.Map;
  * Factory to produce an instance of IronSourceAtom Class or IronSourceAtomTracker Class
  */
 public class IronSourceAtomFactory {
+    private static final String TAG = "IronSourceAtomFactory";
+    private static final Object sInstanceLockObject = new Object();
+
+    private static IronSourceAtomFactory sInstance;
+
+    public static final int NETWORK_MOBILE = 1;
+    public static final int NETWORK_WIFI = 2;
+
+    private final Map<String, IronSourceAtomTracker> sAvailableTrackers = new HashMap<>();
 
     private IsaConfig config;
     private Context context;
-    private final Map<String, IronSourceAtomTracker> sAvailableTrackers = new HashMap<>();
-    private final Map<String, IronSourceAtom> availableSenders = new HashMap<>();
-    private static IronSourceAtomFactory sInstance;
-    final static Object sInstanceLockObject = new Object();
-    private static final String TAG = "IronSourceAtomFactory";
-    public static final int NETWORK_MOBILE = 1;
-    public static final int NETWORK_WIFI = 2;
 
     /**
      * Do not call directly.
@@ -66,40 +68,14 @@ public class IronSourceAtomFactory {
             throw new IllegalArgumentException("`auth` should be valid String");
         }
         synchronized (sAvailableTrackers) {
-            IronSourceAtomTracker ret;
+            IronSourceAtomTracker tracker;
             if (sAvailableTrackers.containsKey(auth)) {
-                ret = sAvailableTrackers.get(auth);
+                tracker = sAvailableTrackers.get(auth);
             } else {
-                ret = new IronSourceAtomTracker(sInstance.context, auth);
-                sAvailableTrackers.put(auth, ret);
+                tracker = new IronSourceAtomTracker(sInstance.context, auth);
+                sAvailableTrackers.put(auth, tracker);
             }
-            return ret;
-        }
-    }
-
-    /**
-     * Create IronSourceAtom with your YOUR_AUTH_KEY.
-     * Example:
-     * <code>
-     * IronSourceAtom sender = IronSourceAtomFactory.newAtom("YOUR_AUTH_KEY");
-     * </code>
-     *
-     * @param auth your IronSourceAtomFactory auth key
-     * @return IronSourceAtom
-     */
-    public IronSourceAtom newAtom(String auth) {
-        if (null == auth) {
-            throw new IllegalArgumentException("`auth` should be valid String");
-        }
-        synchronized (availableSenders) {
-            IronSourceAtom ret;
-            if (availableSenders.containsKey(auth)) {
-                ret = availableSenders.get(auth);
-            } else {
-                ret = new IronSourceAtom(sInstance.context, auth);
-                availableSenders.put(auth, ret);
-            }
-            return ret;
+            return tracker;
         }
     }
 
@@ -193,8 +169,11 @@ public class IronSourceAtomFactory {
         if (config.isErrorReportingEnabled()) {
             String stream = config.getSdkErrorStream();
             String authKey = config.getSdkErrorStreamAuthKey();
+
             Logger.log(TAG, "TRACKING ERROR TO: " + stream + " / " + authKey, Logger.SDK_DEBUG);
+
             IronSourceAtomTracker sdkTracker = this.newTracker(authKey);
+
             try {
                 JSONObject report = new JSONObject();
                 report.put("details", errorString);
@@ -204,6 +183,7 @@ public class IronSourceAtomFactory {
                 report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
                 report.put("platform", "Android");
                 report.put("os", String.valueOf(Build.VERSION.SDK_INT));
+
                 sdkTracker.trackError(stream, report);
             } catch (Exception e) {
                 Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);

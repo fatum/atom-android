@@ -9,17 +9,18 @@ import java.util.concurrent.TimeUnit;
  * Persistence exponential backoff service.
  */
 class BackOff {
+    private static BackOff sInstance;
+    private static final Object sInstanceLock = new Object();
+
+    private final String KEY_LAST_TICK = "retry_last_tick";
+    private final String KEY_RETRY_COUNT = "retry_count";
+
+    protected final int MAX_RETRY_COUNT = 8;
+    protected final int INITIAL_RETRY_VALUE = 0;
 
     private int retry;
     private IsaConfig config;
     private IsaPrefService prefService;
-    private final String KEY_LAST_TICK = "retry_last_tick";
-    private final String KEY_RETRY_COUNT = "retry_count";
-    protected final int MAX_RETRY_COUNT = 8;
-    protected final int INITIAL_RETRY_VALUE = 0;
-
-    private static BackOff sInstance;
-    private static final Object sInstanceLock = new Object();
 
     BackOff(Context context) {
         config = getConfig(context);
@@ -47,6 +48,7 @@ class BackOff {
         long nextTick, currentTime = currentTimeMillis();
         long scheduledNextTick = prefService.load(KEY_LAST_TICK, currentTime);
         long temp = getMills(retry);
+
         nextTick = currentTime + temp; // set the nextTick
         if (currentTime > scheduledNextTick) {
             prefService.save(KEY_RETRY_COUNT, ++retry);

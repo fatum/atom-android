@@ -1,18 +1,21 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.webkit.URLUtil;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Map;
+
 
 
 /**
  * This class is the High Level SDK for ironSource Atom (with tracker)
  */
 public class IronSourceAtomTracker {
-
+    private static final String TAG = "IronSourceAtomTracker";
 
     private String auth;
     private Context context;
@@ -45,6 +48,8 @@ public class IronSourceAtomTracker {
      * @param sendNow    flag if true report will send immediately else will postponed
      */
     public void track(String streamName, String data, boolean sendNow) {
+       // Logger.log("sdfsdfsdf", Logger.SDK_ERROR);
+
         openReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE)
                 .setTable(streamName)
                 .setToken(auth)
@@ -116,15 +121,40 @@ public class IronSourceAtomTracker {
      * Flush error info to error stream
      */
     public void trackError(String streamName, JSONObject data) {
-        openReport(context, SdkEvent.REPORT_ERROR)
+       /* openReport(context, SdkEvent.REPORT_ERROR)
                 .setTable(streamName)
                 .setToken(auth)
                 .setData(data.toString())
-                .send();
+                .send(); */
+        try {
+            String dataStr = data.toString();
+            JSONObject message = new JSONObject();
+
+            if (!auth.isEmpty()) {
+                message.put(ReportIntent.AUTH, Utils.auth(dataStr, auth));
+            }
+            message.put(ReportIntent.TABLE, streamName);
+            message.put(ReportIntent.DATA, dataStr);
+
+            String url = config.getISAEndPoint(auth);
+
+            try {
+                new SendHttpRequestTask().execute(message.toString(), url);
+            } catch (IllegalStateException ex) {
+                new SendHttpRequestTask().execute(message.toString(), url);
+            }
+        } catch (Exception e) {
+            Logger.log(TAG, "Failed to create message" + e, Logger.SDK_DEBUG);
+        }
     }
 
     protected Report openReport(Context context, int event_code) {
-        return new ReportIntent(context, event_code);
+        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+        if (currentapiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP){
+            return new ReportJobIntent(context, event_code);
+        } else {
+            return new ReportIntent(context, event_code);
+        }
     }
 
     /**
@@ -145,4 +175,19 @@ public class IronSourceAtomTracker {
         if (URLUtil.isValidUrl(url)) config.setISAEndPointBulk(auth, url);
     }
 
+    class SendHttpRequestTask extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... parameters) {
+            String message = parameters[0];
+            String url = parameters[1];
+
+            try {
+                HttpClient client = HttpClient.getInstance();
+                client.post(message, url);
+            } catch (IOException ex) {
+            }
+
+            return null;
+        }
+    }
 }
