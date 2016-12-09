@@ -57,37 +57,10 @@ and add dependency for Atom SDK
 
 ## Usage
 
-### The SDK is divided into 2 separate services:
-1. High level Tracker - contains a local db and tracks events based on certain parameters.
-2. Low level - contains 2 methods: putEvent() and putEvents() to send 1 event or a batch respectively.  
-**NOTE:** The low level service will be removed on the upcoming version (1.5.0).  
-Check the example to see how to use the Tracker in order to immediately flush, if that is your use case.
+The SDK provides a tracker class which contains a local db and tracks events based on certain parameters.
 
-### Error tracking:
-The sdk supports an option to track internal errors to a separate stream in order to be able  
-to debug errors at the client side.
 
-Create the following table at your Redshift DB:
-```sql
-CREATE TABLE schema.table (
-  details CHARACTER VARYING(1200),
-  timestamp TIMESTAMP WITHOUT TIME ZONE,
-  sdk_version CHARACTER VARYING(10),
-  connection CHARACTER VARYING(20),
-  platform CHARACTER VARYING(20),
-  currencycode CHARACTER VARYING(10),
-  os CHARACTER VARYING(40)
-);
-```
 
-Setup and enable debug:
-```java
-ironSourceAtomFactory.setErrorStream("YOUR.ATOM.ERROR.STREAM");
-ironSourceAtomFactory.setErrorStreamAuth("YOU.AUTH.KEY");
-ironSourceAtomFactory.enableErrorReporting();
-```
-
-### Tracker usage
 Add the following lines to AndroidManifest.xml
 ```java
 <service android:name="io.ironsourceatom.sdk.ReportService" />
@@ -168,77 +141,39 @@ The tracker accumulates events and flushes them when it meets one of the followi
 In case of failure the tracker will preform an exponential backoff with jitter.
 The tracker stores events in a local SQLITE database.
 
-### Low level API Usage
-The Low level SDK method putEvent() or array of events with method putEvents() as shown below.
-This methods start new service and execute http post to the pipeline in it.
 
-Add the following lines to AndroidManifest.xml
-```java
-<service android:name="io.ironsourceatom.sdk.SimpleReportService" />
+### Error tracking:
+The sdk supports an option to track internal errors to a separate stream in order to be able  
+to debug errors at the client side.
+
+Create the following table at your Redshift DB:
+```sql
+CREATE TABLE schema.table (
+  details CHARACTER VARYING(1200),
+  timestamp TIMESTAMP WITHOUT TIME ZONE,
+  sdk_version CHARACTER VARYING(10),
+  connection CHARACTER VARYING(20),
+  platform CHARACTER VARYING(20),
+  currencycode CHARACTER VARYING(10),
+  os CHARACTER VARYING(40)
+);
 ```
-Add IronSourceAtom to your main activity. For example:
 
+Setup and enable debug:
 ```java
-import io.ironsourceatom.sdk.IronSourceAtomFactory;
-import io.ironsourceatom.sdk.IronSourceAtom;
-
-public class BaseMainActivity extends Activity {
-    private IronSourceAtomFactory ironSourceAtomFactory;
-    private static final String TAG = "SDK_EXAMPLE";
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_v2);
-
-        // Create and config IronSourceAtomFactory instance
-        ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
-        ironSourceAtomFactory.enableErrorReporting();
-        ironSourceAtomFactory.setAllowedNetworkTypes(IronSourceAtomFactory.NETWORK_MOBILE | IronSourceAtomFactory.NETWORK_WIFI);
-        ironSourceAtomFactory.setAllowedOverRoaming(true);
-    }
-
-    public void sendReport(View v) {
-        String stream = "your.stream.name";
-
-        // Atom tracking url
-        String url = "http://track.atom-data.io";
-        String authKey = ""; // Pre-shared HMAC auth key
-
-        // Configure sender to use methods putEvent() or putEvents()
-        IronSourceAtom atom = ironSourceAtomFactory.newAtom(authKey); // SET AUTH KEY HERE
-        atom.setEndPoint(url);
-
-        JSONObject params = new JSONObject();
-        try {
-            params.put("event_name", "ANDROID_PUT_EVENT");
-            params.put("id", "" + (int) (100 * Math.random()));
-        } catch (JSONException e) {
-            Log.d(TAG, "Failed to track your json");
-        }
-        Log.d("[putEvent]", params.toString());
-        atom.putEvent(stream, params.toString());
-        
-        Gson gson = new Gson(); // Used for Array to json conversion.
-        List<ExampleData> bulkList = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            bulkList.add(new ExampleData((int) (Math.random() * 100), "ANDROID_PUT_EVENTS"));
-        }
-        Log.d("[putEvents]", gson.toJson(bulkList));
-        atom.putEvents(stream, gson.toJson(bulkList));
-    }
-}
+ironSourceAtomFactory.setErrorStream("YOUR.ATOM.ERROR.STREAM");
+ironSourceAtomFactory.setErrorStreamAuth("YOU.AUTH.KEY");
+ironSourceAtomFactory.enableErrorReporting();
 ```
 
 ## Example
-You can use our [example][example-url] for sending data to Atom:
++You can use our [example(sample)](ironsourceatom-samples) for sending data to Atom:
 
 ![alt text][example]
 
 ## License
 [MIT](LICENSE)
 
-[example-url]: https://github.com/ironSource/atom-android/tree/master/ironsourceatom-samples
 [example]: https://cloud.githubusercontent.com/assets/7361100/16713929/212a5496-46be-11e6-9ff7-0f5ed2c29844.png "example"
 [license-image]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
 [travis-image]: https://travis-ci.org/ironSource/atom-android.svg?branch=master

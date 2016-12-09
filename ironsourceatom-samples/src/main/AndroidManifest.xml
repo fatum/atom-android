@@ -17,6 +17,7 @@
         android:theme="@style/AppTheme">
 
         <service android:name="io.ironsourceatom.sdk.ReportService" />
+
         <!--The Report Job Service should be added from Android API version 21 and above-->
         <service
             android:name="io.ironsourceatom.sdk.ReportJobService"

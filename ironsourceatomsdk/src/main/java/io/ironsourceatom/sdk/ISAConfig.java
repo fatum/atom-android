@@ -42,8 +42,8 @@ class IsaConfig {
     private int allowedNetworkTypes;
     private int bulkSize;
     private int flushInterval;
-    private HashMap<String, String> isaEndPoint;
-    private HashMap<String, String> isaEndPointBulk;
+    private HashMap<String, String> atomEndPoint;
+    private HashMap<String, String> atomBulkEndPoint;
     private long maximumRequestLimit;
     private long maximumDatabaseLimit;
     private String sdkErrorStream;
@@ -73,8 +73,8 @@ class IsaConfig {
      */
     void loadConfig(Context context) {
         isaPrefService = getPrefService(context);
-        isaEndPoint = new HashMap<>();
-        isaEndPointBulk = new HashMap<>();
+        atomEndPoint = new HashMap<>();
+        atomBulkEndPoint = new HashMap<>();
         isEnableErrorReporting = isaPrefService.load(KEY_ENABLE_ERROR_REPORTING, false);
         isAllowedOverRoaming = isaPrefService.load(KEY_ALLOWED_OVER_ROAMING, true);
         allowedNetworkTypes = isaPrefService.load(KEY_ALLOWED_NETWORK_TYPES, DEFAULT_ALLOWED_NETWORK_TYPES);
@@ -87,18 +87,18 @@ class IsaConfig {
     }
 
     /**
-     * Function provide custom end point url for report if was set or default IronSourceAtomFactory Url
+     * Get Atom endpoint
      *
      * @param token unique publisher token
      * @return url of tracker end point
      */
-    public String getISAEndPoint(String token) {
-        if (isaEndPoint.containsKey(token)) {
-            return isaEndPoint.get(token);
+    public String getAtomEndPoint(String token) {
+        if (atomEndPoint.containsKey(token)) {
+            return atomEndPoint.get(token);
         }
         String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT, token));
         if (URLUtil.isValidUrl(url)) {
-            isaEndPoint.put(token, url);
+            atomEndPoint.put(token, url);
             return url;
         }
         return DEFAULT_URL;
@@ -110,8 +110,8 @@ class IsaConfig {
      * @param token uniq publisher token
      * @param url   custom tracker URL
      */
-    protected void setISAEndPoint(String token, String url) {
-        isaEndPoint.put(token, url);
+    protected void setAtomEndPoint(String token, String url) {
+        atomEndPoint.put(token, url);
         isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT, token), url);
     }
 
@@ -121,13 +121,13 @@ class IsaConfig {
      * @param token unique publisher token
      * @return url of tracker end point if
      */
-    public String getISAEndPointBulk(String token) {
-        if (isaEndPointBulk.containsKey(token)) {
-            return isaEndPointBulk.get(token);
+    public String getAtomBulkEndPoint(String token) {
+        if (atomBulkEndPoint.containsKey(token)) {
+            return atomBulkEndPoint.get(token);
         }
         String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT_BULK, token));
         if (URLUtil.isValidUrl(url)) {
-            isaEndPointBulk.put(token, url);
+            atomBulkEndPoint.put(token, url);
             Logger.log(TAG, "SENDING TO URL: " + url, Logger.SDK_DEBUG);
             return url;
         }
@@ -138,13 +138,13 @@ class IsaConfig {
     /**
      * Function set custom URL for tracker
      *
-     * @param token unique publisher token
+     * @param authToken unique publisher authToken
      * @param url   custom tracker URL
      * @throws MalformedURLException
      */
-    protected void setISAEndPointBulk(String token, String url) {
-        isaEndPointBulk.put(token, url);
-        isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT_BULK, token), url);
+    protected void setAtomBulkEndPoint(String authToken, String url) {
+        atomBulkEndPoint.put(authToken, url);
+        isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT_BULK, authToken), url);
     }
 
     /**

@@ -77,7 +77,7 @@ class ReportHandler {
                 case SdkEvent.REPORT_ERROR:
                     if (isOnline) {
                         String message = createMessage(dataObject, false);
-                        String url = config.getISAEndPoint(dataObject.getString(ReportIntent.TOKEN));
+                        String url = config.getAtomEndPoint(dataObject.getString(ReportIntent.TOKEN));
                         if (send(message, url) != SendStatus.RETRY || sdkEvent == SdkEvent.REPORT_ERROR)
                             break;
                     }
@@ -126,7 +126,7 @@ class ReportHandler {
             event.put(ReportIntent.TABLE, table.name);
             event.put(ReportIntent.TOKEN, table.token);
             event.put(ReportIntent.DATA, batch.events.toString());
-            SendStatus res = send(createMessage(event, true), config.getISAEndPointBulk(table.token));
+            SendStatus res = send(createMessage(event, true), config.getAtomBulkEndPoint(table.token));
             if (res == SendStatus.RETRY) {
                 throw new Exception("Failed flush entries for table: " + table.name);
             }
@@ -201,7 +201,7 @@ class ReportHandler {
      * @return
      */
     private boolean canUseNetwork() {
-        if ((config.getAllowedNetworkTypes() & networkManager.getNetworkIBType()) == 0) {
+        if ((config.getAllowedNetworkTypes() & networkManager.getNetworkAtomType()) == 0) {
             return false;
         }
         return config.isAllowedOverRoaming() || !networkManager.isDataRoamingEnabled();

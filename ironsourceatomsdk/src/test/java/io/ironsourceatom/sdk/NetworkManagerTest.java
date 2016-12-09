@@ -61,13 +61,13 @@ public class NetworkManagerTest {
     public void getNetworkIBTypeTest() {
         // #1
         when(mNetworkInfo.getType()).thenReturn(ConnectivityManager.TYPE_WIFI);
-        assertEquals(mNetManager.getNetworkIBType(), IronSourceAtomFactory.NETWORK_WIFI);
+        assertEquals(mNetManager.getNetworkAtomType(), IronSourceAtomFactory.NETWORK_WIFI);
         // #2
         when(mNetworkInfo.getType()).thenReturn(ConnectivityManager.TYPE_MOBILE);
-        assertEquals(mNetManager.getNetworkIBType(), IronSourceAtomFactory.NETWORK_MOBILE);
+        assertEquals(mNetManager.getNetworkAtomType(), IronSourceAtomFactory.NETWORK_MOBILE);
         // #3
         when(mNetworkInfo.getType()).thenReturn(ConnectivityManager.TYPE_BLUETOOTH);
-        assertEquals(mNetManager.getNetworkIBType(), 0);
+        assertEquals(mNetManager.getNetworkAtomType(), 0);
     }
 
     final Context mContext = mock(MockContext.class);

@@ -81,7 +81,7 @@ public class ReportHandlerTest {
         // add default configuration
         when(config.getNumOfRetries()).thenReturn(1);
         when(config.getAllowedNetworkTypes()).thenReturn(-1);
-        when(netManager.getNetworkIBType()).thenReturn(-1);
+        when(netManager.getNetworkAtomType()).thenReturn(-1);
         when(netManager.isOnline()).thenReturn(true);
     }
 
@@ -103,7 +103,7 @@ public class ReportHandlerTest {
         String url = "http://host.com/post";
         when(client.post(anyString(), anyString())).thenReturn(ok);
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
-        when(config.getISAEndPoint(anyString())).thenReturn(url);
+        when(config.getAtomEndPoint(anyString())).thenReturn(url);
         assertTrue(handler.handleReport(intent) == ReportHandler.HandleStatus.HANDLED);
         verify(netManager, times(1)).isOnline();
         verify(client, times(1)).post(anyString(), eq(url));
@@ -116,7 +116,7 @@ public class ReportHandlerTest {
     public void postAuthFailed() throws Exception {
         String url = "http://host.com";
         when(config.getNumOfRetries()).thenReturn(10);
-        when(config.getISAEndPoint(TOKEN)).thenReturn(url);
+        when(config.getAtomEndPoint(TOKEN)).thenReturn(url);
         when(client.post(anyString(), anyString())).thenReturn(new Response() {{
             code = 401;
             body = "Unauthorized";
@@ -175,7 +175,7 @@ public class ReportHandlerTest {
         when(client.post(anyString(), anyString())).thenReturn(ok);
         for (TestScenario test : scenarios) {
             when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
-            when(netManager.getNetworkIBType()).thenReturn(test.networkStatus);
+            when(netManager.getNetworkAtomType()).thenReturn(test.networkStatus);
             assertEquals(handler.handleReport(intent), test.expected);
         }
     }

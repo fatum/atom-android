@@ -37,6 +37,8 @@ public class HttpClient implements RemoteService {
     /**
      * Post String-data to the given url.
      *
+     * @param data string with data to send
+     * @param url  target url
      * @return RemoteService.Response that has code and body.
      */
     public Response post(final String data, final String url) throws IOException {
@@ -64,7 +66,7 @@ public class HttpClient implements RemoteService {
         }  catch (final IOException e) {
             if (connection != null &&
                     (response.code = connection.getResponseCode()) >= HTTP_BAD_REQUEST) {
-                Logger.log(TAG, "Failed post to IB. StatusCode: " + response.code, Logger.SDK_DEBUG);
+                Logger.log(TAG, "Failed post to Atom. StatusCode: " + response.code, Logger.SDK_DEBUG);
             } else {
                 throw e;
             }

@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.Map;
 
 
-
 /**
  * This class is the High Level SDK for ironSource Atom (with tracker)
  */
@@ -48,8 +47,6 @@ public class IronSourceAtomTracker {
      * @param sendNow    flag if true report will send immediately else will postponed
      */
     public void track(String streamName, String data, boolean sendNow) {
-       // Logger.log("sdfsdfsdf", Logger.SDK_ERROR);
-
         openReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE)
                 .setTable(streamName)
                 .setToken(auth)
@@ -121,11 +118,6 @@ public class IronSourceAtomTracker {
      * Flush error info to error stream
      */
     public void trackError(String streamName, JSONObject data) {
-       /* openReport(context, SdkEvent.REPORT_ERROR)
-                .setTable(streamName)
-                .setToken(auth)
-                .setData(data.toString())
-                .send(); */
         try {
             String dataStr = data.toString();
             JSONObject message = new JSONObject();
@@ -136,7 +128,7 @@ public class IronSourceAtomTracker {
             message.put(ReportIntent.TABLE, streamName);
             message.put(ReportIntent.DATA, dataStr);
 
-            String url = config.getISAEndPoint(auth);
+            String url = config.getAtomEndPoint(auth);
 
             // Cause of a bug in the Async task init
             try {
@@ -151,7 +143,7 @@ public class IronSourceAtomTracker {
 
     protected Report openReport(Context context, int event_code) {
         int currentApiVersion = android.os.Build.VERSION.SDK_INT;
-        if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP){
+        if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             return new ReportJobIntent(context, event_code);
         } else {
             return new ReportIntent(context, event_code);
@@ -164,7 +156,7 @@ public class IronSourceAtomTracker {
      * @param url Custom publisher destination url.
      */
     public void setISAEndPoint(String url) {
-        if (URLUtil.isValidUrl(url)) config.setISAEndPoint(auth, url);
+        if (URLUtil.isValidUrl(url)) config.setAtomEndPoint(auth, url);
     }
 
     /**
@@ -173,10 +165,14 @@ public class IronSourceAtomTracker {
      * @param url
      */
     public void setISABulkEndPoint(String url) {
-        if (URLUtil.isValidUrl(url)) config.setISAEndPointBulk(auth, url);
+        if (URLUtil.isValidUrl(url)) config.setAtomBulkEndPoint(auth, url);
     }
 
-    class SendHttpRequestTask extends AsyncTask<String, Void, Void> {
+    /**
+     * Class for Asynchronously sending HTTP requests (case of error in the SDK)
+     * Opens a separate thread
+     */
+    private class SendHttpRequestTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... parameters) {
             String message = parameters[0];
@@ -186,8 +182,8 @@ public class IronSourceAtomTracker {
                 HttpClient client = HttpClient.getInstance();
                 client.post(message, url);
             } catch (IOException ex) {
+                Logger.log(TAG, ex.toString(), Logger.SDK_DEBUG);
             }
-
             return null;
         }
     }

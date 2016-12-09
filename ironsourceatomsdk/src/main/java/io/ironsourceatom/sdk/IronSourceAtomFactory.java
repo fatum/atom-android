@@ -175,19 +175,19 @@ public class IronSourceAtomFactory {
             IronSourceAtomTracker sdkTracker = this.newTracker(authKey);
 
             try {
-                JSONObject report = new JSONObject();
-                report.put("details", errorString);
-                report.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
+                JSONObject errorReport = new JSONObject();
+                errorReport.put("details", errorString);
+                errorReport.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH)
                         .format(Calendar.getInstance().getTime()));
-                report.put("sdk_version", Consts.VER);
-                report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
-                report.put("platform", "Android");
-                report.put("os", String.valueOf(Build.VERSION.SDK_INT));
-                report.put("api_version", Build.VERSION.RELEASE);
-                report.put("manufacturer", Build.MANUFACTURER);
-                report.put("model", Build.MODEL);
-                report.put("locale", context.getResources().getConfiguration().locale.toString());
-                sdkTracker.trackError(stream, report);
+                errorReport.put("sdk_version", Consts.VER);
+                errorReport.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
+                errorReport.put("platform", "Android");
+                errorReport.put("os", String.valueOf(Build.VERSION.SDK_INT));
+                errorReport.put("api_version", Build.VERSION.RELEASE);
+                errorReport.put("manufacturer", Build.MANUFACTURER);
+                errorReport.put("model", Build.MODEL);
+                errorReport.put("locale", context.getResources().getConfiguration().locale.toString());
+                sdkTracker.trackError(stream, errorReport);
             } catch (Exception e) {
                 Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
             }

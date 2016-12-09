@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Persistence exponential backoff service.
+ * Persistent exponential backoff service.
  */
 class BackOff {
     private static BackOff sInstance;
@@ -38,19 +38,19 @@ class BackOff {
     }
 
     /**
-     * Calculates and Returns the next milliseconds and advances the counter.
+     * Calculates and returns the next retry time in milliseconds and advances the counter.
      * nextTick - the next clock tick that the function returns
-     * scheduledNextTick - The last known nextTick (used to store the state)
+     * lastTick - The last known tick (used to store the state)
      *
-     * @return nextTick - next clock tick.
+     * @return nextTick - next clock tick for backoff service
      */
     synchronized long next() {
         long nextTick, currentTime = currentTimeMillis();
-        long scheduledNextTick = prefService.load(KEY_LAST_TICK, currentTime);
+        long lastTick = prefService.load(KEY_LAST_TICK, currentTime);
         long temp = getMills(retry);
 
         nextTick = currentTime + temp; // set the nextTick
-        if (currentTime > scheduledNextTick) {
+        if (currentTime > lastTick) {
             prefService.save(KEY_RETRY_COUNT, ++retry);
         }
         prefService.save(KEY_LAST_TICK, nextTick);
@@ -58,10 +58,10 @@ class BackOff {
     }
 
     /**
-     * Get milliseconds number based on the given n.
+     * Get milliseconds number based on the given n (retry number)
      *
-     * @param n
-     * @return
+     * @param n retry number
+     * @return new retry time in milliseconds
      */
     private long getMills(int n) {
         if (n <= INITIAL_RETRY_VALUE) {
