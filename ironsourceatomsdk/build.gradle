@@ -215,7 +215,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
             dir: './build/intermediates/classes/debug/io/ironsourceatom/sdk',
             excludes: [
                     'SdkEvent.class',
-                    'ReportService.class',
+                    'Report*.class',
                     'Consts.class',
                     'SdkEvent.class',
                     'Report.class',
@@ -225,10 +225,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
                     'ExternalVars.class',
                     'Utils.class',
                     'Db*.class',
-                    'IronSourceAtomFactory.class',
-                    'IronSourceAtomTracker.class',
-                    'ReportJobIntent.class',
-                    'ReportJobService.class',
+                    'IronSource*.class',
                     'Isa*.class',
                     'IS*.class',
                     'ReportHandler.class'
