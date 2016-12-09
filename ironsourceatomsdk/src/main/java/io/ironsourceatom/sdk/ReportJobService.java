@@ -1,7 +1,6 @@
 package io.ironsourceatom.sdk;
 
 import android.annotation.TargetApi;
-import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -25,12 +24,14 @@ public class ReportJobService extends JobService {
 
     private final LinkedList<JobParameters> jobParamsMap = new LinkedList<JobParameters>();
 
+    // Handler thread - used to start a thread with a Looper (to run msgs in a queue)
     private static HandlerThread handlerThread = new HandlerThread(TAG);
 
     static {
         handlerThread.start();
     }
 
+    // Handler thread to process Runnables from the looper
     private Handler handlerLooper = new Handler(handlerThread.getLooper());
 
     @Override
@@ -50,13 +51,14 @@ public class ReportJobService extends JobService {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
+        // called on intent.startService(intent) at ReportJobIntent
         handlerLooper.post(new Runnable() {
             @Override
             public void run() {
                 try {
                     if (handler.handleReport(intent) == ReportHandler.HandleStatus.RETRY &&
                             backOff.hasNext()) {
-                        setJob(backOff.next());
+                        createJob(backOff.next());
                     } else {
                         backOff.reset();
                     }
@@ -69,23 +71,23 @@ public class ReportJobService extends JobService {
         return START_NOT_STICKY;
     }
 
-    protected void setJob(long triggerMills) {
+    /**
+     * Create a job at the JobScheduler class,
+     *
+     * @param triggerMills time to be executed in
+     */
+    protected void createJob(long triggerMills) {
         Logger.log(TAG, "Setting alarm, Will send in: " + (triggerMills - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
 
         ComponentName serviceComponent = new ComponentName(this.getApplicationContext(), ReportJobService.class);
         JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
         builder.setOverrideDeadline(triggerMills - backOff.currentTimeMillis());
-
-        JobScheduler tm =
-                (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        tm.schedule(builder.build());
+        // After X seconds it will start onStartJob
+        jobScheduler.schedule(builder.build());
     }
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        // We don't do any real 'work' in this sample app. All we'll
-        // do is track which jobs have landed on our service, and
-        // update the UI accordingly.
         jobParamsMap.add(params);
 
         ReportJobIntent report = new ReportJobIntent(this, SdkEvent.FLUSH_QUEUE);
@@ -96,7 +98,6 @@ public class ReportJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        // Stop tracking these job parameters, as we've 'finished' executing.
         jobParamsMap.remove(params);
 
         return true;

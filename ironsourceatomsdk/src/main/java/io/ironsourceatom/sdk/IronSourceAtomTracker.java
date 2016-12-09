@@ -143,6 +143,7 @@ public class IronSourceAtomTracker {
 
     protected Report openReport(Context context, int event_code) {
         int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+        // Case Android Lollipop or higher we use JobScheduler else AlarmManager
         if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             return new ReportJobIntent(context, event_code);
         } else {
