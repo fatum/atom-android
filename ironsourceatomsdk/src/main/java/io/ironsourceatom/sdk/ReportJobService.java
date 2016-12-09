@@ -15,10 +15,6 @@ import android.os.HandlerThread;
 
 import java.util.LinkedList;
 
-/**
- * Created by g8y3e on 12/8/16.
- */
-
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class ReportJobService extends JobService {
     private static final String TAG = "ReportJobService";
@@ -30,6 +26,7 @@ public class ReportJobService extends JobService {
     private final LinkedList<JobParameters> jobParamsMap = new LinkedList<JobParameters>();
 
     private static HandlerThread handlerThread = new HandlerThread(TAG);
+
     static {
         handlerThread.start();
     }
@@ -44,8 +41,6 @@ public class ReportJobService extends JobService {
         jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         handler = new ReportHandler(context);
         backOff = BackOff.getInstance(context);
-
-        System.out.println("sdfdfdsfsdfsdfds\n\n");
     }
 
     @Override
@@ -79,7 +74,7 @@ public class ReportJobService extends JobService {
 
         ComponentName serviceComponent = new ComponentName(this.getApplicationContext(), ReportJobService.class);
         JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-        builder.setOverrideDeadline(1000);
+        builder.setOverrideDeadline(triggerMills - backOff.currentTimeMillis());
 
         JobScheduler tm =
                 (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);

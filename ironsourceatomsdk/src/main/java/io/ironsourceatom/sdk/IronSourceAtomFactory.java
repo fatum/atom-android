@@ -183,7 +183,10 @@ public class IronSourceAtomFactory {
                 report.put("connection", NetworkManager.getInstance(context).getConnectedNetworkType());
                 report.put("platform", "Android");
                 report.put("os", String.valueOf(Build.VERSION.SDK_INT));
-
+                report.put("api_version", Build.VERSION.RELEASE);
+                report.put("manufacturer", Build.MANUFACTURER);
+                report.put("model", Build.MODEL);
+                report.put("locale", context.getResources().getConfiguration().locale.toString());
                 sdkTracker.trackError(stream, report);
             } catch (Exception e) {
                 Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);

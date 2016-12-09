@@ -138,6 +138,7 @@ public class IronSourceAtomTracker {
 
             String url = config.getISAEndPoint(auth);
 
+            // Cause of a bug in the Async task init
             try {
                 new SendHttpRequestTask().execute(message.toString(), url);
             } catch (IllegalStateException ex) {
@@ -149,8 +150,8 @@ public class IronSourceAtomTracker {
     }
 
     protected Report openReport(Context context, int event_code) {
-        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
-        if (currentapiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP){
+        int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+        if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP){
             return new ReportJobIntent(context, event_code);
         } else {
             return new ReportIntent(context, event_code);

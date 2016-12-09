@@ -17,10 +17,11 @@
         android:theme="@style/AppTheme">
 
         <service android:name="io.ironsourceatom.sdk.ReportService" />
+        <!--The Report Job Service should be added from Android API version 21 and above-->
         <service
             android:name="io.ironsourceatom.sdk.ReportJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true"/>
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <activity
             android:name="io.ironsourceatom.sample.MainActivity"

@@ -4,10 +4,6 @@ package io.ironsourceatom.sdk;
 import android.content.Context;
 import android.content.Intent;
 
-/**
- * Created by valentine.pavchuk on 12/8/16.
- */
-
 public class ReportJobIntent implements Report {
     protected static final String EXTRA_SDK_EVENT = "sdk_event";
 
