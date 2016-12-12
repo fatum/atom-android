@@ -79,10 +79,13 @@ public class ReportJobService extends JobService {
     protected void createJob(long triggerMills) {
         Logger.log(TAG, "Setting alarm, Will send in: " + (triggerMills - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
 
+        long deltaTime = (triggerMills - backOff.currentTimeMillis());
+
         ComponentName serviceComponent = new ComponentName(this.getApplicationContext(), ReportJobService.class);
         JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-        builder.setOverrideDeadline(triggerMills - backOff.currentTimeMillis());
-        // After X seconds it will start onStartJob
+        builder.setMinimumLatency(deltaTime);
+        builder.setOverrideDeadline(deltaTime);
+
         jobScheduler.schedule(builder.build());
     }
 
