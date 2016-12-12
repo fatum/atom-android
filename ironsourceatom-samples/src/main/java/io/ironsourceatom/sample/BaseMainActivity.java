@@ -29,7 +29,7 @@ public class BaseMainActivity extends Activity {
         ironSourceAtomFactory.setErrorStreamAuth("I40iwPPOsG3dfWX30labriCg9HqMfL");
         ironSourceAtomFactory.enableErrorReporting();
         ironSourceAtomFactory.setBulkSize(5);
-        ironSourceAtomFactory.setFlushInterval(3000);
+        ironSourceAtomFactory.setFlushInterval(10000);
         ironSourceAtomFactory.setAllowedNetworkTypes(IronSourceAtomFactory.NETWORK_MOBILE | IronSourceAtomFactory.NETWORK_WIFI);
         ironSourceAtomFactory.setAllowedOverRoaming(true);
     }
@@ -79,11 +79,5 @@ public class BaseMainActivity extends Activity {
                 tracker.flush();
                 break;
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
     }
 }
