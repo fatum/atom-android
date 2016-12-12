@@ -8,22 +8,6 @@
     android:paddingTop="@dimen/activity_vertical_margin">
 
     <Button
-        android:id="@+id/btnPutEvent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Test Low Level putEvent"
-        android:onClick="sendReport"
-        android:layout_marginTop="8dp" />
-
-    <Button
-        android:id="@+id/btnPutEvents"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Test Low Level putEvents"
-        android:onClick="sendReport"
-        android:layout_marginTop="8dp" />
-
-    <Button
         android:id="@+id/btnTrackReport"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
