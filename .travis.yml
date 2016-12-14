@@ -23,6 +23,7 @@ script:
   - adb devices
   - adb install trackertest/build/outputs/apk/trackertest-debug.apk
   - adb shell am start -W -n io.ironsourceatom.trackertest/io.ironsourceatom.trackertest.MainActivity -c android.intent.category.LAUNCHER -D
+  - sleep 22
   - adb logcat -t 500
 
 before_script:
