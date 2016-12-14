@@ -21,8 +21,9 @@ script:
   - "./gradlew clean build jacocoTestReport coveralls --info --stacktrace"
   - android-wait-for-emulator
   - adb devices
-  - adb install -r trackertest/build/outputs/apk/trackertest-debug.apk
-  - adb shell am start -n io.ironsourceatom.trackertest/io.ironsourceatom.trackertest.MainActivity -c android.intent.category.LAUNCHER -D
+  - adb install trackertest/build/outputs/apk/trackertest-debug.apk
+  - adb shell am start -W -n io.ironsourceatom.trackertest/io.ironsourceatom.trackertest.MainActivity -c android.intent.category.LAUNCHER -D
+  - adb logcat -t 500
 
 before_script:
   - android list targets
