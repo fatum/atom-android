@@ -1,8 +1,8 @@
 package io.ironsourceatom.trackertest;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -16,7 +16,7 @@ import io.ironsourceatom.sdk.Report;
 import io.ironsourceatom.sdk.ReportHandler;
 import io.ironsourceatom.sdk.StorageService;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     protected static final String TAG = "TrackerTest";
 
     protected Boolean isFlushCalled = false;
