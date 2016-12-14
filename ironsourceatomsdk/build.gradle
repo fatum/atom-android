@@ -36,8 +36,8 @@ android {
      * utilities, and compiler that Gradle should use to build your app. You need to
      * download the build tools using the SDK Manager.
      */
-    compileSdkVersion 22
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 24
+    buildToolsVersion "25.0.2"
 
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
