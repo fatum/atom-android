@@ -24,6 +24,7 @@ import java.util.Map;
  */
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, emulateSdk = 18, manifest = Config.NONE)
+
 public class ReportHandlerIntegrationTest {
 
     @Before

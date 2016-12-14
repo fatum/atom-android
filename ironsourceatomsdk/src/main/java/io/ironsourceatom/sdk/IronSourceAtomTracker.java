@@ -32,7 +32,7 @@ public class IronSourceAtomTracker {
      * @param context current context object
      * @param auth    pre shared auth key for Atom cluster
      */
-    IronSourceAtomTracker(Context context, String auth) {
+    public IronSourceAtomTracker(Context context, String auth) {
         this.context = context;
         this.auth = auth;
         config = IsaConfig.getInstance(context);

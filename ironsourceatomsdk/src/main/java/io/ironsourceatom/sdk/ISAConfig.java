@@ -7,8 +7,7 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Locale;
 
-class IsaConfig {
-
+public class IsaConfig {
     private static final String TAG = IsaConfig.class.getSimpleName();
     private static final Object sInstanceLock = new Object();
     protected static final String DEFAULT_URL = "http://track.atom-data.io/bulk";
@@ -57,7 +56,7 @@ class IsaConfig {
         loadConfig(context);
     }
 
-    static IsaConfig getInstance(Context context) {
+    public static IsaConfig getInstance(Context context) {
         synchronized (sInstanceLock) {
             if (null == sInstance) {
                 sInstance = new IsaConfig(context);
@@ -161,7 +160,7 @@ class IsaConfig {
      *
      * @param size max number of reports in bulk
      */
-    void setBulkSize(int size) {
+    public void setBulkSize(int size) {
         bulkSize = size > 0 ? size : bulkSize;
         isaPrefService.save(KEY_BULK_SIZE, bulkSize);
     }
@@ -175,7 +174,7 @@ class IsaConfig {
         return flushInterval;
     }
 
-    void setFlushInterval(int ms) {
+    public void setFlushInterval(int ms) {
         flushInterval = ms;
         isaPrefService.save(KEY_FLUSH_INTERVAL, flushInterval);
     }

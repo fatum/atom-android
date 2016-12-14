@@ -21,12 +21,10 @@ import static java.lang.Math.ceil;
 /**
  * Class responsible for tracker logic
  */
-class ReportHandler {
+public class ReportHandler {
+    public enum SendStatus {SUCCESS, DELETE, RETRY}
 
-
-    enum SendStatus {SUCCESS, DELETE, RETRY}
-
-    enum HandleStatus {HANDLED, RETRY}
+    public enum HandleStatus {HANDLED, RETRY}
 
     private static final String TAG = "ReportHandler";
     private NetworkManager networkManager;
@@ -48,7 +46,7 @@ class ReportHandler {
      * @param intent
      * @return result of the handleReport if success true or failed false
      */
-    public synchronized HandleStatus handleReport(Intent intent) {
+    public synchronized HandleStatus handleReport(Intent intent) throws IOException {
         HandleStatus status = HandleStatus.HANDLED;
         boolean isOnline = networkManager.isOnline() && canUseNetwork();
         try {
@@ -97,6 +95,7 @@ class ReportHandler {
             status = HandleStatus.RETRY;
             Logger.log(TAG, e.getMessage(), Logger.SDK_DEBUG);
         }
+
         return status;
     }
 
@@ -173,6 +172,7 @@ class ReportHandler {
      */
     protected SendStatus send(String data, String url) {
         int nRetry = config.getNumOfRetries();
+
         Logger.log(TAG, "Tracking data:" + data, Logger.SDK_DEBUG);
         while (nRetry-- > 0) {
             try {

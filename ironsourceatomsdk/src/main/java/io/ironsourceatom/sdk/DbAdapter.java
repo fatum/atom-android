@@ -15,7 +15,7 @@ import android.database.sqlite.SQLiteStatement;
 /**
  * Db Adapter class for local SQLite DB
  */
-class DbAdapter implements StorageService {
+public class DbAdapter implements StorageService {
     /**
      * Do not call directly. You should use DbAdapter.getInstance()
      */
@@ -70,7 +70,7 @@ class DbAdapter implements StorageService {
                 db.insertWithOnConflict(TABLES_TABLE, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
             }
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to insert event to 'records' table", Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to insert event to 'records' table", e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -135,7 +135,7 @@ class DbAdapter implements StorageService {
                 events.add(c.getString(c.getColumnIndex(KEY_DATA)));
             }
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to get a events of table" + table.name, Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to get a events of table" + table.name, e, Logger.SDK_ERROR);
             lastId = null;
             events = null;
         } finally {
@@ -165,7 +165,7 @@ class DbAdapter implements StorageService {
                 tables.add(new Table(name, token));
             }
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to get all tables" + e.getMessage(), Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to get all tables" + e.getMessage(), e, Logger.SDK_ERROR);
         } finally {
             if (null != c) c.close();
             mDb.close();
@@ -189,7 +189,7 @@ class DbAdapter implements StorageService {
             n = db.delete(REPORTS_TABLE, deleteParams,
                     new String[]{table.name, lastId});
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to clean up events from table: " + table.name, Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to clean up events from table: " + table.name, e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -208,7 +208,7 @@ class DbAdapter implements StorageService {
             String deleteParams = KEY_TABLE + "=?";
             db.delete(TABLES_TABLE, deleteParams, new String[]{table.name});
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to delete table:" + table.name, Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to delete table:" + table.name, e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -238,7 +238,7 @@ class DbAdapter implements StorageService {
             vacuumStmt.execute();
 
         } catch (SQLiteException e) {
-            Logger.log(TAG, "Failed to shrink and vacuum db:" + e, Logger.SDK_ERROR);
+            Logger.log(TAG, "Failed to shrink and vacuum db:" + e, e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();

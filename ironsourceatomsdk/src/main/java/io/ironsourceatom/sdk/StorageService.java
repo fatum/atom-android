@@ -2,7 +2,7 @@ package io.ironsourceatom.sdk;
 
 import java.util.List;
 
-interface StorageService {
+public interface StorageService {
     List<Table> getTables();
     void deleteTable(Table table);
     int count(Table table);

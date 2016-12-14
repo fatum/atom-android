@@ -16,23 +16,23 @@ import java.util.LinkedList;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class ReportJobService extends JobService {
-    private static final String TAG = "ReportJobService";
+    protected static final String TAG = "ReportJobService";
 
-    private JobScheduler jobScheduler;
-    private ReportHandler handler;
-    private BackOff backOff;
+    protected JobScheduler jobScheduler;
+    protected ReportHandler handler;
+    protected BackOff backOff;
 
-    private final LinkedList<JobParameters> jobParamsMap = new LinkedList<JobParameters>();
+    protected final LinkedList<JobParameters> jobParamsMap = new LinkedList<JobParameters>();
 
     // Handler thread - used to start a thread with a Looper (to run msgs in a queue)
-    private static HandlerThread handlerThread = new HandlerThread(TAG);
+    protected static HandlerThread handlerThread = new HandlerThread(TAG);
 
     static {
         handlerThread.start();
     }
 
     // Handler thread to process Runnables from the looper
-    private Handler handlerLooper = new Handler(handlerThread.getLooper());
+    protected Handler handlerLooper = new Handler(handlerThread.getLooper());
 
     @Override
     public void onCreate() {
@@ -63,7 +63,7 @@ public class ReportJobService extends JobService {
                         backOff.reset();
                     }
                 } catch (Throwable th) {
-                    Logger.log(TAG, "failed to handle intent: " + th, Logger.SDK_ERROR);
+                    Logger.log(TAG, "failed to handle intent: " + th, th, Logger.SDK_ERROR);
                 }
             }
         });

@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Persistent exponential backoff service.
  */
-class BackOff {
+public class BackOff {
     private static BackOff sInstance;
     private static final Object sInstanceLock = new Object();
 
@@ -87,7 +87,7 @@ class BackOff {
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    protected long currentTimeMillis() {
+    public long currentTimeMillis() {
         return System.currentTimeMillis();
     }
 

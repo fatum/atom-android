@@ -1,7 +1,6 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
-import android.net.NetworkInfo;
 import android.test.mock.MockContext;
 
 import org.json.JSONException;

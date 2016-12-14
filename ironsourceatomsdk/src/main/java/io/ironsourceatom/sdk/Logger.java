@@ -2,7 +2,10 @@ package io.ironsourceatom.sdk;
 
 import android.util.Log;
 
-class Logger {
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+public class Logger {
     protected static final int PRE_INIT = 1;
     public static final int SDK_ERROR = 2;
     public static final int NORMAL = 3;
@@ -12,7 +15,35 @@ class Logger {
 
     public static IsaConfig.LOG_TYPE logLevel = IsaConfig.LOG_TYPE.PRODUCTION;
 
+    private static boolean PRINT_ERROR_STACK_TRACE = false;
+
+    /**
+     * Set Atom Logger print error stack trace
+     *
+     * @param printData is need to print data
+     */
+    public static void setPrintErrorStackTrace(boolean printData) {
+        PRINT_ERROR_STACK_TRACE = printData;
+    }
+
     public static void log(String tag, String msg, int level) {
+        log(String.format("[%s]: %s", tag, msg), level);
+    }
+
+    public static void log(String tag, String msg, Throwable ex, int level) {
+        if (PRINT_ERROR_STACK_TRACE) {
+            StringBuilder errorMessage = new StringBuilder();
+
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            ex.printStackTrace(pw);
+
+            errorMessage.append(sw.toString()).append("\n");
+            errorMessage.append(msg);
+
+            msg = errorMessage.toString();
+        }
+
         log(String.format("[%s]: %s", tag, msg), level);
     }
 

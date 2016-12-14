@@ -19,8 +19,6 @@ import static org.junit.Assert.*;
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, emulateSdk = 18, manifest = Config.NONE)
 public class DbIntegrationTest {
-
-
     DbAdapter adapter;
     final Table table = new Table("a8m", "token");
     final String DATA = "foobarbaz";

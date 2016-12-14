@@ -6,18 +6,16 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import java.sql.Time;
+import java.io.IOException;
 
 /**
  * Intent service to handle tracker functionality
  */
 public class ReportService extends IntentService {
-
-
-    final static private String TAG = "ReportService";
-    private AlarmManager alarmManager;
-    private ReportHandler handler;
-    private BackOff backOff;
+    protected static final String TAG = "ReportService";
+    protected AlarmManager alarmManager;
+    protected ReportHandler handler;
+    protected BackOff backOff;
 
     public ReportService() {
         super(TAG);
@@ -42,7 +40,7 @@ public class ReportService extends IntentService {
                 backOff.reset();
             }
         } catch (Throwable th) {
-            Logger.log(TAG, "failed to handle intent: " + th, Logger.SDK_ERROR);
+            Logger.log(TAG, "failed to handle intent: " + th, th, Logger.SDK_ERROR);
         }
 
     }

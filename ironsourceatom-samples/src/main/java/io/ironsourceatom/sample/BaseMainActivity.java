@@ -3,7 +3,6 @@ package io.ironsourceatom.sample;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 
 import org.json.JSONException;

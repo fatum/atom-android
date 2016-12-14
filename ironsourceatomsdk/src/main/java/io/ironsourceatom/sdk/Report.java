@@ -2,7 +2,7 @@ package io.ironsourceatom.sdk;
 
 import android.content.Intent;
 
-interface Report {
+public interface Report {
     Report setData(String value);
 
     Report setTable(String table);

@@ -14,16 +14,16 @@ public class ReportJobIntent implements Report {
     public static final String AUTH = "auth";
     public static final String ENDPOINT = "endpoint";
 
-    private Context context;
-    private Intent intent;
+    protected Context context;
+    protected Intent intent;
 
-    ReportJobIntent(Context context, int sdkEvent) {
+    public ReportJobIntent(Context context, int sdkEvent) {
         this.context = context;
         intent = new Intent(context, ReportJobService.class);
         intent.putExtra(EXTRA_SDK_EVENT, sdkEvent);
     }
 
-    ReportJobIntent(Context context) {
+    public ReportJobIntent(Context context) {
         this.context = context;
         intent = new Intent(context, ReportJobService.class);
     }

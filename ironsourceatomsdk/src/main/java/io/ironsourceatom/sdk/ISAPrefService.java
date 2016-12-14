@@ -2,7 +2,6 @@ package io.ironsourceatom.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.StrictMode;
 
 class IsaPrefService {
 

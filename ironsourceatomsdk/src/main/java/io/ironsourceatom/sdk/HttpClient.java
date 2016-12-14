@@ -1,14 +1,10 @@
 package io.ironsourceatom.sdk;
 
-import android.util.Base64;
-import android.util.Log;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;

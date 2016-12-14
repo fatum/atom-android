@@ -3,8 +3,8 @@ package io.ironsourceatom.sdk;
 import android.content.Context;
 import android.content.Intent;
 
-class ReportIntent implements Report {
-    protected static final String EXTRA_SDK_EVENT = "sdk_event";
+public class ReportIntent implements Report {
+    public static final String EXTRA_SDK_EVENT = "sdk_event";
 
     public static final String TABLE = "table";
     public static final String TOKEN = "token";
@@ -13,16 +13,16 @@ class ReportIntent implements Report {
     public static final String AUTH = "auth";
     public static final String ENDPOINT = "endpoint";
 
-    private Context context;
-    private Intent intent;
+    protected Context context;
+    protected Intent intent;
 
-    ReportIntent(Context context, int sdkEvent) {
+    public ReportIntent(Context context, int sdkEvent) {
         this.context = context;
         intent = new Intent(context, ReportService.class);
         intent.putExtra(EXTRA_SDK_EVENT, sdkEvent);
     }
 
-    ReportIntent(Context context) {
+    public ReportIntent(Context context) {
         this.context = context;
         intent = new Intent(context, ReportService.class);
 
