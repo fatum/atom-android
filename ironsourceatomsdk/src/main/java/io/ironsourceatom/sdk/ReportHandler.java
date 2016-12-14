@@ -46,7 +46,7 @@ public class ReportHandler {
      * @param intent
      * @return result of the handleReport if success true or failed false
      */
-    public synchronized HandleStatus handleReport(Intent intent) throws IOException {
+    public synchronized HandleStatus handleReport(Intent intent) {
         HandleStatus status = HandleStatus.HANDLED;
         boolean isOnline = networkManager.isOnline() && canUseNetwork();
         try {

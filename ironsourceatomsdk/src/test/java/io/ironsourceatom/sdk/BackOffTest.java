@@ -34,7 +34,7 @@ public class BackOffTest {
         }
 
         @Override
-        protected long currentTimeMillis() {
+        public long currentTimeMillis() {
             return currentMills;
         }
     };
