@@ -1,6 +1,5 @@
 #!/bin/bash "
-LOG_DATA=$(cat logcat.txt)
-echo $LOG_DATA
+printf '%b\n' "$(cat logcat.txt)"
 RESULT=$(cat logcat.txt | grep "All tasks done")
 if [ -z "$RESULT" ]; then
     echo "Found error in Tracker tests!"
