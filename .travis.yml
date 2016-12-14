@@ -12,13 +12,7 @@ android:
     - android-24
     - build-tools-25.0.2
     - sys-img-armeabi-v7a-android-22
-    - add-on
-    - extra
-    
-  licenses:
-    - 'android-sdk-preview-license-52d11cd2'
-    - 'android-sdk-license-.+'
-    - 'google-gdk-license-.+'
+
 cache:
   directories:
   - "$HOME/.gradle/caches/"
@@ -32,6 +26,7 @@ script:
   - adb shell am start -n "io.ironsourceatom.trackertest/io.ironsourceatom.trackertest.MainActivity" -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -D
 
 before_script:
+  - android list targets
   - echo no | android create avd --force -n test -t android-22 --abi armeabi-v7a
   - emulator -avd test -no-audio -no-window &
   - android-wait-for-emulator
