@@ -1,5 +1,4 @@
 // Top level settings file
 include ':ironsourceatom-samples', ':trackertest'
 include ':ironsourceatomsdk'
-include ':trackertest'
 project(':ironsourceatom-samples').projectDir = new File('ironsourceatom-samples')
