@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "io.ironsourceatom.trackertest"
-        minSdkVersion 10
+        minSdkVersion 21
         targetSdkVersion 22
     }
     buildTypes {

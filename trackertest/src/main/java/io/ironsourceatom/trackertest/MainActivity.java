@@ -64,8 +64,6 @@ public class MainActivity extends Activity {
         isaConfig.setBulkSize(3);
         isaConfig.setFlushInterval(1000);
 
-
-
         ReportJobServiceMock.setReportHandler(reportHandler);
         ReportServiceMock.setReportHandler(reportHandler);
 

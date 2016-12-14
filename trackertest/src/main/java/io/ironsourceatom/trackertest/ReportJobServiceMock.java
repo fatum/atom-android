@@ -14,7 +14,6 @@ import io.ironsourceatom.sdk.SdkEvent;
  * Created by g8y3e on 12/13/16.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-
 public class ReportJobServiceMock extends ReportJobService {
     public static ReportHandler reportHandler;
 
