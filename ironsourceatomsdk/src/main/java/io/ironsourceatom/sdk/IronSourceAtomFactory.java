@@ -115,6 +115,16 @@ public class IronSourceAtomFactory {
         Logger.logLevel = logType;
     }
 
+
+    /**
+     * Set Logger print stack trace
+     *
+     * @param isPrintStackTrace enable print stack trace
+     */
+    public void setLogPrintStackTrace(boolean isPrintStackTrace) {
+        Logger.setPrintErrorStackTrace(isPrintStackTrace);
+    }
+
     /**
      * function set report bulk max size
      *

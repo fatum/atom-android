@@ -64,7 +64,7 @@ android {
         versionCode 1
 
         // Defines a user-friendly version name for your app.
-        versionName "1.1.1"
+        versionName "1.2.0"
 
         project.version = versionName
         project.archivesBaseName = "atom-android"

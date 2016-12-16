@@ -5,3 +5,5 @@ if [ -z "$RESULT" ]; then
     echo "Found error in Tracker tests!"
     exit 1
 fi
+
+echo "Tracker tests SUCCESS!"

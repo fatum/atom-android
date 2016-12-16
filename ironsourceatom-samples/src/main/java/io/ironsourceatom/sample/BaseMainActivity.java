@@ -20,8 +20,6 @@ public class BaseMainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_v2);
 
-
-
         // Create and config IronSourceAtomFactory instance
         ironSourceAtomFactory = IronSourceAtomFactory.getInstance(this);
         ironSourceAtomFactory.setErrorStream("sdkdev_android_sdk_errors");
@@ -29,6 +27,10 @@ public class BaseMainActivity extends Activity {
         ironSourceAtomFactory.enableErrorReporting();
         ironSourceAtomFactory.setBulkSize(5);
         ironSourceAtomFactory.setFlushInterval(10000);
+
+        // enable print exception stack trace
+        ironSourceAtomFactory.setLogPrintStackTrace(true);
+
         ironSourceAtomFactory.setAllowedNetworkTypes(IronSourceAtomFactory.NETWORK_MOBILE | IronSourceAtomFactory.NETWORK_WIFI);
         ironSourceAtomFactory.setAllowedOverRoaming(true);
     }
