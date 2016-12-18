@@ -196,7 +196,13 @@ public class IronSourceAtomFactory {
                 errorReport.put("api_version", Build.VERSION.RELEASE);
                 errorReport.put("manufacturer", Build.MANUFACTURER);
                 errorReport.put("model", Build.MODEL);
-                errorReport.put("locale", context.getResources().getConfiguration().locale.toString());
+                Locale locale;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    locale = context.getResources().getConfiguration().getLocales().get(0);
+                } else {
+                    locale = context.getResources().getConfiguration().locale;
+                }
+                errorReport.put("locale", locale.toString());
                 sdkTracker.trackError(stream, errorReport);
             } catch (Exception e) {
                 Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
