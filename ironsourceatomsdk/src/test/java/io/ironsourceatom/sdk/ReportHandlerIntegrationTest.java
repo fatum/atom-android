@@ -158,7 +158,7 @@ public class ReportHandlerIntegrationTest {
         }
 
         @Override
-        protected RemoteService getClient() {
+        protected RemoteConnection getClient() {
             return mClient;
         }
     };

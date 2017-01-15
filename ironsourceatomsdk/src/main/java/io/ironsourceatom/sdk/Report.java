@@ -3,18 +3,19 @@ package io.ironsourceatom.sdk;
 import android.content.Intent;
 
 public interface Report {
-    Report setData(String value);
 
-    Report setTable(String table);
+	Report setData(String value);
 
-    Report setToken(String token);
+	Report setTable(String table);
 
-    Report setEndPoint(String endpoint);
+	Report setToken(String token);
 
-    Report setBulk(boolean b);
+	Report setEndPoint(String endpoint);
 
-    Intent getIntent();
+	Report setBulk(boolean b);
 
-    void send();
+	Intent getIntent();
+
+	void send();
 
 }

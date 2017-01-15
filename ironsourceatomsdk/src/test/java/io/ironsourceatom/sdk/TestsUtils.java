@@ -56,7 +56,7 @@ public class TestsUtils {
         public int mType;
     }
 
-    static class MockPoster implements RemoteService {
+    static class MockPoster implements RemoteConnection {
 
         @Override
         public Response post(String data, String url) throws IOException {

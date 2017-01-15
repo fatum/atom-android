@@ -17,7 +17,7 @@ import static junit.framework.Assert.*;
 import static org.mockito.Mockito.*;
 
 import io.ironsourceatom.sdk.ReportHandler.HandleStatus;
-import io.ironsourceatom.sdk.RemoteService.Response;
+import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.StorageService.Batch;
 import io.ironsourceatom.sdk.StorageService.Table;
 
@@ -25,23 +25,23 @@ import io.ironsourceatom.sdk.StorageService.Table;
 public class ReportHandlerTest {
 
     // Two different responses
-    final Response ok = new RemoteService.Response() {{
+    final Response         ok         = new RemoteConnection.Response() {{
         code = 200;
         body = "OK";
     }};
-    final Response fail = new RemoteService.Response() {{
+    final Response         fail       = new RemoteConnection.Response() {{
         code = 503;
         body = "Service Unavailable";
     }};
     // Mocking
-    final Context context = mock(MockContext.class);
-    final NetworkManager netManager = mock(NetworkManager.class);
-    final StorageService storage = mock(DbAdapter.class);
-    final RemoteService client = mock(HttpClient.class);
-    final IsaConfig config = mock(IsaConfig.class);
-    final ReportHandler handler = new ReportHandler(context) {
+    final Context          context    = mock(MockContext.class);
+    final NetworkManager   netManager = mock(NetworkManager.class);
+    final StorageService   storage    = mock(DbAdapter.class);
+    final RemoteConnection client     = mock(HttpClient.class);
+    final IsaConfig        config     = mock(IsaConfig.class);
+    final ReportHandler    handler    = new ReportHandler(context) {
         @Override
-        protected RemoteService getClient() {
+        protected RemoteConnection getClient() {
             return client;
         }
 
@@ -60,7 +60,7 @@ public class ReportHandlerTest {
             return netManager;
         }
     };
-    final String TABLE = "ib_table", TOKEN = "ib_token", DATA = "hello world";
+    final String           TABLE      = "ib_table", TOKEN = "ib_token", DATA = "hello world";
     final Map<String, String> reportMap = new HashMap<String, String>() {{
         put(ReportIntent.DATA, DATA);
         put(ReportIntent.TOKEN, TOKEN);

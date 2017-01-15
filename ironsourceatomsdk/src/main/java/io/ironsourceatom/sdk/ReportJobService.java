@@ -15,95 +15,97 @@ import android.os.HandlerThread;
 import java.util.LinkedList;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class ReportJobService extends JobService {
-    protected static final String TAG = "ReportJobService";
+public class ReportJobService
+		extends JobService {
 
-    protected JobScheduler jobScheduler;
-    protected ReportHandler handler;
-    protected BackOff backOff;
+	protected static final String TAG = "ReportJobService";
 
-    protected final LinkedList<JobParameters> jobParamsMap = new LinkedList<JobParameters>();
+	protected JobScheduler  jobScheduler;
+	protected ReportHandler handler;
+	protected BackOff       backOff;
 
-    // Handler thread - used to start a thread with a Looper (to run msgs in a queue)
-    protected static HandlerThread handlerThread = new HandlerThread(TAG);
+	protected final LinkedList<JobParameters> jobParamsMap = new LinkedList<JobParameters>();
 
-    static {
-        handlerThread.start();
-    }
+	// Handler thread - used to start a thread with a Looper (to run msgs in a queue)
+	protected static HandlerThread handlerThread = new HandlerThread(TAG);
 
-    // Handler thread to process Runnables from the looper
-    protected Handler handlerLooper = new Handler(handlerThread.getLooper());
+	static {
+		handlerThread.start();
+	}
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+	// Handler thread to process Runnables from the looper
+	protected Handler handlerLooper = new Handler(handlerThread.getLooper());
 
-        Context context = this.getApplicationContext();
-        jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        handler = new ReportHandler(context);
-        backOff = BackOff.getInstance(context);
-    }
+	@Override
+	public void onCreate() {
+		super.onCreate();
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
+		Context context = this.getApplicationContext();
+		jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+		handler = new ReportHandler(context);
+		backOff = BackOff.getInstance(context);
+	}
 
-    @Override
-    public int onStartCommand(final Intent intent, int flags, int startId) {
-        // called on intent.startService(intent) at ReportJobIntent
-        handlerLooper.post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (handler.handleReport(intent) == ReportHandler.HandleStatus.RETRY &&
-                            backOff.hasNext()) {
-                        createJob(backOff.next());
-                    } else {
-                        backOff.reset();
-                    }
-                } catch (Throwable th) {
-                    Logger.log(TAG, "failed to handle intent: " + th, th, Logger.SDK_ERROR);
-                }
-            }
-        });
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+	}
 
-        return START_NOT_STICKY;
-    }
+	@Override
+	public int onStartCommand(final Intent intent, int flags, int startId) {
+		// called on intent.startService(intent) at ReportJobIntent
+		handlerLooper.post(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					if (handler.handleReport(intent) == ReportHandler.HandleStatus.RETRY && backOff.hasNext()) {
+						createJob(backOff.next());
+					}
+					else {
+						backOff.reset();
+					}
+				} catch (Throwable th) {
+					Logger.log(TAG, "failed to handle intent: " + th, th, Logger.SDK_ERROR);
+				}
+			}
+		});
 
-    /**
-     * Create a job at the JobScheduler class,
-     *
-     * @param triggerMills time to be executed in
-     */
-    protected void createJob(long triggerMills) {
-        Logger.log(TAG, "Setting alarm, Will send in: " + (triggerMills - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
+		return START_NOT_STICKY;
+	}
 
-        long deltaTime = (triggerMills - backOff.currentTimeMillis());
+	/**
+	 * Create a job at the JobScheduler class,
+	 *
+	 * @param triggerMills time to be executed in
+	 */
+	protected void createJob(long triggerMills) {
+		Logger.log(TAG, "Setting alarm, Will send in: " + (triggerMills - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
 
-        ComponentName serviceComponent = new ComponentName(this.getApplicationContext(), ReportJobService.class);
-        JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-        builder.setMinimumLatency(deltaTime);
-        builder.setOverrideDeadline(deltaTime);
+		long deltaTime = (triggerMills - backOff.currentTimeMillis());
 
-        jobScheduler.schedule(builder.build());
-    }
+		ComponentName serviceComponent = new ComponentName(this.getApplicationContext(), ReportJobService.class);
+		JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
+		builder.setMinimumLatency(deltaTime);
+		builder.setOverrideDeadline(deltaTime);
 
-    @Override
-    public boolean onStartJob(JobParameters params) {
-        jobParamsMap.add(params);
+		jobScheduler.schedule(builder.build());
+	}
 
-        ReportJobIntent report = new ReportJobIntent(this, SdkEvent.FLUSH_QUEUE);
-        report.send();
+	@Override
+	public boolean onStartJob(JobParameters params) {
+		jobParamsMap.add(params);
 
-        return true;
-    }
+		ReportJobIntent report = new ReportJobIntent(this, SdkEvent.FLUSH_QUEUE);
+		report.send();
 
-    @Override
-    public boolean onStopJob(JobParameters params) {
-        jobParamsMap.remove(params);
+		return true;
+	}
 
-        return true;
-    }
+	@Override
+	public boolean onStopJob(JobParameters params) {
+		jobParamsMap.remove(params);
+
+		return true;
+	}
 
 }
