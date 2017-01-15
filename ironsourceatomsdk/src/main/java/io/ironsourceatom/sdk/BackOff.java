@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 public class BackOff {
 
 	private static BackOff sInstance;
-	private static final Object sInstanceLock = new Object();
 
 	private final String KEY_LAST_TICK   = "retry_last_tick";
 	private final String KEY_RETRY_COUNT = "retry_count";
@@ -29,12 +28,11 @@ public class BackOff {
 		retry = prefService.load(KEY_RETRY_COUNT, INITIAL_RETRY_VALUE);
 	}
 
-	public static BackOff getInstance(Context context) {
-		synchronized (sInstanceLock) {
-			if (null == sInstance) {
-				sInstance = new BackOff(context);
-			}
+	public static synchronized BackOff getInstance(Context context) {
+		if (null == sInstance) {
+			sInstance = new BackOff(context);
 		}
+
 		return sInstance;
 	}
 

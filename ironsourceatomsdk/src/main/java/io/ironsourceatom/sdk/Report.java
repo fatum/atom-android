@@ -1,6 +1,6 @@
 package io.ironsourceatom.sdk;
 
-import android.content.Intent;
+import android.os.Bundle;
 
 public interface Report {
 
@@ -14,8 +14,5 @@ public interface Report {
 
 	Report setBulk(boolean b);
 
-	Intent getIntent();
-
-	void send();
-
+	Bundle getExtras();
 }

@@ -16,7 +16,7 @@ import java.util.List;
  * Db Adapter class for local SQLite DB
  */
 public class DbAdapter
-		implements StorageService {
+		implements StorageApi {
 
 	/**
 	 * Do not call directly. You should use DbAdapter.getInstance()

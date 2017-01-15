@@ -14,8 +14,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.ironsourceatom.sdk.StorageService.Batch;
-import io.ironsourceatom.sdk.StorageService.Table;
+import io.ironsourceatom.sdk.StorageApi.Batch;
+import io.ironsourceatom.sdk.StorageApi.Table;
 
 import static java.lang.Math.ceil;
 
@@ -36,10 +36,10 @@ public class ReportHandler {
 	}
 
 	private static final String TAG = "ReportHandler";
-	private NetworkManager networkManager;
-	private StorageService storage;
+	private NetworkManager   networkManager;
+	private StorageApi       storage;
 	private RemoteConnection client;
-	private IsaConfig config;
+	private IsaConfig        config;
 
 	public ReportHandler(Context context) {
 		client = getClient();
@@ -62,11 +62,11 @@ public class ReportHandler {
             if (null == intent.getExtras()) {
                 return status;
             }
-			int sdkEvent = intent.getIntExtra(ReportIntent.EXTRA_SDK_EVENT, SdkEvent.ERROR);
+			int sdkEvent = intent.getIntExtra(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR);
 			Bundle bundle = intent.getExtras();
 			JSONObject dataObject = new JSONObject();
 			try {
-				String[] fields = {ReportIntent.TABLE, ReportIntent.TOKEN, ReportIntent.DATA};
+				String[] fields = {ReportData.TABLE, ReportData.TOKEN, ReportData.DATA};
 				for (String key : fields) {
 					Object value = bundle.get(key);
 					dataObject.put(key, value);
@@ -86,14 +86,14 @@ public class ReportHandler {
 				case SdkEvent.REPORT_ERROR:
 					if (isOnline) {
 						String message = createMessage(dataObject, false);
-						String url = config.getAtomEndPoint(dataObject.getString(ReportIntent.TOKEN));
+						String url = config.getAtomEndPoint(dataObject.getString(ReportData.TOKEN));
                         if (send(message, url) != SendStatus.RETRY || sdkEvent == SdkEvent.REPORT_ERROR) {
                             break;
                         }
 					}
 				case SdkEvent.ENQUEUE:
-					Table table = new Table(dataObject.getString(ReportIntent.TABLE), dataObject.getString(ReportIntent.TOKEN));
-					int nRows = storage.addEvent(table, dataObject.getString(ReportIntent.DATA));
+					Table table = new Table(dataObject.getString(ReportData.TABLE), dataObject.getString(ReportData.TOKEN));
+					int nRows = storage.addEvent(table, dataObject.getString(ReportData.DATA));
 					if (isOnline && config.getBulkSize() <= nRows) {
 						tablesToFlush.add(table);
 					}
@@ -142,9 +142,9 @@ public class ReportHandler {
 		}
 		if (batch != null) {
 			JSONObject event = new JSONObject();
-			event.put(ReportIntent.TABLE, table.name);
-			event.put(ReportIntent.TOKEN, table.token);
-			event.put(ReportIntent.DATA, batch.events.toString());
+			event.put(ReportData.TABLE, table.name);
+			event.put(ReportData.TOKEN, table.token);
+			event.put(ReportData.DATA, batch.events.toString());
 			SendStatus res = send(createMessage(event, true), config.getAtomBulkEndPoint(table.token));
 			if (res == SendStatus.RETRY) {
 				throw new Exception("Failed flush entries for table: " + table.name);
@@ -169,16 +169,16 @@ public class ReportHandler {
 		String message = "";
 		try {
 			JSONObject clone = new JSONObject(obj.toString());
-			String data = clone.getString(ReportIntent.DATA);
-			if (!clone.getString(ReportIntent.TOKEN)
+			String data = clone.getString(ReportData.DATA);
+			if (!clone.getString(ReportData.TOKEN)
 			          .isEmpty()) {
-				clone.put(ReportIntent.AUTH, Utils.auth(data, (String) clone.remove(ReportIntent.TOKEN)));
+				clone.put(ReportData.AUTH, Utils.auth(data, (String) clone.remove(ReportData.TOKEN)));
 			}
 			else {
-				clone.remove(ReportIntent.TOKEN);
+				clone.remove(ReportData.TOKEN);
 			}
 			if (bulk) {
-				clone.put(ReportIntent.BULK, true);
+				clone.put(ReportData.BULK, true);
 			}
 			message = clone.toString();
 		} catch (Exception e) {
@@ -239,7 +239,7 @@ public class ReportHandler {
 		return IsaConfig.getInstance(context);
 	}
 
-	protected StorageService getStorage(Context context) {
+	protected StorageApi getStorage(Context context) {
 		return DbAdapter.getInstance(context);
 	}
 

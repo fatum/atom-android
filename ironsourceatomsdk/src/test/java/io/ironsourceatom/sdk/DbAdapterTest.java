@@ -1,7 +1,7 @@
 package io.ironsourceatom.sdk;
 
 import io.ironsourceatom.sdk.DbAdapter.*;
-import io.ironsourceatom.sdk.StorageService.*;
+import io.ironsourceatom.sdk.StorageApi.*;
 
 import android.content.ContentValues;
 import android.content.Context;

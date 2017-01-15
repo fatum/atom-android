@@ -85,7 +85,7 @@ public class ReportHandlerIntegrationTest {
         mConfig.setBulkSize(2);
         for (int i = 1; i <= 10; i++) {
             final Map<String, String> event = new HashMap<>(event1);
-            event.put(ReportIntent.DATA, String.valueOf(i));
+            event.put(ReportData.DATA, String.valueOf(i));
             mHandler.handleReport(newReport(SdkEvent.ENQUEUE, event));
         }
         assertEquals(mAdapter.count(null), 0);
@@ -123,9 +123,9 @@ public class ReportHandlerIntegrationTest {
         mConfig.setBulkSize(5);
         for (int i = 1; i <= 10; i++) {
             final Map<String, String> event = new HashMap<>(event1);
-            event.put(ReportIntent.DATA, String.valueOf(i));
+            event.put(ReportData.DATA, String.valueOf(i));
             mHandler.handleReport(newReport(SdkEvent.ENQUEUE, event));
-            event.put(ReportIntent.TABLE, TABLE2);
+            event.put(ReportData.TABLE, TABLE2);
             mHandler.handleReport(newReport(SdkEvent.ENQUEUE, event));
         }
         assertEquals(mAdapter.count(null), 0);
@@ -137,23 +137,23 @@ public class ReportHandlerIntegrationTest {
     // Events to test
     final String TABLE1 = "ib_test", TOKEN1 = "ib_token", DATA1 = "ib-data";
     final String TABLE2 = "ic_test", TOKEN2 = "ic_token", DATA2 = "ic-data";
-    final Map<String, String> event1 = new HashMap<String, String>() {{
-        put(ReportIntent.DATA, DATA1);
-        put(ReportIntent.TOKEN, TOKEN1);
-        put(ReportIntent.TABLE, TABLE1);
+    final Map<String, String>   event1   = new HashMap<String, String>() {{
+        put(ReportData.DATA, DATA1);
+        put(ReportData.TOKEN, TOKEN1);
+        put(ReportData.TABLE, TABLE1);
     }};
-    final Map<String, String> event2 = new HashMap<String, String>() {{
-        put(ReportIntent.DATA, DATA2);
-        put(ReportIntent.TOKEN, TOKEN2);
-        put(ReportIntent.TABLE, TABLE2);
+    final Map<String, String>   event2   = new HashMap<String, String>() {{
+        put(ReportData.DATA, DATA2);
+        put(ReportData.TOKEN, TOKEN2);
+        put(ReportData.TABLE, TABLE2);
     }};
     // MockBackend
-    final TestsUtils.MockPoster mClient = new TestsUtils.MockPoster();
-    final IsaConfig mConfig = IsaConfig.getInstance(RuntimeEnvironment.application);
-    final StorageService mAdapter = new DbAdapter(RuntimeEnvironment.application);
-    final ReportHandler mHandler = new ReportHandler(RuntimeEnvironment.application) {
+    final TestsUtils.MockPoster mClient  = new TestsUtils.MockPoster();
+    final IsaConfig             mConfig  = IsaConfig.getInstance(RuntimeEnvironment.application);
+    final StorageApi            mAdapter = new DbAdapter(RuntimeEnvironment.application);
+    final ReportHandler         mHandler = new ReportHandler(RuntimeEnvironment.application) {
         @Override
-        protected StorageService getStorage(Context context) {
+        protected StorageApi getStorage(Context context) {
             return mAdapter;
         }
 

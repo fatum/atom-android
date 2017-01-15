@@ -9,8 +9,7 @@ import android.net.NetworkInfo;
  */
 public class NetworkManager {
 
-	private static final Object sInstanceLock = new Object();
-	private static final String TAG           = "NetworkManager";
+	private static final String TAG = "NetworkManager";
 
 	private static NetworkManager sInstance;
 
@@ -20,12 +19,11 @@ public class NetworkManager {
 		this.context = context;
 	}
 
-	public static NetworkManager getInstance(Context context) {
-		synchronized (sInstanceLock) {
-			if (null == sInstance) {
-				sInstance = new NetworkManager(context);
-			}
+	public static synchronized NetworkManager getInstance(Context context) {
+		if (null == sInstance) {
+			sInstance = new NetworkManager(context);
 		}
+
 		return sInstance;
 	}
 

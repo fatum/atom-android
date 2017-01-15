@@ -1,6 +1,7 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.webkit.URLUtil;
 
@@ -48,10 +49,9 @@ public class IronSourceAtomTracker {
 	 * @param sendNow    flag if true report will send immediately else will postponed
 	 */
 	public void track(String streamName, String data, boolean sendNow) {
-		openReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE).setTable(streamName)
-		                                                                    .setToken(auth)
-		                                                                    .setData(data)
-		                                                                    .send();
+		send(newReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE).setTable(streamName)
+		                                                                   .setToken(auth)
+		                                                                   .setData(data));
 	}
 
 	/**
@@ -110,7 +110,13 @@ public class IronSourceAtomTracker {
 	 * Flush immediately all reports
 	 */
 	public void flush() {
-		openReport(context, SdkEvent.FLUSH_QUEUE).send();
+		send(newReport(context, SdkEvent.FLUSH_QUEUE));
+	}
+
+	private void send(Report report) {
+		final Intent intent = new Intent(context, ReportService.class);
+		intent.putExtras(report.getExtras());
+		context.startService(intent);
 	}
 
 	/**
@@ -122,10 +128,10 @@ public class IronSourceAtomTracker {
 			JSONObject message = new JSONObject();
 
 			if (!auth.isEmpty()) {
-				message.put(ReportIntent.AUTH, Utils.auth(dataStr, auth));
+				message.put(ReportData.AUTH, Utils.auth(dataStr, auth));
 			}
-			message.put(ReportIntent.TABLE, streamName);
-			message.put(ReportIntent.DATA, dataStr);
+			message.put(ReportData.TABLE, streamName);
+			message.put(ReportData.DATA, dataStr);
 
 			String url = config.getAtomEndPoint(auth);
 
@@ -140,15 +146,8 @@ public class IronSourceAtomTracker {
 		}
 	}
 
-	protected Report openReport(Context context, int event_code) {
-		int currentApiVersion = android.os.Build.VERSION.SDK_INT;
-		// Case Android Lollipop or higher we use JobScheduler else AlarmManager
-		if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-			return new ReportJobIntent(context, event_code);
-		}
-		else {
-			return new ReportIntent(context, event_code);
-		}
+	protected Report newReport(Context context, int eventCode) {
+		return new ReportData(eventCode);
 	}
 
 	/**

@@ -12,7 +12,8 @@ import android.content.Intent;
 public class ReportService
 		extends IntentService {
 
-	protected static final String TAG = "ReportService";
+	private static final String TAG = "ReportService";
+
 	protected AlarmManager  alarmManager;
 	protected ReportHandler handler;
 	protected BackOff       backOff;
@@ -47,10 +48,10 @@ public class ReportService
 
 	protected void setAlarm(long triggerMills) {
 		Logger.log(TAG, "Setting alarm, Will send in: " + (triggerMills - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
-		ReportIntent report = new ReportIntent(this, SdkEvent.FLUSH_QUEUE);
-		PendingIntent intent = PendingIntent.getService(this, 0, report.getIntent(), PendingIntent.FLAG_UPDATE_CURRENT);
+		ReportData report = new ReportData(SdkEvent.FLUSH_QUEUE);
+		final Intent reportIntent = new Intent(this, ReportService.class);
+		PendingIntent intent = PendingIntent.getService(this, 0, reportIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		alarmManager.cancel(intent);
 		alarmManager.set(AlarmManager.RTC, triggerMills, intent);
 	}
-
 }

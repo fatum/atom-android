@@ -3,8 +3,6 @@ package io.ironsourceatom.trackertest;
 import android.content.Context;
 import android.content.Intent;
 
-import io.ironsourceatom.sdk.ReportJobIntent;
-
 /**
  * Created by g8y3e on 12/13/16.
  */

@@ -1,6 +1,6 @@
 package io.ironsourceatom.sdk;
 
-import io.ironsourceatom.sdk.StorageService.*;
+import io.ironsourceatom.sdk.StorageApi.*;
 
 import java.util.List;
 

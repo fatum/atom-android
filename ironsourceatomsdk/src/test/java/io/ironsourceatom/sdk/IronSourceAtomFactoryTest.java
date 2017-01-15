@@ -33,8 +33,8 @@ public class IronSourceAtomFactoryTest {
     TestsUtils.MockReport mSpyReport = spy(new TestsUtils.MockReport());
     final IronSourceAtomTracker mTracker = new IronSourceAtomTracker(mock(MockContext.class), mToken) {
         @Override
-        public Report openReport(Context context, int event_code) {
-            mSpyReport.mType = event_code;
+        public Report newReport(Context context, int eventCode) {
+            mSpyReport.mType = eventCode;
             return mSpyReport;
         }
     };
@@ -71,7 +71,6 @@ public class IronSourceAtomFactoryTest {
         verify(mSpyReport, times(10)).setToken(mToken);
         verify(mSpyReport, times(10)).setTable("table");
         verify(mSpyReport, times(10)).setData("hello world");
-        verify(mSpyReport, times(10)).send();
         assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
     }
 
@@ -85,7 +84,6 @@ public class IronSourceAtomFactoryTest {
         verify(mSpyReport, times(10)).setToken(mToken);
         verify(mSpyReport, times(10)).setTable("table");
         verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-        verify(mSpyReport, times(10)).send();
         assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
     }
 
@@ -99,7 +97,6 @@ public class IronSourceAtomFactoryTest {
         verify(mSpyReport, times(10)).setToken(mToken);
         verify(mSpyReport, times(10)).setTable("table");
         verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-        verify(mSpyReport, times(10)).send();
         assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
     }
 
@@ -111,7 +108,6 @@ public class IronSourceAtomFactoryTest {
         verify(mSpyReport, times(10)).setToken(mToken);
         verify(mSpyReport, times(10)).setTable("table");
         verify(mSpyReport, times(10)).setData("hello world");
-        verify(mSpyReport, times(10)).send();
         assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
     }
 
@@ -125,7 +121,6 @@ public class IronSourceAtomFactoryTest {
         verify(mSpyReport, times(10)).setToken(mToken);
         verify(mSpyReport, times(10)).setTable("table");
         verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-        verify(mSpyReport, times(10)).send();
         assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
     }
 
@@ -139,14 +134,12 @@ public class IronSourceAtomFactoryTest {
         verify(mSpyReport, times(10)).setToken(mToken);
         verify(mSpyReport, times(10)).setTable("table");
         verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-        verify(mSpyReport, times(10)).send();
         assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
     }
 
     @Test
     public void flushEvents() {
         mTracker.flush();
-        verify(mSpyReport, times(1)).send();
         assertEquals(mSpyReport.mType, SdkEvent.FLUSH_QUEUE);
     }
 

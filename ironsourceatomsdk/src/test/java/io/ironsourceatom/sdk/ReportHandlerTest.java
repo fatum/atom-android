@@ -18,8 +18,8 @@ import static org.mockito.Mockito.*;
 
 import io.ironsourceatom.sdk.ReportHandler.HandleStatus;
 import io.ironsourceatom.sdk.RemoteConnection.Response;
-import io.ironsourceatom.sdk.StorageService.Batch;
-import io.ironsourceatom.sdk.StorageService.Table;
+import io.ironsourceatom.sdk.StorageApi.Batch;
+import io.ironsourceatom.sdk.StorageApi.Table;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReportHandlerTest {
@@ -36,7 +36,7 @@ public class ReportHandlerTest {
     // Mocking
     final Context          context    = mock(MockContext.class);
     final NetworkManager   netManager = mock(NetworkManager.class);
-    final StorageService   storage    = mock(DbAdapter.class);
+    final StorageApi       storage    = mock(DbAdapter.class);
     final RemoteConnection client     = mock(HttpClient.class);
     final IsaConfig        config     = mock(IsaConfig.class);
     final ReportHandler    handler    = new ReportHandler(context) {
@@ -51,7 +51,7 @@ public class ReportHandlerTest {
         }
 
         @Override
-        protected StorageService getStorage(Context context) {
+        protected StorageApi getStorage(Context context) {
             return storage;
         }
 
@@ -62,9 +62,9 @@ public class ReportHandlerTest {
     };
     final String           TABLE      = "ib_table", TOKEN = "ib_token", DATA = "hello world";
     final Map<String, String> reportMap = new HashMap<String, String>() {{
-        put(ReportIntent.DATA, DATA);
-        put(ReportIntent.TOKEN, TOKEN);
-        put(ReportIntent.TABLE, TABLE);
+        put(ReportData.DATA, DATA);
+        put(ReportData.TOKEN, TOKEN);
+        put(ReportData.TABLE, TABLE);
     }};
     final Table mTable = new Table(TABLE, TOKEN) {
         @Override
@@ -324,9 +324,9 @@ public class ReportHandlerTest {
         Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
         assertEquals(handler.handleReport(intent), HandleStatus.HANDLED);
         JSONObject report = new JSONObject(reportMap);
-        String token = reportMap.get(ReportIntent.TOKEN);
-        report.put(ReportIntent.AUTH, Utils.auth(report.getString(ReportIntent.DATA),
-                report.getString(ReportIntent.TOKEN))).remove(ReportIntent.TOKEN);
+        String token = reportMap.get(ReportData.TOKEN);
+        report.put(ReportData.AUTH, Utils.auth(report.getString(ReportData.DATA),
+                report.getString(ReportData.TOKEN))).remove(ReportData.TOKEN);
         verify(client, times(1)).post(eq(report.toString()), anyString());
     }
 

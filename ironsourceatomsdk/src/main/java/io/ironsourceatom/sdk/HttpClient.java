@@ -95,5 +95,4 @@ class HttpClient
 		connection.setDoInput(true);
 		return connection;
 	}
-
 }

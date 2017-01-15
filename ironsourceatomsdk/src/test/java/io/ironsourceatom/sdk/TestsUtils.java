@@ -19,9 +19,8 @@ import static org.mockito.Mockito.when;
 public class TestsUtils {
 
     static class MockReport implements Report {
-        @Override
-        public void send() {
-        }
+
+        public int mType;
 
         @Override
         public MockReport setData(String value) {
@@ -49,11 +48,9 @@ public class TestsUtils {
         }
 
         @Override
-        public Intent getIntent() {
+        public Bundle getExtras() {
             return null;
         }
-
-        public int mType;
     }
 
     static class MockPoster implements RemoteConnection {
@@ -64,7 +61,7 @@ public class TestsUtils {
             if (mCode == 200) {
                 try {
                     JSONObject event = new JSONObject(data);
-                    String table = event.getString(ReportIntent.TABLE);
+                    String table = event.getString(ReportData.TABLE);
                     if (!mBackedMock.containsKey(table)) {
                         mBackedMock.put(table, new ArrayList<String>());
                     }
@@ -108,7 +105,7 @@ public class TestsUtils {
     // Take SdkEvent and Map and generate new MockReport
     public static Intent newReport(int event, Map<String, String> report) {
         Intent intent = mock(Intent.class);
-        when(intent.getIntExtra(ReportIntent.EXTRA_SDK_EVENT, SdkEvent.ERROR))
+        when(intent.getIntExtra(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR))
                 .thenReturn(event);
         Bundle bundle = mock(Bundle.class);
         for (String key : report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));

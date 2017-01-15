@@ -50,7 +50,7 @@ public class IronSourceAtomTrackerIntegrationTest {
 
     final IronSourceAtomTracker tracker = new IronSourceAtomTracker(InstrumentationRegistry.getTargetContext(), authKey) {
         @Override
-        protected Report openReport(Context context, int event_code) {
+        protected Report newReport(Context context, int event_code) {
             int currentApiVersion = android.os.Build.VERSION.SDK_INT;
 
             if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
