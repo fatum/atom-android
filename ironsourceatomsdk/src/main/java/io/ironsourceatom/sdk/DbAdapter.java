@@ -21,7 +21,7 @@ public class DbAdapter
 	/**
 	 * Do not call directly. You should use DbAdapter.getInstance()
 	 */
-	public DbAdapter(Context context) {
+	DbAdapter(Context context) {
 		mDb = getSQLHandler(context);
 	}
 
@@ -29,7 +29,7 @@ public class DbAdapter
 	 * Use this to get a singleton instance of DbAdapter instead of creating
 	 * one directly for yourself.
 	 */
-	public static DbAdapter getInstance(Context context) {
+	static DbAdapter getInstance(Context context) {
 		synchronized (sInstanceLock) {
 			if (null == sInstance) {
 				sInstance = new DbAdapter(context);
@@ -122,29 +122,29 @@ public class DbAdapter
 	 * will be used later to clean up this batch).
 	 */
 	public Batch getEvents(Table table, int limit) {
-		Cursor c = null;
+		Cursor cursor = null;
 		String lastId = null;
 		List<String> events = null;
 		try {
 			final SQLiteDatabase db = mDb.getReadableDatabase();
 			String whereParams = KEY_TABLE + "=?";
 			String orderParam = KEY_CREATED_AT + " ASC";
-			c = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam, String.valueOf(limit));
+			cursor = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam, String.valueOf(limit));
 
 			events = new ArrayList<>();
-			while (c.moveToNext()) {
-				if (c.isLast()) {
-					lastId = c.getString(c.getColumnIndex(REPORTS_TABLE + "_id"));
+			while (cursor.moveToNext()) {
+				if (cursor.isLast()) {
+					lastId = cursor.getString(cursor.getColumnIndex(REPORTS_TABLE + "_id"));
 				}
-				events.add(c.getString(c.getColumnIndex(KEY_DATA)));
+				events.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
 			}
-		} catch (final SQLiteException e) {
+		} catch (SQLiteException e) {
 			Logger.log(TAG, "Failed to get a events of table" + table.name, e, Logger.SDK_ERROR);
 			lastId = null;
 			events = null;
 		} finally {
-			if (null != c) {
-				c.close();
+			if (null != cursor) {
+				cursor.close();
 			}
 			mDb.close();
 		}

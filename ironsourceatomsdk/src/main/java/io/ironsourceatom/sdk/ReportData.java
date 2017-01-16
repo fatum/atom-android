@@ -56,5 +56,4 @@ public class ReportData
 	public Bundle getExtras() {
 		return extras;
 	}
-
 }

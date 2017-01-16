@@ -97,18 +97,20 @@ public class TestsUtils {
         }
 
         // catch all incoming requests
-        final public Map<String, List<String>> mBackedMock = new HashMap<String, List<String>>();
+        final public Map<String, List<String>> mBackedMock = new HashMap<>();
         private int mCode = 200;
     }
 
     // Helper method.
     // Take SdkEvent and Map and generate new MockReport
     public static Intent newReport(int event, Map<String, String> report) {
-        Intent intent = mock(Intent.class);
-        when(intent.getIntExtra(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR))
-                .thenReturn(event);
         Bundle bundle = mock(Bundle.class);
-        for (String key : report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
+        for (String key : report.keySet()) {
+            when(bundle.get(key)).thenReturn(report.get(key));
+        }
+        when(bundle.getInt(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR)).thenReturn(event);
+
+        Intent intent = mock(Intent.class);
         when(intent.getExtras()).thenReturn(bundle);
         return intent;
     }

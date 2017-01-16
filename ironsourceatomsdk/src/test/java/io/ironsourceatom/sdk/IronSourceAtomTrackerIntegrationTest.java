@@ -36,7 +36,7 @@ public class IronSourceAtomTrackerIntegrationTest {
         public void onCreate() {
             super.onCreate();
 
-            handler = reportHandler;
+            reportService = reportHandler;
         }
     };
 
