@@ -1,10 +1,15 @@
 package io.ironsourceatom.sdk;
 
+import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import org.json.JSONException;
@@ -28,11 +33,11 @@ public class ReportService
 
 	private static final String TAG = "ReportService";
 
-	private NetworkManager   networkManager;
-	private StorageApi       storage;
-	private RemoteConnection client;
-	private IsaConfig        config;
-	protected BackOff       backOff;
+	private   NetworkManager   networkManager;
+	private   StorageApi       storage;
+	private   RemoteConnection client;
+	private   IsaConfig        config;
+	protected BackOff          backOff;
 
 	public enum SendStatus {
 		SUCCESS,
@@ -68,7 +73,7 @@ public class ReportService
 		try {
 			final HandleStatus status = handleReport(intent);
 			if (status == HandleStatus.RETRY && backOff.hasNext()) {
-				setAlarm(backOff.next());
+				retrySendReport(backOff.next());
 			}
 			else {
 				backOff.reset();
@@ -87,10 +92,9 @@ public class ReportService
 	 */
 	public HandleStatus handleReport(Intent intent) {
 		HandleStatus status = HandleStatus.HANDLED;
-		boolean isOnline = networkManager.isOnline() && canUseNetwork();
 		try {
-			if (intent==null || intent.getExtras() == null) {
-				Logger.log(TAG, "Failed to handle intent - null or no extras", Logger.SDK_DEBUG);
+			if (intent == null || intent.getExtras() == null) {
+				Logger.log(TAG, "Failed to handle intent - intent is null or no extras", Logger.SDK_DEBUG);
 				return status;
 			}
 			final Bundle extras = intent.getExtras();
@@ -104,6 +108,8 @@ public class ReportService
 			} catch (JSONException e) {
 				Logger.log(TAG, "Failed extracting the data from Intent", Logger.SDK_DEBUG);
 			}
+
+			final boolean isOnline = networkManager.isOnline() && canUseNetwork();
 			List<StorageApi.Table> tablesToFlush = new ArrayList<>();
 			final int sdkEvent = extras.getInt(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR);
 			switch (sdkEvent) {
@@ -253,7 +259,7 @@ public class ReportService
 	}
 
 	/**
-	 * Test if the handler can use the network.
+	 * Check if the handler can use the network.
 	 *
 	 * @return
 	 */
@@ -261,17 +267,82 @@ public class ReportService
 		if ((config.getAllowedNetworkTypes() & networkManager.getNetworkAtomType()) == 0) {
 			return false;
 		}
+
 		return config.isAllowedOverRoaming() || !networkManager.isDataRoamingEnabled();
 	}
 
+	private void retrySendReport(long delayInMillis) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			retryWithJobScheduler(delayInMillis);
+		}
+		else {
+			Logger.log(TAG, "Job Scheduler not supported - retrying using AlarmManager", Logger.SDK_DEBUG);
+			retryWithAlarmManager(delayInMillis);
+		}
+	}
 
-	protected void setAlarm(long delayInMillis) {
+	/**
+	 * On Android Nougat: use JobScheduler<BR>
+	 * On Android Marshmallow/Lollipop: use JobScheduler only when roaming is not a consideration
+	 */
+	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+	private void retryWithJobScheduler(long delayInMillis) {
+		final boolean allowedOverRoaming = config.isAllowedOverRoaming();
+		final boolean allowedOverMobileData = (config.getAllowedNetworkTypes() & IronSourceAtomFactory.NETWORK_MOBILE) != 0;
+		if (Utils.isBackgroundDataRestricted(this)) {
+			// We can't use JobScheduler when bg data is restricted since it will instantly start the job
+			Logger.log(TAG, "Can't reschedule with JobScheduler since background data is restricted", Logger.SDK_DEBUG);
+			retryWithAlarmManager(delayInMillis);
+		}
+		else if (networkManager.isDataRoamingEnabled() && allowedOverMobileData && Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+			// We'll get here in the case where the device is pre-Nougat (no NETWORK_TYPE_ROAMING) and we're roaming while it's not allowed
+			Logger.log(TAG, "Can't reschedule with JobScheduler - type 'not roaming' cannot be enforced on Android Marshmallow JobScheduler", Logger.SDK_DEBUG);
+		}
+		else {
+			// Prepare JobScheduler
+			JobInfo.Builder builder = new JobInfo.Builder(ReportJobService.JOB_ID, new ComponentName(this, ReportJobService.class));
+			int desiredNetwork;
+			if (!allowedOverRoaming && !allowedOverMobileData) {
+				desiredNetwork = JobInfo.NETWORK_TYPE_UNMETERED;
+			}
+			else if (allowedOverMobileData && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+				// Introduced in Android N
+				desiredNetwork = JobInfo.NETWORK_TYPE_NOT_ROAMING;
+			}
+			else {
+				desiredNetwork = JobInfo.NETWORK_TYPE_ANY;
+			}
+
+			// Use only desired network
+			builder.setRequiredNetworkType(desiredNetwork);
+			// Survive reboots
+			builder.setPersisted(true);
+			// Retry anyway after 24 hours
+			builder.setOverrideDeadline(24 * 60 * 60 * 1000);
+			// Set our backoff delay
+			builder.setMinimumLatency(delayInMillis);
+
+			// Schedule with JobScheduler
+			JobScheduler scheduler = (JobScheduler) this.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+			int result = scheduler.schedule(builder.build());
+			if (result == JobScheduler.RESULT_SUCCESS) {
+				Logger.log(TAG, "Successfully scheduled with JobScheduler (Required network = " + desiredNetwork + ")...", Logger.SDK_DEBUG);
+			}
+			else {
+				// Should never happen
+				Logger.log(TAG, "Failed to schedule with JobScheduler - bad parameters supplied to builder(Required network = " + desiredNetwork + ")...", Logger.SDK_DEBUG);
+				retryWithAlarmManager(delayInMillis);
+			}
+		}
+	}
+
+	private void retryWithAlarmManager(long delayInMillis) {
 		Logger.log(TAG, "Setting alarm, Will send in: " + (delayInMillis - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
 		final Intent reportIntent = new Intent(this, ReportService.class);
 		reportIntent.putExtras(new ReportData(SdkEvent.FLUSH_QUEUE).getExtras());
 		final PendingIntent intent = PendingIntent.getService(this, 0, reportIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		// PENDING: The call to cancel() here might cause pending alarms to stop and lose event!
+		// Cancel any scheduled flush retry
 		alarmManager.cancel(intent);
 		alarmManager.set(AlarmManager.RTC, delayInMillis, intent);
 	}
@@ -295,4 +366,15 @@ public class ReportService
 		return NetworkManager.getInstance(context);
 	}
 
+
+	////////////////////////////////////////////////////////////////////////////////////////////
+
+	public static void sendReport(Context context, Report report) {
+
+		// PENDING: Might be better to save to DB before starting the intent service
+
+		final Intent intent = new Intent(context, ReportService.class);
+		intent.putExtras(report.getExtras());
+		context.startService(intent);
+	}
 }

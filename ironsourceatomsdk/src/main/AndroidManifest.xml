@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="io.ironsourceatom.sdk">
-    <uses-permission android:name="android.permission.INTERNET" />
+<manifest package="io.ironsourceatom.sdk"
+          xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <application>
+
+        <service android:name="io.ironsourceatom.sdk.ReportService"/>
+
+        <service
+            android:name="io.ironsourceatom.sdk.ReportJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+    </application>
+
 
 </manifest>

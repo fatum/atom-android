@@ -1,5 +1,10 @@
 package io.ironsourceatom.sdk;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +60,17 @@ class Utils {
 			return sb.toString();
 		} catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
 			return "";
+		}
+	}
+
+	static boolean isBackgroundDataRestricted(Context context) {
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+			return cm.getRestrictBackgroundStatus() == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED;
+		}
+		else {
+			NetworkInfo ni = cm.getActiveNetworkInfo();
+			return ni != null && ni.getDetailedState() == NetworkInfo.DetailedState.BLOCKED;
 		}
 	}
 }

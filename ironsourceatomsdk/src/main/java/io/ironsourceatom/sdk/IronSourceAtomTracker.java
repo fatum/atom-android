@@ -1,7 +1,6 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.webkit.URLUtil;
 
@@ -49,9 +48,9 @@ public class IronSourceAtomTracker {
 	 * @param sendNow    flag if true report will send immediately else will postponed
 	 */
 	public void track(String streamName, String data, boolean sendNow) {
-		send(newReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE).setTable(streamName)
-		                                                                   .setToken(auth)
-		                                                                   .setData(data));
+		ReportService.sendReport(context, newReport(sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE).setTable(streamName)
+		                                                                                            .setToken(auth)
+		                                                                                            .setData(data));
 	}
 
 	/**
@@ -110,13 +109,7 @@ public class IronSourceAtomTracker {
 	 * Flush immediately all reports
 	 */
 	public void flush() {
-		send(newReport(context, SdkEvent.FLUSH_QUEUE));
-	}
-
-	private void send(Report report) {
-		final Intent intent = new Intent(context, ReportService.class);
-		intent.putExtras(report.getExtras());
-		context.startService(intent);
+		ReportService.sendReport(context, newReport(SdkEvent.FLUSH_QUEUE));
 	}
 
 	/**
@@ -146,7 +139,7 @@ public class IronSourceAtomTracker {
 		}
 	}
 
-	protected Report newReport(Context context, int eventCode) {
+	protected Report newReport(int eventCode) {
 		return new ReportData(eventCode);
 	}
 

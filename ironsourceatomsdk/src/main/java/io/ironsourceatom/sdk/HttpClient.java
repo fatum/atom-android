@@ -12,6 +12,8 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 /**
  * HttpClient is the default implementations to RemoteService.
  * Used for processing requests to endpoint
+ * <p>
+ * PENDING: Might be a good idea to allow supplying the implementation outside the SDK
  */
 class HttpClient
 		implements RemoteConnection {
@@ -23,8 +25,12 @@ class HttpClient
 
 	private static HttpClient sInstance;
 
+	private HttpClient() {
+		// Singelton!
+	}
+
 	public static synchronized HttpClient getInstance() {
-		if (null == sInstance) {
+		if (sInstance == null) {
 			sInstance = new HttpClient();
 		}
 
@@ -61,7 +67,7 @@ class HttpClient
 			response.code = connection.getResponseCode();
 			in.close();
 			in = null;
-		} catch (final IOException e) {
+		} catch (IOException e) {
 			if (connection != null && (response.code = connection.getResponseCode()) >= HTTP_BAD_REQUEST) {
 				Logger.log(TAG, "Failed post to Atom. StatusCode: " + response.code, Logger.SDK_DEBUG);
 			}
