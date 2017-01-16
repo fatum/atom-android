@@ -11,6 +11,7 @@ Atom-Android is the official [ironSource.atom](http://www.ironsrc.com/data-flow-
 - [Documentation][docs-url]
 - [Installation](#installation)
 - [Usage](#usage)
+- [Change Log](#change-log)
 - [Example](#example)
 
 ## Installation
