@@ -9,6 +9,7 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -23,6 +24,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.ironsourceatom.sdk.ReportService.HandleStatus.FLUSH_INTERVAL;
+import static io.ironsourceatom.sdk.ReportService.HandleStatus.HANDLED;
+import static io.ironsourceatom.sdk.ReportService.HandleStatus.RETRY;
 import static java.lang.Math.ceil;
 
 /**
@@ -47,7 +51,8 @@ public class ReportService
 
 	public enum HandleStatus {
 		HANDLED,
-		RETRY
+		RETRY,
+		FLUSH_INTERVAL
 	}
 
 	public ReportService() {
@@ -72,14 +77,19 @@ public class ReportService
 	protected void onHandleIntent(Intent intent) {
 		try {
 			final HandleStatus status = handleReport(intent);
-			if (status == HandleStatus.RETRY && backOff.hasNext()) {
-				retrySendReport(backOff.next());
-			}
-			else {
-				backOff.reset();
+			switch (status) {
+				case RETRY:
+					retrySendReport();
+					break;
+				case FLUSH_INTERVAL:
+					scheduleAlarm(config.getFlushInterval());
+					// Intentional fall-through
+				case HANDLED:
+					backOff.reset();
+					break;
 			}
 		} catch (Throwable th) {
-			Logger.log(TAG, "failed to handle intent: " + th, th, Logger.SDK_ERROR);
+			Logger.log(TAG, "Failed to handle intent: " + th, th, Logger.SDK_ERROR);
 		}
 	}
 
@@ -91,7 +101,7 @@ public class ReportService
 	 * @return result of the handleReport if success true or failed false
 	 */
 	public HandleStatus handleReport(Intent intent) {
-		HandleStatus status = HandleStatus.HANDLED;
+		HandleStatus status = HANDLED;
 		try {
 			if (intent == null || intent.getExtras() == null) {
 				Logger.log(TAG, "Failed to handle intent - intent is null or no extras", Logger.SDK_DEBUG);
@@ -114,10 +124,13 @@ public class ReportService
 			final int sdkEvent = extras.getInt(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR);
 			switch (sdkEvent) {
 				case SdkEvent.FLUSH_QUEUE:
+					Logger.log(TAG, "Requested to flush database", Logger.SDK_DEBUG);
 					if (isOnline) {
 						tablesToFlush = storage.getTables();
 						break;
 					}
+					Logger.log(TAG, "Device is off line or cannot use network", Logger.SDK_DEBUG);
+
 					return HandleStatus.RETRY;
 				case SdkEvent.POST_SYNC:
 				case SdkEvent.REPORT_ERROR:
@@ -129,14 +142,18 @@ public class ReportService
 							break;
 						}
 					}
+					// Intentional fall-through
 				case SdkEvent.ENQUEUE:
 					final StorageApi.Table table = new StorageApi.Table(dataObject.getString(ReportData.TABLE), dataObject.getString(ReportData.TOKEN));
 					final int nRows = storage.addEvent(table, dataObject.getString(ReportData.DATA));
+					Logger.log(TAG, "Added event to database (size: " + nRows + " rows)", Logger.SDK_DEBUG);
 					if (isOnline && config.getBulkSize() <= nRows) {
+						Logger.log(TAG, "Exceeded configured bulk size (" + config.getBulkSize() + " rows) - flushing data", Logger.SDK_DEBUG);
 						tablesToFlush.add(table);
 					}
 					else {
-						return HandleStatus.RETRY;
+						// Wait for flush interval or retry on valid network
+						return isOnline ? FLUSH_INTERVAL : RETRY;
 					}
 			}
 			// If there's something to flush, it'll not be empty.
@@ -184,9 +201,11 @@ public class ReportService
 			event.put(ReportData.TOKEN, table.token);
 			event.put(ReportData.DATA, batch.events.toString());
 
+			Logger.log(TAG, "Sending " + batch.events.size() + " rows of " + table.name + " to server...", Logger.SDK_DEBUG);
 			final SendStatus res = send(createMessage(event, true), config.getAtomBulkEndPoint(table.token));
 
 			if (res == SendStatus.RETRY) {
+				// This will be caught by handleReport() and return a HandleStatus.RETRY
 				throw new IllegalStateException("Failed flush entries for table: " + table.name);
 			}
 
@@ -241,11 +260,11 @@ public class ReportService
 			try {
 				RemoteConnection.Response response = client.post(data, url);
 				if (response.code == HttpURLConnection.HTTP_OK) {
-					Logger.log(TAG, "Server Response Status: " + response.code, Logger.SDK_DEBUG);
+					Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
 					return SendStatus.SUCCESS;
 				}
 				if (response.code >= HttpURLConnection.HTTP_BAD_REQUEST && response.code < HttpURLConnection.HTTP_INTERNAL_ERROR) {
-					Logger.log(TAG, "Server Response Status: " + response.code, Logger.SDK_DEBUG);
+					Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
 					//  PENDING: Are we sure we want to DELETE when getting here? What about temporary 404?
 					return SendStatus.DELETE;
 				}
@@ -271,13 +290,13 @@ public class ReportService
 		return config.isAllowedOverRoaming() || !networkManager.isDataRoamingEnabled();
 	}
 
-	private void retrySendReport(long delayInMillis) {
+	private void retrySendReport() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			retryWithJobScheduler(delayInMillis);
+			retryWithJobScheduler();
 		}
 		else {
-			Logger.log(TAG, "Job Scheduler not supported - retrying using AlarmManager", Logger.SDK_DEBUG);
-			retryWithAlarmManager(delayInMillis);
+			Logger.log(TAG, "Job Scheduler not supported - Scheduling retry with AlarmManager", Logger.SDK_DEBUG);
+			retryWithAlarmManager();
 		}
 	}
 
@@ -286,13 +305,13 @@ public class ReportService
 	 * On Android Marshmallow/Lollipop: use JobScheduler only when roaming is not a consideration
 	 */
 	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
-	private void retryWithJobScheduler(long delayInMillis) {
+	private void retryWithJobScheduler() {
 		final boolean allowedOverRoaming = config.isAllowedOverRoaming();
 		final boolean allowedOverMobileData = (config.getAllowedNetworkTypes() & IronSourceAtomFactory.NETWORK_MOBILE) != 0;
 		if (Utils.isBackgroundDataRestricted(this)) {
 			// We can't use JobScheduler when bg data is restricted since it will instantly start the job
-			Logger.log(TAG, "Can't reschedule with JobScheduler since background data is restricted", Logger.SDK_DEBUG);
-			retryWithAlarmManager(delayInMillis);
+			Logger.log(TAG, "Can't reschedule with JobScheduler since background data is restricted - using AlarmManager", Logger.SDK_DEBUG);
+			retryWithAlarmManager();
 		}
 		else if (networkManager.isDataRoamingEnabled() && allowedOverMobileData && Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
 			// We'll get here in the case where the device is pre-Nougat (no NETWORK_TYPE_ROAMING) and we're roaming while it's not allowed
@@ -315,12 +334,12 @@ public class ReportService
 
 			// Use only desired network
 			builder.setRequiredNetworkType(desiredNetwork);
-			// Survive reboots
-			builder.setPersisted(true);
+			if (checkCallingOrSelfPermission("android.permission.RECEIVE_BOOT_COMPLETED") == PackageManager.PERMISSION_GRANTED) {
+				// Survive reboots
+				builder.setPersisted(true);
+			}
 			// Retry anyway after 24 hours
 			builder.setOverrideDeadline(24 * 60 * 60 * 1000);
-			// Set our backoff delay
-			builder.setMinimumLatency(delayInMillis);
 
 			// Schedule with JobScheduler
 			JobScheduler scheduler = (JobScheduler) this.getSystemService(Context.JOB_SCHEDULER_SERVICE);
@@ -331,20 +350,28 @@ public class ReportService
 			else {
 				// Should never happen
 				Logger.log(TAG, "Failed to schedule with JobScheduler - bad parameters supplied to builder(Required network = " + desiredNetwork + ")...", Logger.SDK_DEBUG);
-				retryWithAlarmManager(delayInMillis);
+				retryWithAlarmManager();
 			}
 		}
 	}
 
-	private void retryWithAlarmManager(long delayInMillis) {
-		Logger.log(TAG, "Setting alarm, Will send in: " + (delayInMillis - backOff.currentTimeMillis()) + "ms", Logger.SDK_DEBUG);
+	private void retryWithAlarmManager() {
+		if (backOff.hasNext()) {
+			scheduleAlarm(backOff.next());
+		}
+		else {
+			Logger.log(TAG, "Reached max retry attempts", Logger.SDK_DEBUG);
+			backOff.reset();
+		}
+	}
+
+	private void scheduleAlarm(long delayInMillis) {
+		Logger.log(TAG, "Scheduling to retry flushing data in " + (delayInMillis / 1000) + " seconds...", Logger.SDK_DEBUG);
 		final Intent reportIntent = new Intent(this, ReportService.class);
 		reportIntent.putExtras(new ReportData(SdkEvent.FLUSH_QUEUE).getExtras());
-		final PendingIntent intent = PendingIntent.getService(this, 0, reportIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		// Cancel any scheduled flush retry
-		alarmManager.cancel(intent);
-		alarmManager.set(AlarmManager.RTC, delayInMillis, intent);
+
+		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + delayInMillis, PendingIntent.getService(this, 0, reportIntent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	/**

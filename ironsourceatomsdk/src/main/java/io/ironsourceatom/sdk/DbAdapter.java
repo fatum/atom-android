@@ -283,7 +283,6 @@ public class DbAdapter
 	protected static class DatabaseHandler
 			extends SQLiteOpenHelper {
 
-
 		private final File      databaseFile;
 		private final IsaConfig mConfig;
 

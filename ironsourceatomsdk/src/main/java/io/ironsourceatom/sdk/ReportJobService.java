@@ -18,7 +18,7 @@ public class ReportJobService
 
 	@Override
 	public boolean onStartJob(JobParameters jobParameters) {
-		Logger.log(TAG, "Flushing...", Logger.SDK_DEBUG);
+		Logger.log(TAG, "Requesting ReportService to flush events", Logger.SDK_DEBUG);
 		ReportService.sendReport(this, new ReportData(SdkEvent.FLUSH_QUEUE));
 
 		// The only purpose of this job is to start the service - so our work is done

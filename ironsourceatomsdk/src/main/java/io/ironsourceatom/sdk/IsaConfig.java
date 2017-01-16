@@ -10,7 +10,6 @@ import java.util.Locale;
 public class IsaConfig {
 
 	private static final   String TAG                               = IsaConfig.class.getSimpleName();
-	private static final   Object sInstanceLock                     = new Object();
 	protected static final String DEFAULT_URL                       = "http://track.atom-data.io/bulk";
 	protected static final String DEFAULT_BULK_URL                  = "http://track.atom-data.io/bulk";
 	protected static final int    KILOBYTE                          = 1024;
@@ -58,11 +57,9 @@ public class IsaConfig {
 		loadConfig(context);
 	}
 
-	public static IsaConfig getInstance(Context context) {
-		synchronized (sInstanceLock) {
-			if (null == sInstance) {
-				sInstance = new IsaConfig(context);
-			}
+	public static synchronized IsaConfig getInstance(Context context) {
+		if (sInstance == null) {
+			sInstance = new IsaConfig(context);
 		}
 		return sInstance;
 	}
@@ -278,7 +275,6 @@ public class IsaConfig {
 	public String toString() {
 		return String.format(Locale.ENGLISH, "[%s] flushInterval %d " + "req limit %d db limit %s bSize %d error enable ", TAG, flushInterval, maximumRequestLimit, maximumDatabaseLimit, bulkSize) + isEnableErrorReporting;
 	}
-
 
 	/**
 	 * Function provide Preference service to save and load IsaConfig data

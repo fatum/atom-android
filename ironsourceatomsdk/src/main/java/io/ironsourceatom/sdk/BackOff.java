@@ -29,7 +29,7 @@ public class BackOff {
 	}
 
 	public static synchronized BackOff getInstance(Context context) {
-		if (null == sInstance) {
+		if (sInstance == null) {
 			sInstance = new BackOff(context);
 		}
 
@@ -44,15 +44,9 @@ public class BackOff {
 	 * @return nextTick - next clock tick for backoff service
 	 */
 	synchronized long next() {
-		long nextTick, currentTime = currentTimeMillis();
-		long lastTick = prefService.load(KEY_LAST_TICK, currentTime);
-		long temp = getMills(retry);
-
-		nextTick = currentTime + temp; // set the nextTick
-		if (currentTime > lastTick) {
-			prefService.save(KEY_RETRY_COUNT, ++retry);
-		}
+		final long nextTick = getMills(retry);
 		prefService.save(KEY_LAST_TICK, nextTick);
+		prefService.save(KEY_RETRY_COUNT, ++retry);
 		return nextTick;
 	}
 
@@ -83,13 +77,6 @@ public class BackOff {
 		return retry <= MAX_RETRY_COUNT;
 	}
 
-	/**
-	 * For testing purpose. to allow mocking this behavior.
-	 */
-	public long currentTimeMillis() {
-		return System.currentTimeMillis();
-	}
-
 	protected IsaPrefService getPrefService(Context context) {
 		return IsaPrefService.getInstance(context);
 	}
@@ -97,5 +84,4 @@ public class BackOff {
 	protected IsaConfig getConfig(Context context) {
 		return IsaConfig.getInstance(context);
 	}
-
 }

@@ -25,8 +25,8 @@ class HttpClient
 
 	private static HttpClient sInstance;
 
-	private HttpClient() {
-		// Singelton!
+	HttpClient() {
+		// Singelton but testing needs this
 	}
 
 	public static synchronized HttpClient getInstance() {
