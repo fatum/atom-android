@@ -157,8 +157,9 @@ public class ReportService
 					}
 			}
 			// If there's something to flush, it'll not be empty.
-			for (StorageApi.Table table : tablesToFlush)
+			for (StorageApi.Table table : tablesToFlush) {
 				flush(table);
+			}
 		} catch (Exception e) {
 			status = HandleStatus.RETRY;
 			Logger.log(TAG, e.getMessage(), Logger.SDK_DEBUG);
@@ -363,7 +364,7 @@ public class ReportService
 			}
 			else {
 				final long backoffSecondsLeft = (backOff.getNextBackoffTime() - System.currentTimeMillis()) / 1000;
-				Logger.log(TAG, "Backoff not yet expired (" + backoffSecondsLeft + " seconds left)  - no need to reschedule alarm", Logger.SDK_DEBUG);
+				Logger.log(TAG, "Backoff not yet expired (" + backoffSecondsLeft + " seconds left) - no need to reschedule alarm", Logger.SDK_DEBUG);
 			}
 		}
 		else {
