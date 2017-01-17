@@ -9,7 +9,8 @@ import java.util.Locale;
 
 public class IsaConfig {
 
-	private static final   String TAG                               = IsaConfig.class.getSimpleName();
+	private static final String TAG = IsaConfig.class.getSimpleName();
+
 	protected static final String DEFAULT_URL                       = "http://track.atom-data.io/bulk";
 	protected static final String DEFAULT_BULK_URL                  = "http://track.atom-data.io/bulk";
 	protected static final int    KILOBYTE                          = 1024;
@@ -21,22 +22,24 @@ public class IsaConfig {
 	protected static final int    DEFAULT_ALLOWED_NETWORK_TYPES     = ~0;
 	protected static final String DEFAULT_SDK_ERROR_STREAM          = "ironbeast_sdk"; // Error tracking stream
 	protected static final String DEFAULT_SDK_ERROR_STREAM_AUTH_KEY = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt"; // Error tracking
+
 	// SharedPreferences keys for metadata
-	protected static final String KEY_BULK_SIZE                     = "bulk_size";
-	protected static final String KEY_IB_END_POINT                  = "ib_end_point";
-	protected static final String KEY_FLUSH_INTERVAL                = "flush_interval";
-	protected static final String KEY_IB_END_POINT_BULK             = "ib_end_point_bulk";
-	protected static final String KEY_MAX_REQUEST_LIMIT             = "max_request_limit";
-	protected static final String KEY_MAX_DATABASE_LIMIT            = "max_database_limit";
-	protected static final String KEY_ENABLE_ERROR_REPORTING        = "sdk_tracker_enabled";
-	protected static final String KEY_ALLOWED_OVER_ROAMING          = "allow_roaming_flush";
-	protected static final String KEY_ALLOWED_NETWORK_TYPES         = "allowed_network_types";
-	protected static final String KEY_ERROR_STREAM                  = "error_stream";
-	protected static final String KEY_ERROR_STREAM_AUTH             = "error_stream_auth";
+	protected static final String KEY_BULK_SIZE              = "bulk_size";
+	protected static final String KEY_IB_END_POINT           = "ib_end_point";
+	protected static final String KEY_FLUSH_INTERVAL         = "flush_interval";
+	protected static final String KEY_IB_END_POINT_BULK      = "ib_end_point_bulk";
+	protected static final String KEY_MAX_REQUEST_LIMIT      = "max_request_limit";
+	protected static final String KEY_MAX_DATABASE_LIMIT     = "max_database_limit";
+	protected static final String KEY_ENABLE_ERROR_REPORTING = "sdk_tracker_enabled";
+	protected static final String KEY_ALLOWED_OVER_ROAMING   = "allow_roaming_flush";
+	protected static final String KEY_ALLOWED_NETWORK_TYPES  = "allowed_network_types";
+	protected static final String KEY_ERROR_STREAM           = "error_stream";
+	protected static final String KEY_ERROR_STREAM_AUTH      = "error_stream_auth";
+
 	private static IsaConfig sInstance;
 
 	IsaPrefService isaPrefService;
-	private boolean isEnableErrorReporting = false;
+	private boolean                 isEnableErrorReporting;
 	private boolean                 isAllowedOverRoaming;
 	private int                     allowedNetworkTypes;
 	private int                     bulkSize;

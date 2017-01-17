@@ -6,26 +6,22 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Persistent exponential backoff service.
+ * Persistence exponential backoff service.
  */
-public class BackOff {
+class BackOff {
 
-	private static BackOff sInstance;
-
+	private IsaPrefService prefService;
 	private final String KEY_LAST_TICK   = "retry_last_tick";
 	private final String KEY_RETRY_COUNT = "retry_count";
 
-	protected final int MAX_RETRY_COUNT     = 8;
-	protected final int INITIAL_RETRY_VALUE = 0;
+	protected final int MAX_RETRY_COUNT = 8;
+	private int retry;
 
-	private int            retry;
-	private IsaConfig      config;
-	private IsaPrefService prefService;
+	private static BackOff sInstance;
 
 	BackOff(Context context) {
-		config = getConfig(context);
 		prefService = getPrefService(context);
-		retry = prefService.load(KEY_RETRY_COUNT, INITIAL_RETRY_VALUE);
+		retry = prefService.load(KEY_RETRY_COUNT, 0);
 	}
 
 	public static synchronized BackOff getInstance(Context context) {
@@ -37,30 +33,40 @@ public class BackOff {
 	}
 
 	/**
-	 * Calculates and returns the next retry time in milliseconds and advances the counter.
+	 * Calculates and returns the next milliseconds and advances the counter.
 	 * nextTick - the next clock tick that the function returns
-	 * lastTick - The last known tick (used to store the state)
+	 * scheduledNextTick - The last known nextTick (used to store the state)
 	 *
-	 * @return nextTick - next clock tick for backoff service
+	 * @return nextTick - next clock tick.
 	 */
 	synchronized long next() {
-		final long nextTick = getMills(retry);
+		final long currentTime = currentTimeMillis();
+		final long scheduledNextTick = prefService.load(KEY_LAST_TICK, 0L);
+
+		// Increment counter only if last backoff expired
+		if (currentTime > scheduledNextTick) {
+			prefService.save(KEY_RETRY_COUNT, ++retry);
+		}
+
+		final long nextTick = currentTime + getMills(retry); // set the nextTick
 		prefService.save(KEY_LAST_TICK, nextTick);
-		prefService.save(KEY_RETRY_COUNT, ++retry);
 		return nextTick;
 	}
 
+	long getNextBackoffTime() {
+		return prefService.load(KEY_LAST_TICK, 0L);
+	}
+
 	/**
-	 * Get milliseconds number based on the given n (retry number)
+	 * Get milliseconds number based on the given n +- jitter.
 	 *
-	 * @param n retry number
-	 * @return new retry time in milliseconds
+	 * @param n The retry counter
+	 * @return A value between (2 power n-1) and (2 power n)
 	 */
 	private long getMills(int n) {
-		if (n <= INITIAL_RETRY_VALUE) {
-			return config.getFlushInterval();
-		}
-		return (long) (new Random().nextDouble() * TimeUnit.MINUTES.toMillis((int) Math.pow(2, n) - 1));
+		final long basicBackoff = TimeUnit.MINUTES.toMillis((int) Math.pow(2, n));
+		final long jitter = (long) (new Random().nextDouble() * (basicBackoff / 2));
+		return basicBackoff - jitter;
 	}
 
 	/**
@@ -68,7 +74,7 @@ public class BackOff {
 	 * save current state in sharedPreferences.
 	 */
 	void reset() {
-		retry = INITIAL_RETRY_VALUE;
+		retry = 0;
 		prefService.save(KEY_RETRY_COUNT, retry);
 		prefService.delete(KEY_LAST_TICK);
 	}
@@ -77,11 +83,14 @@ public class BackOff {
 		return retry <= MAX_RETRY_COUNT;
 	}
 
-	protected IsaPrefService getPrefService(Context context) {
-		return IsaPrefService.getInstance(context);
+	/**
+	 * For testing purpose. to allow mocking this behavior.
+	 */
+	protected long currentTimeMillis() {
+		return System.currentTimeMillis();
 	}
 
-	protected IsaConfig getConfig(Context context) {
-		return IsaConfig.getInstance(context);
+	protected IsaPrefService getPrefService(Context context) {
+		return IsaPrefService.getInstance(context);
 	}
 }

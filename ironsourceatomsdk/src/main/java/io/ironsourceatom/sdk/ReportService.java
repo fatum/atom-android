@@ -82,7 +82,7 @@ public class ReportService
 					retrySendReport();
 					break;
 				case FLUSH_INTERVAL:
-					scheduleAlarm(config.getFlushInterval());
+					scheduleAlarm(System.currentTimeMillis() + config.getFlushInterval());
 					// Intentional fall-through
 				case HANDLED:
 					backOff.reset();
@@ -104,7 +104,7 @@ public class ReportService
 		HandleStatus status = HANDLED;
 		try {
 			if (intent == null || intent.getExtras() == null) {
-				Logger.log(TAG, "Failed to handle intent - intent is null or no extras", Logger.SDK_DEBUG);
+				Logger.log(TAG, "Failed to handle intent - is null or no extras", Logger.SDK_DEBUG);
 				return status;
 			}
 			final Bundle extras = intent.getExtras();
@@ -119,22 +119,22 @@ public class ReportService
 				Logger.log(TAG, "Failed extracting the data from Intent", Logger.SDK_DEBUG);
 			}
 
-			final boolean isOnline = networkManager.isOnline() && canUseNetwork();
+			final boolean connectedToValidNetwork = networkManager.isOnline() && canUseNetwork();
 			List<StorageApi.Table> tablesToFlush = new ArrayList<>();
 			final int sdkEvent = extras.getInt(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR);
 			switch (sdkEvent) {
 				case SdkEvent.FLUSH_QUEUE:
 					Logger.log(TAG, "Requested to flush database", Logger.SDK_DEBUG);
-					if (isOnline) {
+					if (connectedToValidNetwork) {
 						tablesToFlush = storage.getTables();
 						break;
 					}
-					Logger.log(TAG, "Device is off line or cannot use network", Logger.SDK_DEBUG);
+					Logger.log(TAG, "Device is offline or cannot use network", Logger.SDK_DEBUG);
 
 					return HandleStatus.RETRY;
 				case SdkEvent.POST_SYNC:
 				case SdkEvent.REPORT_ERROR:
-					if (isOnline) {
+					if (connectedToValidNetwork) {
 						final String message = createMessage(dataObject, false);
 						final String url = config.getAtomEndPoint(dataObject.getString(ReportData.TOKEN));
 						final SendStatus sendStatus = send(message, url);
@@ -146,14 +146,14 @@ public class ReportService
 				case SdkEvent.ENQUEUE:
 					final StorageApi.Table table = new StorageApi.Table(dataObject.getString(ReportData.TABLE), dataObject.getString(ReportData.TOKEN));
 					final int nRows = storage.addEvent(table, dataObject.getString(ReportData.DATA));
-					Logger.log(TAG, "Added event to database (size: " + nRows + " rows)", Logger.SDK_DEBUG);
-					if (isOnline && config.getBulkSize() <= nRows) {
+					Logger.log(TAG, "Added event to " + table + " table (size: " + nRows + " rows)", Logger.SDK_DEBUG);
+					if (connectedToValidNetwork && config.getBulkSize() <= nRows) {
 						Logger.log(TAG, "Exceeded configured bulk size (" + config.getBulkSize() + " rows) - flushing data", Logger.SDK_DEBUG);
 						tablesToFlush.add(table);
 					}
 					else {
 						// Wait for flush interval or retry on valid network
-						return isOnline ? FLUSH_INTERVAL : RETRY;
+						return connectedToValidNetwork ? FLUSH_INTERVAL : RETRY;
 					}
 			}
 			// If there's something to flush, it'll not be empty.
@@ -357,7 +357,14 @@ public class ReportService
 
 	private void retryWithAlarmManager() {
 		if (backOff.hasNext()) {
-			scheduleAlarm(backOff.next());
+			boolean backoffExpired = backOff.getNextBackoffTime() < System.currentTimeMillis();
+			if (backoffExpired) {
+				scheduleAlarm(backOff.next());
+			}
+			else {
+				final long backoffSecondsLeft = (backOff.getNextBackoffTime() - System.currentTimeMillis()) / 1000;
+				Logger.log(TAG, "Backoff not yet expired (" + backoffSecondsLeft + " seconds left)  - no need to reschedule alarm", Logger.SDK_DEBUG);
+			}
 		}
 		else {
 			Logger.log(TAG, "Reached max retry attempts", Logger.SDK_DEBUG);
@@ -365,13 +372,14 @@ public class ReportService
 		}
 	}
 
-	private void scheduleAlarm(long delayInMillis) {
+	private void scheduleAlarm(long epochTime) {
+		final long delayInMillis = epochTime - System.currentTimeMillis();
 		Logger.log(TAG, "Scheduling to retry flushing data in " + (delayInMillis / 1000) + " seconds...", Logger.SDK_DEBUG);
 		final Intent reportIntent = new Intent(this, ReportService.class);
 		reportIntent.putExtras(new ReportData(SdkEvent.FLUSH_QUEUE).getExtras());
 
 		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		alarmManager.set(AlarmManager.RTC, System.currentTimeMillis() + delayInMillis, PendingIntent.getService(this, 0, reportIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+		alarmManager.set(AlarmManager.RTC, epochTime, PendingIntent.getService(this, 0, reportIntent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	/**
