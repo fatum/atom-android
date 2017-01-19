@@ -58,7 +58,7 @@ class BackOff {
 	}
 
 	/**
-	 * Get milliseconds number based on the given n +- jitter.
+	 * Get milliseconds number based on the given n - jitter.
 	 *
 	 * @param n The retry counter
 	 * @return A value between (2 power n-1) and (2 power n)

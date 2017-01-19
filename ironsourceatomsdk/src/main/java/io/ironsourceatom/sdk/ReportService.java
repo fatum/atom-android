@@ -407,6 +407,9 @@ public class ReportService
 
 	public static void sendReport(Context context, Report report) {
 
+		// PENDING: Since one flush may be stuck, any incoming reports must wait in the intents queue
+		// PENDING: until the flush is released - so if device reboots or process stops, we may lose reports
+
 		// PENDING: Might be better to save to DB before starting the intent service
 
 		final Intent intent = new Intent(context, ReportService.class);
