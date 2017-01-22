@@ -26,7 +26,7 @@ public class ReportService
 
 	private IsaConfig      config;
 	private StorageApi     storage;
-	private NetworkManager networkManager;
+
 
 	public ReportService() {
 		super(TAG);
@@ -42,7 +42,6 @@ public class ReportService
 	void init(Context context) {
 		config = getConfig(context);
 		storage = getStorage(context);
-		networkManager = getNetManager(context);
 	}
 
 	@Override
@@ -74,9 +73,9 @@ public class ReportService
 
 	private boolean saveReport(JSONObject dataObject) {
 		final StorageApi.Table table = new StorageApi.Table(dataObject.optString(Report.TABLE_KEY), dataObject.optString(Report.TOKEN_KEY));
-		int numberOfRowsBeofreInsert = storage.count(table);
+		int numberOfRowsBeforeInsert = storage.count(table);
 		final int dbRowCount = storage.addEvent(table, dataObject.optString(Report.DATA_KEY));
-		boolean addSuccessful = dbRowCount == numberOfRowsBeofreInsert + 1;
+		boolean addSuccessful = dbRowCount == numberOfRowsBeforeInsert + 1;
 		if (addSuccessful) {
 			Logger.log(TAG, "Added event to " + table + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
 			if (dbRowCount > config.getBulkSize()) {
@@ -104,10 +103,6 @@ public class ReportService
 
 	protected StorageApi getStorage(Context context) {
 		return DbAdapter.getInstance(context);
-	}
-
-	protected NetworkManager getNetManager(Context context) {
-		return NetworkManager.getInstance(context);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////

@@ -28,31 +28,35 @@ public class ReportHandlerIntegrationTest {
 	@Before
 	public void reset() {
 		mClient.mBackedMock.clear();
+		mReportService.init(RuntimeEnvironment.application);
 		mFlushDatabaseService.init(RuntimeEnvironment.application);
 	}
 
 	@Test
 	public void testPostSuccess() throws
 			Exception {
-		mFlushDatabaseService.handleReport(new JSONObject(event1), Report.Action.POST_SYNC);
-		mFlushDatabaseService.handleReport(new JSONObject(event2), Report.Action.POST_SYNC);
-		assertEquals(mClient.get(TABLE1), new JSONArray("[{" +
-				"\"data\":\"ib-data\"," +
+		mReportService.handleReport(new JSONObject(event1), Report.Action.POST_SYNC);
+		assertEquals(new JSONArray("[{" +
+				"\"data\":\"[ib-data]\"," +
 				"\"table\":\"ib_test\"," +
-				"\"auth\":\"fbc254c2e706a3dc3a0b35985f220a66a2e05a25011bcbbe245671a2f54c1e8c\"" +
-				"}]").toString());
-		assertEquals(mClient.get(TABLE2), new JSONArray("[{" +
-				"\"data\":\"ic-data\"," +
+				"\"bulk\":true," +
+				"\"auth\":\"87015109c69035da52b0ca267a2586e0a0865ebdb369be260a504578750fff9f\"" +
+				"}]").toString(), mClient.get(TABLE1));
+
+		mReportService.handleReport(new JSONObject(event2), Report.Action.POST_SYNC);
+		assertEquals(new JSONArray("[{" +
+				"\"data\":\"[ic-data]\"," +
 				"\"table\":\"ic_test\"," +
-				"\"auth\":\"bfcdf43b270ba2c1b19042f87bf094fe0c1b54f0be309d5451cfe52f18957189\"" +
-				"}]").toString());
+				"\"bulk\":true," +
+				"\"auth\":\"b7e90b4f318d1e1fbbb452dab032647b19f128ab3aa2b88c1098508e1946bc76\"" +
+				"}]").toString(), mClient.get(TABLE2));
 	}
 
 	@Test
 	public void testPostFailed() {
 		mClient.setNext(503);
-		mFlushDatabaseService.handleReport(new JSONObject(event1), Report.Action.POST_SYNC);
-		mFlushDatabaseService.handleReport(new JSONObject(event2), Report.Action.POST_SYNC);
+		mReportService.handleReport(new JSONObject(event1), Report.Action.POST_SYNC);
+		mReportService.handleReport(new JSONObject(event2), Report.Action.POST_SYNC);
 		assertEquals(mAdapter.count(null), 2);
 		assertEquals(mAdapter.getTables()
 		                     .size(), 2);
@@ -62,7 +66,7 @@ public class ReportHandlerIntegrationTest {
 	public void testTrackEvent() {
 		mConfig.setBulkSize(Integer.MAX_VALUE);
 		for (int i = 1 ; i <= 10 ; i++) {
-			mFlushDatabaseService.handleReport(new JSONObject(event1), Report.Action.ENQUEUE);
+			mReportService.handleReport(new JSONObject(event1), Report.Action.ENQUEUE);
 			assertEquals(mAdapter.count(null), i);
 		}
 		assertEquals(mAdapter.getTables()
@@ -72,7 +76,7 @@ public class ReportHandlerIntegrationTest {
 	@Test
 	public void testTrackError() throws
 			JSONException {
-		mFlushDatabaseService.handleReport(new JSONObject(event1), Report.Action.REPORT_ERROR);
+		mReportService.handleReport(new JSONObject(event1), Report.Action.REPORT_ERROR);
 		assertEquals(mClient.get(TABLE1), new JSONArray("[{" +
 				"\"data\":\"ib-data\"," +
 				"\"table\":\"ib_test\"," +
@@ -87,7 +91,7 @@ public class ReportHandlerIntegrationTest {
 		for (int i = 1 ; i <= 10 ; i++) {
 			final Map<String, String> event = new HashMap<>(event1);
 			event.put(Report.DATA_KEY, String.valueOf(i));
-			mFlushDatabaseService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
+			mReportService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
 		}
 		assertEquals(0, mAdapter.count(null));
 		assertEquals(mAdapter.getTables()
@@ -126,9 +130,9 @@ public class ReportHandlerIntegrationTest {
 		for (int i = 1 ; i <= 10 ; i++) {
 			final Map<String, String> event = new HashMap<>(event1);
 			event.put(Report.DATA_KEY, String.valueOf(i));
-			mFlushDatabaseService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
+			mReportService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
 			event.put(Report.TABLE_KEY, TABLE2);
-			mFlushDatabaseService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
+			mReportService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
 		}
 		assertEquals(0, mAdapter.count(null));
 		assertEquals(mAdapter.getTables()
@@ -142,30 +146,41 @@ public class ReportHandlerIntegrationTest {
 	// Events to test
 	final String TABLE1 = "ib_test", TOKEN1 = "ib_token", DATA1 = "ib-data";
 	final String TABLE2 = "ic_test", TOKEN2 = "ic_token", DATA2 = "ic-data";
-	final Map<String, String>   event1                = new HashMap<String, String>() {{
+	final Map<String, String>   event1         = new HashMap<String, String>() {{
 		put(Report.DATA_KEY, DATA1);
 		put(Report.TOKEN_KEY, TOKEN1);
 		put(Report.TABLE_KEY, TABLE1);
 	}};
-	final Map<String, String>   event2                = new HashMap<String, String>() {{
+	final Map<String, String>   event2         = new HashMap<String, String>() {{
 		put(Report.DATA_KEY, DATA2);
 		put(Report.TOKEN_KEY, TOKEN2);
 		put(Report.TABLE_KEY, TABLE2);
 	}};
 	// MockBackend
-	final TestsUtils.MockPoster mClient               = new TestsUtils.MockPoster();
-	final IsaConfig             mConfig               = IsaConfig.getInstance(RuntimeEnvironment.application);
-	final StorageApi            mAdapter              = new DbAdapter(RuntimeEnvironment.application);
-	final FlushDatabaseService  mFlushDatabaseService = new FlushDatabaseService() {
+	final TestsUtils.MockPoster mClient        = new TestsUtils.MockPoster();
+	final IsaConfig             mConfig        = IsaConfig.getInstance(RuntimeEnvironment.application);
+	final StorageApi            mAdapter       = new DbAdapter(RuntimeEnvironment.application);
+	final ReportService         mReportService = new ReportService() {
 		@Override
 		protected StorageApi getStorage(Context context) {
 			return mAdapter;
 		}
 
 		@Override
-		protected RemoteConnection getHttpClient() {
-			return mClient;
+		void flushDatabase() {
+			mFlushDatabaseService.flushDatabase();
 		}
 	};
 
+	final FlushDatabaseService mFlushDatabaseService = new FlushDatabaseService() {
+		@Override
+		protected RemoteConnection getHttpClient() {
+			return mClient;
+		}
+
+		@Override
+		protected StorageApi getStorage(Context context) {
+			return mAdapter;
+		}
+	};
 }

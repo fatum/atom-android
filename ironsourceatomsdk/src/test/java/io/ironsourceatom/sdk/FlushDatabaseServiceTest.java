@@ -18,6 +18,7 @@ import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -83,13 +84,8 @@ public class FlushDatabaseServiceTest {
 		}
 
 		@Override
-		protected NetworkManager getNetManager(Context context) {
-			return netManager;
-		}
-
-		@Override
 		void flushDatabase() {
-			mFlushDatabaseService.flushDatabase();
+			//mFlushDatabaseService.flushDatabase();
 		}
 	};
 
@@ -117,6 +113,7 @@ public class FlushDatabaseServiceTest {
 		when(netManager.getNetworkAtomType()).thenReturn(-1);
 		when(netManager.isOnline()).thenReturn(true);
 
+		mReportService.init(context);
 		mFlushDatabaseService.init(context);
 	}
 
@@ -139,7 +136,8 @@ public class FlushDatabaseServiceTest {
 		String url = "http://host.com/post";
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		when(config.getAtomEndPoint(anyString())).thenReturn(url);
-		assertTrue(mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC) == FlushResult.HANDLED);
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+		assertTrue(mFlushDatabaseService.flushDatabase() == FlushResult.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -157,7 +155,8 @@ public class FlushDatabaseServiceTest {
 			code = 401;
 			body = "Unauthorized";
 		}});
-		assertEquals(FlushResult.HANDLED, mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC));
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -171,7 +170,8 @@ public class FlushDatabaseServiceTest {
 		when(netManager.isOnline()).thenReturn(false);
 		// no idle time, but should try it out 10 times
 		when(config.getNumOfRetries()).thenReturn(10);
-		assertEquals(FlushResult.RETRY, mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC));
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.RETRY);
 		verify(netManager, times(1)).isOnline();
 		verify(client, never()).post(anyString(), anyString());
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -186,9 +186,12 @@ public class FlushDatabaseServiceTest {
 		when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		final JSONObject jsonObject = new JSONObject(reportMap);
-		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), FlushResult.HANDLED);
-		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), FlushResult.RETRY);
-		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), FlushResult.HANDLED);
+		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
+		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
+		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
+		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.RETRY);
+		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
+		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
 		verify(client, times(2)).post(anyString(), anyString());
 	}
 
@@ -212,7 +215,8 @@ public class FlushDatabaseServiceTest {
 		for (TestScenario test : scenarios) {
 			when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
 			when(netManager.getNetworkAtomType()).thenReturn(test.networkStatus);
-			assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), test.expected);
+			mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+			assertEquals(mFlushDatabaseService.flushDatabase(), test.expected);
 		}
 	}
 
@@ -220,7 +224,7 @@ public class FlushDatabaseServiceTest {
 	// Should do nothing and return true.
 	@Test
 	public void flushNothing() {
-		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getTables();
 	}
 
@@ -262,7 +266,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.count(mTable)).thenReturn(1);
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
-		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.flushDatabase());
 		verify(storage, times(2)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
 		verify(storage, times(1)).deleteEvents(mTable, "3");
@@ -280,7 +284,7 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void flushNoItems() throws
 			Exception {
-		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getTables();
 		verify(storage, never()).getEvents(any(Table.class), anyInt());
 	}
@@ -299,7 +303,7 @@ public class FlushDatabaseServiceTest {
 			add(mTable);
 		}});
 		when(client.post(anyString(), anyString())).thenReturn(fail);
-		assertEquals(FlushResult.RETRY, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.RETRY, mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, never()).deleteEvents(mTable, "2");
 		verify(storage, never()).deleteTable(mTable);
@@ -311,7 +315,8 @@ public class FlushDatabaseServiceTest {
 	public void trackCauseFlush() {
 		config.setBulkSize(2);
 		when(storage.addEvent(mTable, DATA)).thenReturn(2);
-		mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
+		mFlushDatabaseService.flushDatabase();
 		verify(storage, times(1)).addEvent(mTable, DATA);
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 	}
@@ -341,7 +346,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.deleteEvents(eq(mTable), anyString())).thenReturn(1);
 		when(storage.count(mTable)).thenReturn(1, 0);
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok);
-		mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE);
+		mFlushDatabaseService.flushDatabase();
 		verify(storage, times(2)).getEvents(mTable, 2);
 		verify(storage, times(1)).getEvents(mTable, 1);
 		verify(storage, times(1)).deleteTable(mTable);
@@ -353,7 +358,8 @@ public class FlushDatabaseServiceTest {
 	public void dataFormat() throws
 			Exception {
 		when(client.post(any(String.class), any(String.class))).thenReturn(ok);
-		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), FlushResult.HANDLED);
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
 		JSONObject report = new JSONObject(reportMap);
 		String token = reportMap.get(Report.TOKEN_KEY);
 		report.put(Report.AUTH_KEY, Utils.auth(report.getString(Report.DATA_KEY), report.getString(Report.TOKEN_KEY)))
