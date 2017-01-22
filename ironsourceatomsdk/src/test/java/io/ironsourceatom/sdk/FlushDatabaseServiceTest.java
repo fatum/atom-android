@@ -13,12 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.ironsourceatom.sdk.FlushDatabaseService.HandleStatus;
+import io.ironsourceatom.sdk.FlushDatabaseService.FlushResult;
 import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
 
-import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -35,20 +34,21 @@ import static org.mockito.Mockito.when;
 public class FlushDatabaseServiceTest {
 
 	// Two different responses
-	final Response             ok                    = new RemoteConnection.Response() {{
+	final Response         ok         = new RemoteConnection.Response() {{
 		code = 200;
 		body = "OK";
 	}};
-	final Response             fail                  = new RemoteConnection.Response() {{
+	final Response         fail       = new RemoteConnection.Response() {{
 		code = 503;
 		body = "Service Unavailable";
 	}};
 	// Mocking
-	final NetworkManager       netManager            = mock(NetworkManager.class);
-	final StorageApi           storage               = mock(DbAdapter.class);
-	final RemoteConnection     client                = mock(HttpClient.class);
-	final IsaConfig            config                = mock(IsaConfig.class);
-	final Context              context               = mock(Context.class);
+	final NetworkManager   netManager = mock(NetworkManager.class);
+	final StorageApi       storage    = mock(DbAdapter.class);
+	final RemoteConnection client     = mock(HttpClient.class);
+	final IsaConfig        config     = mock(IsaConfig.class);
+	final Context          context    = mock(Context.class);
+
 	final FlushDatabaseService mFlushDatabaseService = new FlushDatabaseService() {
 		@Override
 		protected RemoteConnection getHttpClient() {
@@ -70,7 +70,30 @@ public class FlushDatabaseServiceTest {
 			return netManager;
 		}
 	};
-	final String               TABLE                 = "ib_table", TOKEN = "ib_token", DATA = "hello world";
+
+	final ReportService mReportService = new ReportService() {
+		@Override
+		protected IsaConfig getConfig(Context context) {
+			return config;
+		}
+
+		@Override
+		protected StorageApi getStorage(Context context) {
+			return storage;
+		}
+
+		@Override
+		protected NetworkManager getNetManager(Context context) {
+			return netManager;
+		}
+
+		@Override
+		void flushDatabase() {
+			mFlushDatabaseService.flushDatabase();
+		}
+	};
+
+	final String TABLE = "ib_table", TOKEN = "ib_token", DATA = "hello world";
 	final Map<String, String> reportMap = new HashMap<String, String>() {{
 		put(Report.DATA_KEY, DATA);
 		put(Report.TOKEN_KEY, TOKEN);
@@ -102,7 +125,7 @@ public class FlushDatabaseServiceTest {
 	public void trackOnly() throws
 			Exception {
 		config.setBulkSize(Integer.MAX_VALUE);
-		mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
 		verify(storage, times(1)).addEvent(mTable, DATA);
 		verify(client, never()).post(anyString(), anyString());
 	}
@@ -116,7 +139,7 @@ public class FlushDatabaseServiceTest {
 		String url = "http://host.com/post";
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		when(config.getAtomEndPoint(anyString())).thenReturn(url);
-		assertTrue(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC) == FlushDatabaseService.HandleStatus.HANDLED);
+		assertTrue(mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC) == FlushResult.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -134,13 +157,13 @@ public class FlushDatabaseServiceTest {
 			code = 401;
 			body = "Unauthorized";
 		}});
-		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), FlushDatabaseService.HandleStatus.HANDLED);
+		assertEquals(FlushResult.HANDLED, mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC));
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
 	}
 
-	// When reportService get a post-event(or flush), but the device not connected to internet.
+	// When reportService get a post-event(or flushTable), but the device not connected to internet.
 	// Should try to post "n" times, add it to storage if it's failed, and returns false.
 	@Test
 	public void postWithoutNetwork() throws
@@ -148,13 +171,13 @@ public class FlushDatabaseServiceTest {
 		when(netManager.isOnline()).thenReturn(false);
 		// no idle time, but should try it out 10 times
 		when(config.getNumOfRetries()).thenReturn(10);
-		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), HandleStatus.RETRY);
+		assertEquals(FlushResult.RETRY, mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC));
 		verify(netManager, times(1)).isOnline();
 		verify(client, never()).post(anyString(), anyString());
 		verify(storage, times(1)).addEvent(mTable, DATA);
 	}
 
-	// When reportService get a post-event(or flush), and the device is on ROAMING_MODE.
+	// When reportService get a post-event(or flushTable), and the device is on ROAMING_MODE.
 	// It should try to send only if its has a permission to it.
 	@Test
 	public void postOnRoaming() throws
@@ -163,13 +186,13 @@ public class FlushDatabaseServiceTest {
 		when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		final JSONObject jsonObject = new JSONObject(reportMap);
-		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), HandleStatus.HANDLED);
-		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), HandleStatus.RETRY);
-		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), FlushResult.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), FlushResult.RETRY);
+		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), FlushResult.HANDLED);
 		verify(client, times(2)).post(anyString(), anyString());
 	}
 
-	// When reportService get a post-event(or flush), should test if the
+	// When reportService get a post-event(or flushTable), should test if the
 	// network type allowing it to make a network transaction before trying to make it.
 	@Test
 	public void isNetworkTypeAllowed() throws
@@ -178,13 +201,13 @@ public class FlushDatabaseServiceTest {
 		// List of scenarios, each member contains:
 		// configResult, networkTypeResult and the expected behavior.
 		List<TestScenario> scenarios = new ArrayList<>();
-		scenarios.add(new TestScenario(~0, MOBILE, HandleStatus.HANDLED));
-		scenarios.add(new TestScenario(WIFI | MOBILE, MOBILE, HandleStatus.HANDLED));
-		scenarios.add(new TestScenario(WIFI | MOBILE, WIFI, HandleStatus.HANDLED));
-		scenarios.add(new TestScenario(WIFI, WIFI, HandleStatus.HANDLED));
-		scenarios.add(new TestScenario(MOBILE, MOBILE, HandleStatus.HANDLED));
-		scenarios.add(new TestScenario(WIFI, MOBILE, HandleStatus.RETRY));
-		scenarios.add(new TestScenario(MOBILE, WIFI, HandleStatus.RETRY));
+		scenarios.add(new TestScenario(~0, MOBILE, FlushResult.HANDLED));
+		scenarios.add(new TestScenario(WIFI | MOBILE, MOBILE, FlushResult.HANDLED));
+		scenarios.add(new TestScenario(WIFI | MOBILE, WIFI, FlushResult.HANDLED));
+		scenarios.add(new TestScenario(WIFI, WIFI, FlushResult.HANDLED));
+		scenarios.add(new TestScenario(MOBILE, MOBILE, FlushResult.HANDLED));
+		scenarios.add(new TestScenario(WIFI, MOBILE, FlushResult.RETRY));
+		scenarios.add(new TestScenario(MOBILE, WIFI, FlushResult.RETRY));
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		for (TestScenario test : scenarios) {
 			when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
@@ -193,15 +216,15 @@ public class FlushDatabaseServiceTest {
 		}
 	}
 
-	// When reportService get a flush-event and there's no items in the queue.
+	// When reportService get a flushTable-event and there's no items in the queue.
 	// Should do nothing and return true.
 	@Test
 	public void flushNothing() {
-		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(1)).getTables();
 	}
 
-	// When reportService get a flush-event, it should ask for the all tables with `getTables`,
+	// When reportService get a flushTable-event, it should ask for the all tables with `getTables`,
 	// and then call `getEvents` for each of them with `maximumBulkSize`.
 	// If everything goes well, it should drain the table, and then delete it.
 	@Test
@@ -239,7 +262,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.count(mTable)).thenReturn(1);
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
-		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(2)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
 		verify(storage, times(1)).deleteEvents(mTable, "3");
@@ -252,17 +275,17 @@ public class FlushDatabaseServiceTest {
 		verify(storage, times(1)).deleteTable(mTable1);
 	}
 
-	// When reportService get a flush-event, and there's no tables to drain(i.e: no event)
+	// When reportService get a flushTable-event, and there's no tables to drain(i.e: no event)
 	// Should do-nothing, and return true
 	@Test
 	public void flushNoItems() throws
 			Exception {
-		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(1)).getTables();
 		verify(storage, never()).getEvents(any(Table.class), anyInt());
 	}
 
-	// When reportService try to flush a batch, and it encounter an error(e.g: connectivity)
+	// When reportService try to flushTable a batch, and it encounter an error(e.g: connectivity)
 	// should stop-flushing, and return false
 	@Test
 	public void flushFailed() throws
@@ -276,14 +299,14 @@ public class FlushDatabaseServiceTest {
 			add(mTable);
 		}});
 		when(client.post(anyString(), anyString())).thenReturn(fail);
-		assertEquals(HandleStatus.RETRY, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
+		assertEquals(FlushResult.RETRY, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, never()).deleteEvents(mTable, "2");
 		verify(storage, never()).deleteTable(mTable);
 	}
 
 	// When tracking an event(record) to some table and the count number
-	// is greater or equal to bulk-size, should flush the queue.
+	// is greater or equal to bulk-size, should flushTable the queue.
 	@Test
 	public void trackCauseFlush() {
 		config.setBulkSize(2);
@@ -330,7 +353,7 @@ public class FlushDatabaseServiceTest {
 	public void dataFormat() throws
 			Exception {
 		when(client.post(any(String.class), any(String.class))).thenReturn(ok);
-		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), FlushResult.HANDLED);
 		JSONObject report = new JSONObject(reportMap);
 		String token = reportMap.get(Report.TOKEN_KEY);
 		report.put(Report.AUTH_KEY, Utils.auth(report.getString(Report.DATA_KEY), report.getString(Report.TOKEN_KEY)))
@@ -344,11 +367,11 @@ public class FlushDatabaseServiceTest {
 	// Helper class, used inside "isNetworkAllowed" test case.
 	class TestScenario {
 
-		int          configStatus;
-		int          networkStatus;
-		HandleStatus expected;
+		int         configStatus;
+		int         networkStatus;
+		FlushResult expected;
 
-		TestScenario(int config, int network, HandleStatus exp) {
+		TestScenario(int config, int network, FlushResult exp) {
 			configStatus = config;
 			networkStatus = network;
 			expected = exp;

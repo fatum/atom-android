@@ -168,9 +168,9 @@ public class IsaConfig {
 	}
 
 	/**
-	 * Function return next flush time of report
+	 * Function return next flushTable time of report
 	 *
-	 * @return automatic flush time
+	 * @return automatic flushTable time
 	 */
 	public int getFlushInterval() {
 		return flushInterval;

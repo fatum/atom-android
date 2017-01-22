@@ -14,6 +14,8 @@ import java.util.List;
 
 /**
  * Db Adapter class for local SQLite DB
+ *
+ * PENDING: Consider notifying on SQL errors by throwing all SqlLiteExceptions instead of catching them
  */
 public class DbAdapter
 		implements StorageApi {

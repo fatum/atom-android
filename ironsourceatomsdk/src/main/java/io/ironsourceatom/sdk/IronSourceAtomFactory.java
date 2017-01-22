@@ -146,9 +146,9 @@ public class IronSourceAtomFactory {
 	}
 
 	/**
-	 * function set report flush intervals
+	 * function set report flushTable intervals
 	 *
-	 * @param ms - time for flush in milliseconds
+	 * @param ms - time for flushTable in milliseconds
 	 */
 	public void setFlushInterval(int ms) {
 		config.setFlushInterval(ms);

@@ -36,10 +36,10 @@ public class FlushDatabaseService
 
 	private static final String TAG = "FlushDatabaseService";
 
+	private   IsaConfig        config;
 	private   NetworkManager   networkManager;
 	private   StorageApi       storage;
 	private   RemoteConnection httpClient;
-	private   IsaConfig        config;
 	protected BackOff          backOff;
 
 	public enum SendStatus {
@@ -48,7 +48,7 @@ public class FlushDatabaseService
 		RETRY
 	}
 
-	public enum HandleStatus {
+	public enum FlushResult {
 		HANDLED,
 		RETRY,
 		FLUSH_INTERVAL
@@ -80,32 +80,44 @@ public class FlushDatabaseService
 			return;
 		}
 
-		JSONObject reportJsonObject;
 		try {
-			reportJsonObject = new JSONObject(intent.getStringExtra(EXTRA_REPORT_JSON));
-		} catch (JSONException e) {
-			Logger.log(TAG, "Failed to create report from json - exiting", Logger.SDK_DEBUG);
-			return;
-		}
 
-		final Report.Action action = Report.Action.values()[intent.getExtras()
-		                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal())];
+			final Report.Action action = Report.Action.values()[intent.getExtras()
+			                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal())];
 
-		try {
-			final HandleStatus status = handleReport(reportJsonObject, action);
-			switch (status) {
-				case RETRY:
-					retrySendReport();
-					break;
-				case FLUSH_INTERVAL:
-					scheduleAlarm(System.currentTimeMillis() + config.getFlushInterval());
-					// Intentional fall-through
-				case HANDLED:
-					backOff.reset();
-					break;
+			if (action == REPORT_ERROR) {
+				try {
+					final JSONObject errorReportJsonObject = new JSONObject(intent.getStringExtra(EXTRA_REPORT_JSON));
+					sendErrorReport(errorReportJsonObject);
+				} catch (JSONException e) {
+					Logger.log(TAG, "Failed to report error from json - exiting", Logger.SDK_DEBUG);
+				}
+			}
+			else {
+				final FlushResult status = flushDatabase();
+				switch (status) {
+					case RETRY:
+						retrySendReport();
+						break;
+					case FLUSH_INTERVAL:
+						scheduleAlarm(System.currentTimeMillis() + config.getFlushInterval());
+						// Intentional fall-through
+					case HANDLED:
+						backOff.reset();
+						break;
+				}
 			}
 		} catch (Throwable th) {
 			Logger.log(TAG, "Failed to handle intent: " + th, th, Logger.SDK_ERROR);
+		}
+	}
+
+	void sendErrorReport(JSONObject errorReport) {
+		final String message = createMessage(errorReport, false);
+		final String url = config.getAtomEndPoint(errorReport.optString(Report.TOKEN_KEY));
+		final SendStatus sendStatus = send(message, url);
+		if (sendStatus != SendStatus.SUCCESS) {
+			Logger.log(TAG, "Failed to send error report to server", Logger.SDK_DEBUG);
 		}
 	}
 
@@ -115,54 +127,27 @@ public class FlushDatabaseService
 	 *
 	 * @return result of the handleReport if success true or failed false
 	 */
-	public HandleStatus handleReport(JSONObject reportData, Report.Action action) {
+	FlushResult flushDatabase() {
 		try {
 			final boolean connectedToValidNetwork = networkManager.isOnline() && canUseNetwork();
-			switch (action) {
-				case FLUSH_QUEUE:
-					Logger.log(TAG, "Requested to flush database", Logger.SDK_DEBUG);
-					if (connectedToValidNetwork) {
-						final List<StorageApi.Table> tables = storage.getTables();
-						// Flush all tables in database
-						for (StorageApi.Table table : tables) {
-							flush(table);
-						}
-					}
-					else {
-						Logger.log(TAG, "Device is offline or cannot use network", Logger.SDK_DEBUG);
-						return HandleStatus.RETRY;
-					}
-					break;
-				case POST_SYNC:
-				case REPORT_ERROR:
-					if (connectedToValidNetwork) {
-						final String message = createMessage(reportData, false);
-						final String url = config.getAtomEndPoint(reportData.getString(Report.TOKEN_KEY));
-						final SendStatus sendStatus = send(message, url);
-						if (sendStatus != SendStatus.RETRY || action == REPORT_ERROR) {
-							break;
-						}
-					}
-					// Intentional fall-through
-				case ENQUEUE:
-					final StorageApi.Table table = new StorageApi.Table(reportData.getString(Report.TABLE_KEY), reportData.getString(Report.TOKEN_KEY));
-					final int dbRowCount = storage.addEvent(table, reportData.getString(Report.DATA_KEY));
-					Logger.log(TAG, "Added event to " + table + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
-					if (dbRowCount > config.getBulkSize() && connectedToValidNetwork) {
-						Logger.log(TAG, "Exceeded configured bulk size (" + config.getBulkSize() + " rows) - flushing data", Logger.SDK_DEBUG);
-						flush(table);
-					}
-					else {
-						// Wait for flush interval or retry on valid network
-						return connectedToValidNetwork ? HandleStatus.FLUSH_INTERVAL : HandleStatus.RETRY;
-					}
+			Logger.log(TAG, "Requested to flushTable database", Logger.SDK_DEBUG);
+			if (connectedToValidNetwork) {
+				final List<StorageApi.Table> tables = storage.getTables();
+				// Flush all tables in database
+				for (StorageApi.Table table : tables) {
+					flushTable(table);
+				}
+			}
+			else {
+				Logger.log(TAG, "Device is offline or cannot use network", Logger.SDK_DEBUG);
+				return FlushResult.RETRY;
 			}
 		} catch (Exception e) {
 			Logger.log(TAG, e.getMessage(), Logger.SDK_DEBUG);
-			return HandleStatus.RETRY;
+			return FlushResult.RETRY;
 		}
 
-		return HandleStatus.HANDLED;
+		return FlushResult.HANDLED;
 	}
 
 	/**
@@ -175,7 +160,7 @@ public class FlushDatabaseService
 	 * @param table
 	 * @throws Exception
 	 */
-	public void flush(StorageApi.Table table) throws
+	public void flushTable(StorageApi.Table table) throws
 			Exception {
 		int bulkSize = config.getBulkSize();
 		StorageApi.Batch batch;
@@ -208,12 +193,12 @@ public class FlushDatabaseService
 					storage.deleteTable(table);
 				}
 				else {
-					flush(table);
+					flushTable(table);
 				}
 			}
 			else {
 				// This will be caught by handleReport() and return a HandleStatus.RETRY
-				throw new IllegalStateException("Failed flush entries for table: " + table.name + ". Retrying");
+				throw new IllegalStateException("Failed flushTable entries for table: " + table.name + ". Retrying");
 			}
 		}
 	}
@@ -405,7 +390,7 @@ public class FlushDatabaseService
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 
-	public static void flush(Context context) {
+	public static void flushTable(Context context) {
 		final Intent intent = new Intent(context, FlushDatabaseService.class);
 		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
 		context.startService(intent);

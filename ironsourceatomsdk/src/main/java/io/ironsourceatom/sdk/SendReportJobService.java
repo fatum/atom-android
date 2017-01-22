@@ -18,8 +18,8 @@ public class SendReportJobService
 
 	@Override
 	public boolean onStartJob(JobParameters jobParameters) {
-		Logger.log(TAG, "Requesting FlushDatabaseService to flush...", Logger.SDK_DEBUG);
-		FlushDatabaseService.flush(this);
+		Logger.log(TAG, "Requesting FlushDatabaseService to flushTable...", Logger.SDK_DEBUG);
+		FlushDatabaseService.flushTable(this);
 
 		// The only purpose of this job is to start the service - so our work is done
 		return false;

@@ -16,7 +16,6 @@ public interface StorageApi {
 
 	int addEvent(Table table, String data);
 
-
 	/**
 	 * Batch is just a syntactic-sugar way to store bulk of events
 	 * with its lastId to acknowledge them later

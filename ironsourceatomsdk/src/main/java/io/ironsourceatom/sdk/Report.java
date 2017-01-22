@@ -12,8 +12,6 @@ class Report {
 		FLUSH_QUEUE,
 		// send report immediately
 		POST_SYNC,
-		// error on report
-		ERROR,
 		// report an error to sdk error stream
 		REPORT_ERROR
 	}

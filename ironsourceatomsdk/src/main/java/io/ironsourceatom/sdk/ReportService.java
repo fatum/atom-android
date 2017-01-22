@@ -7,7 +7,7 @@ import android.content.Intent;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static io.ironsourceatom.sdk.Report.Action.REPORT_ERROR;
+import static io.ironsourceatom.sdk.Report.Action.POST_SYNC;
 
 /**
  * Created on 19/01/2017 16:33.
@@ -24,10 +24,9 @@ public class ReportService
 	static final String EXTRA_REPORT_JSON                = PACKAGE + ".EXTRA_REPORT_JSON";
 	static final String EXTRA_REPORT_ACTION_ENUM_ORDINAL = PACKAGE + ".EXTRA_REPORT_ACTION_ENUM_ORDINAL";
 
-	private NetworkManager networkManager;
+	private IsaConfig      config;
 	private StorageApi     storage;
-
-	private IsaConfig config;
+	private NetworkManager networkManager;
 
 	public ReportService() {
 		super(TAG);
@@ -53,41 +52,51 @@ public class ReportService
 			return;
 		}
 
-
 		try {
 			final JSONObject reportJsonObject = new JSONObject(intent.getStringExtra(EXTRA_REPORT_JSON));
+			final Report.Action action = Report.Action.values()[intent.getExtras()
+			                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, -1)];
 
-			saveReport(reportJsonObject);
-
-
+			handleReport(reportJsonObject, action);
 		} catch (JSONException e) {
 			Logger.log(TAG, "Failed to create report from json - exiting", Logger.SDK_DEBUG);
-			return;
-		}
-
-
-		final Report.Action action = Report.Action.values()[intent.getExtras()
-		                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal())];
-		switch(action) {
-			case ERROR:
-			case POST_SYNC:
-				FlushDatabaseService.flush(this);
-				break;
-			case REPORT_ERROR:
 		}
 	}
 
-	private void saveReport(JSONObject dataObject) {
-		final StorageApi.Table table = new StorageApi.Table(dataObject.optString(Report.TABLE_KEY), dataObject.optString(Report.TOKEN_KEY));
-		final int dbRowCount = getStorage(this).addEvent(table, dataObject.optString(Report.DATA_KEY));
-		Logger.log(TAG, "Added event to " + table + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
-		if (dbRowCount > config.getBulkSize()) {
-			Logger.log(TAG, "Exceeded configured bulk size (" + config.getBulkSize() + " rows) - flushing data", Logger.SDK_DEBUG);
-			FlushDatabaseService.flush(this);
+	void handleReport(JSONObject reportJsonObject, Report.Action action) {
+		boolean shouldFlush = saveReport(reportJsonObject);
+
+		// If report was sync posted - flushTable immediately
+		if (action == POST_SYNC || shouldFlush) {
+			flushDatabase();
 		}
+	}
+
+	private boolean saveReport(JSONObject dataObject) {
+		final StorageApi.Table table = new StorageApi.Table(dataObject.optString(Report.TABLE_KEY), dataObject.optString(Report.TOKEN_KEY));
+		int numberOfRowsBeofreInsert = storage.count(table);
+		final int dbRowCount = storage.addEvent(table, dataObject.optString(Report.DATA_KEY));
+		boolean addSuccessful = dbRowCount == numberOfRowsBeofreInsert + 1;
+		if (addSuccessful) {
+			Logger.log(TAG, "Added event to " + table + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
+			if (dbRowCount > config.getBulkSize()) {
+				Logger.log(TAG, "Exceeded configured bulk size (" + config.getBulkSize() + " rows) - flushing data", Logger.SDK_DEBUG);
+				return true;
+			}
+		}
+		else {
+			Logger.log(TAG, "Failed to add event to " + table + " table", Logger.SDK_DEBUG);
+		}
+
+		// No need to flushTable yet
+		return false;
 	}
 
 	//////////////////// For testing purpose - to allow mocking this behavior /////////////////////
+
+	void flushDatabase() {
+		FlushDatabaseService.flushTable(this);
+	}
 
 	protected IsaConfig getConfig(Context context) {
 		return IsaConfig.getInstance(context);

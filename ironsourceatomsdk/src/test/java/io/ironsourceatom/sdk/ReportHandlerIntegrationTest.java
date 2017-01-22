@@ -89,7 +89,7 @@ public class ReportHandlerIntegrationTest {
 			event.put(Report.DATA_KEY, String.valueOf(i));
 			mFlushDatabaseService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
 		}
-		assertEquals(mAdapter.count(null), 0);
+		assertEquals(0, mAdapter.count(null));
 		assertEquals(mAdapter.getTables()
 		                     .size(), 0);
 		assertEquals(mClient.get(TABLE1), new JSONArray("[{" +
@@ -130,7 +130,7 @@ public class ReportHandlerIntegrationTest {
 			event.put(Report.TABLE_KEY, TABLE2);
 			mFlushDatabaseService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
 		}
-		assertEquals(mAdapter.count(null), 0);
+		assertEquals(0, mAdapter.count(null));
 		assertEquals(mAdapter.getTables()
 		                     .size(), 0);
 		assertEquals(mClient.mBackedMock.get(TABLE1)
