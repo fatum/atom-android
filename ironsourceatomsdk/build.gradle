@@ -186,6 +186,7 @@ task makeReleaseJar(type: Copy) {
     include('classes.jar')
     rename('classes.jar', "${archivesBaseName}-${version}.jar")
 }
+
 task makeDebugJar(type: Copy) {
     from('build/intermediates/bundles/debug/')
     into('../output/')
