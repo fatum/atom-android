@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import io.ironsourceatom.sdk.RemoteService;
-import io.ironsourceatom.sdk.Report;
 import io.ironsourceatom.sdk.ReportIntent;
 
 public class TestsUtils {

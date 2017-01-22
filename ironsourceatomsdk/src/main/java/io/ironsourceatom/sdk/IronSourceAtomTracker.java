@@ -48,9 +48,9 @@ public class IronSourceAtomTracker {
 	 * @param sendNow    flag if true report will send immediately else will postponed
 	 */
 	public void track(String streamName, String data, boolean sendNow) {
-		ReportService.sendReport(context, newReport(sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE).setTable(streamName)
-		                                                                                            .setToken(auth)
-		                                                                                            .setData(data));
+		ReportService.report(context, newReport().setTable(streamName)
+		                                         .setToken(auth)
+		                                         .setData(data), sendNow ? Report.Action.POST_SYNC : Report.Action.ENQUEUE);
 	}
 
 	/**
@@ -109,7 +109,7 @@ public class IronSourceAtomTracker {
 	 * Flush immediately all reports
 	 */
 	public void flush() {
-		ReportService.sendReport(context, newReport(SdkEvent.FLUSH_QUEUE));
+		FlushDatabaseService.flush(context);
 	}
 
 	/**
@@ -121,10 +121,10 @@ public class IronSourceAtomTracker {
 			JSONObject message = new JSONObject();
 
 			if (!auth.isEmpty()) {
-				message.put(ReportData.AUTH, Utils.auth(dataStr, auth));
+				message.put(Report.AUTH_KEY, Utils.auth(dataStr, auth));
 			}
-			message.put(ReportData.TABLE, streamName);
-			message.put(ReportData.DATA, dataStr);
+			message.put(Report.TABLE_KEY, streamName);
+			message.put(Report.DATA_KEY, dataStr);
 
 			String url = config.getAtomEndPoint(auth);
 
@@ -139,8 +139,8 @@ public class IronSourceAtomTracker {
 		}
 	}
 
-	protected Report newReport(int eventCode) {
-		return new ReportData(eventCode);
+	protected Report newReport() {
+		return new Report();
 	}
 
 	/**

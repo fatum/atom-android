@@ -8,10 +8,10 @@
 
     <application>
 
-        <service android:name="io.ironsourceatom.sdk.ReportService"/>
+        <service android:name="io.ironsourceatom.sdk.FlushDatabaseService"/>
 
         <service
-            android:name="io.ironsourceatom.sdk.ReportJobService"
+            android:name="io.ironsourceatom.sdk.SendReportJobService"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
 

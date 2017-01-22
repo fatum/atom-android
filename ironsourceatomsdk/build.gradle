@@ -55,7 +55,7 @@ android {
          */
 
         // Defines the minimum API level required to run the app.
-        minSdkVersion 10
+        minSdkVersion 16
 
         // Specifies the API level used to test the app.
         targetSdkVersion 25

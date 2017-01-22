@@ -12,7 +12,6 @@ import io.ironsourceatom.sdk.IronSourceAtomTracker;
 import io.ironsourceatom.sdk.IsaConfig;
 import io.ironsourceatom.sdk.Logger;
 import io.ironsourceatom.sdk.RemoteService;
-import io.ironsourceatom.sdk.Report;
 import io.ironsourceatom.sdk.ReportHandler;
 import io.ironsourceatom.sdk.StorageService;
 

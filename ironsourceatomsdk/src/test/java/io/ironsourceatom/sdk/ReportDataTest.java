@@ -12,7 +12,7 @@ public class ReportDataTest {
 
 	@Test
 	public void testSetters() {
-		ReportData report = new ReportData();
+		Report report = new Report();
 		report.setEndPoint("bla");
 		report.setTable("bla");
 		report.setToken("bla");
@@ -22,13 +22,13 @@ public class ReportDataTest {
 
 	@Test
 	public void testSend() {
-		ReportData report = new ReportData();
+		Report report = new Report();
 		//report.send();
 	}
 
 	@Test
 	public void testConstructor() {
-		ReportData report = new ReportData();
+		Report report = new Report();
 		assertNotNull(report);
 	}
 }

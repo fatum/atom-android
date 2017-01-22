@@ -61,7 +61,7 @@ public class TestsUtils {
             if (mCode == 200) {
                 try {
                     JSONObject event = new JSONObject(data);
-                    String table = event.getString(ReportData.TABLE);
+                    String table = event.getString(Report.TABLE);
                     if (!mBackedMock.containsKey(table)) {
                         mBackedMock.put(table, new ArrayList<String>());
                     }
@@ -108,7 +108,7 @@ public class TestsUtils {
         for (String key : report.keySet()) {
             when(bundle.get(key)).thenReturn(report.get(key));
         }
-        when(bundle.getInt(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR)).thenReturn(event);
+        when(bundle.getInt(Report.EXTRA_SDK_EVENT, SdkEvent.ERROR)).thenReturn(event);
 
         Intent intent = mock(Intent.class);
         when(intent.getExtras()).thenReturn(bundle);

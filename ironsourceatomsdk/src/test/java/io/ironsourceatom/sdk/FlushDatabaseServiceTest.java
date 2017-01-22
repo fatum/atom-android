@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.ironsourceatom.sdk.RemoteConnection.Response;
-import io.ironsourceatom.sdk.ReportService.HandleStatus;
+import io.ironsourceatom.sdk.FlushDatabaseService.HandleStatus;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
 
@@ -34,24 +34,24 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ReportServiceTest {
+public class FlushDatabaseServiceTest {
 
 	// Two different responses
-	final Response         ok            = new RemoteConnection.Response() {{
+	final Response             ok                    = new RemoteConnection.Response() {{
 		code = 200;
 		body = "OK";
 	}};
-	final Response         fail          = new RemoteConnection.Response() {{
+	final Response             fail                  = new RemoteConnection.Response() {{
 		code = 503;
 		body = "Service Unavailable";
 	}};
 	// Mocking
-	final NetworkManager   netManager    = mock(NetworkManager.class);
-	final StorageApi       storage       = mock(DbAdapter.class);
-	final RemoteConnection client        = mock(HttpClient.class);
-	final IsaConfig        config        = mock(IsaConfig.class);
-	final Context          context       = mock(Context.class);
-	final ReportService    reportService = new ReportService() {
+	final NetworkManager       netManager            = mock(NetworkManager.class);
+	final StorageApi           storage               = mock(DbAdapter.class);
+	final RemoteConnection     client                = mock(HttpClient.class);
+	final IsaConfig            config                = mock(IsaConfig.class);
+	final Context              context               = mock(Context.class);
+	final FlushDatabaseService mFlushDatabaseService = new FlushDatabaseService() {
 		@Override
 		protected RemoteConnection getClient() {
 			return client;
@@ -72,11 +72,11 @@ public class ReportServiceTest {
 			return netManager;
 		}
 	};
-	final String           TABLE         = "ib_table", TOKEN = "ib_token", DATA = "hello world";
+	final String               TABLE                 = "ib_table", TOKEN = "ib_token", DATA = "hello world";
 	final Map<String, String> reportMap = new HashMap<String, String>() {{
-		put(ReportData.DATA, DATA);
-		put(ReportData.TOKEN, TOKEN);
-		put(ReportData.TABLE, TABLE);
+		put(Report.DATA, DATA);
+		put(Report.TOKEN, TOKEN);
+		put(Report.TABLE, TABLE);
 	}};
 	final Table               mTable    = new Table(TABLE, TOKEN) {
 		@Override
@@ -96,7 +96,7 @@ public class ReportServiceTest {
 		when(netManager.getNetworkAtomType()).thenReturn(-1);
 		when(netManager.isOnline()).thenReturn(true);
 
-		reportService.init(context);
+		mFlushDatabaseService.init(context);
 	}
 
 	// When you tracking an event.
@@ -105,7 +105,7 @@ public class ReportServiceTest {
 			Exception {
 		config.setBulkSize(Integer.MAX_VALUE);
 		Intent intent = newReport(SdkEvent.ENQUEUE, reportMap);
-		reportService.handleReport(intent);
+		mFlushDatabaseService.handleReport(intent);
 		verify(storage, times(1)).addEvent(mTable, DATA);
 		verify(client, never()).post(anyString(), anyString());
 	}
@@ -120,7 +120,7 @@ public class ReportServiceTest {
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
 		when(config.getAtomEndPoint(anyString())).thenReturn(url);
-		assertTrue(reportService.handleReport(intent) == ReportService.HandleStatus.HANDLED);
+		assertTrue(mFlushDatabaseService.handleReport(intent) == FlushDatabaseService.HandleStatus.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -139,7 +139,7 @@ public class ReportServiceTest {
 			body = "Unauthorized";
 		}});
 		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
-		assertEquals(reportService.handleReport(intent), ReportService.HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(intent), FlushDatabaseService.HandleStatus.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -154,7 +154,7 @@ public class ReportServiceTest {
 		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
 		// no idle time, but should try it out 10 times
 		when(config.getNumOfRetries()).thenReturn(10);
-		assertEquals(reportService.handleReport(intent), HandleStatus.RETRY);
+		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.RETRY);
 		verify(netManager, times(1)).isOnline();
 		verify(client, never()).post(anyString(), anyString());
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -169,9 +169,9 @@ public class ReportServiceTest {
 		when(config.isAllowedOverRoaming()).thenReturn(false, false, true);
 		when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
 		when(client.post(anyString(), anyString())).thenReturn(ok);
-		assertEquals(reportService.handleReport(intent), HandleStatus.HANDLED);
-		assertEquals(reportService.handleReport(intent), HandleStatus.RETRY);
-		assertEquals(reportService.handleReport(intent), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.RETRY);
+		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.HANDLED);
 		verify(client, times(2)).post(anyString(), anyString());
 	}
 
@@ -196,7 +196,7 @@ public class ReportServiceTest {
 		for (TestScenario test : scenarios) {
 			when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
 			when(netManager.getNetworkAtomType()).thenReturn(test.networkStatus);
-			assertEquals(reportService.handleReport(intent), test.expected);
+			assertEquals(mFlushDatabaseService.handleReport(intent), test.expected);
 		}
 	}
 
@@ -205,7 +205,7 @@ public class ReportServiceTest {
 	@Test
 	public void flushNothing() {
 		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
-		assertEquals(HandleStatus.HANDLED, reportService.handleReport(intent));
+		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(intent));
 		verify(storage, times(1)).getTables();
 	}
 
@@ -248,7 +248,7 @@ public class ReportServiceTest {
 		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
-		assertEquals(HandleStatus.HANDLED, reportService.handleReport(intent));
+		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(intent));
 		verify(storage, times(2)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
 		verify(storage, times(1)).deleteEvents(mTable, "3");
@@ -267,7 +267,7 @@ public class ReportServiceTest {
 	public void flushNoItems() throws
 			Exception {
 		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
-		assertEquals(HandleStatus.HANDLED, reportService.handleReport(intent));
+		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(intent));
 		verify(storage, times(1)).getTables();
 		verify(storage, never()).getEvents(any(Table.class), anyInt());
 	}
@@ -287,7 +287,7 @@ public class ReportServiceTest {
 			add(mTable);
 		}});
 		when(client.post(anyString(), anyString())).thenReturn(fail);
-		assertEquals(HandleStatus.RETRY, reportService.handleReport(intent));
+		assertEquals(HandleStatus.RETRY, mFlushDatabaseService.handleReport(intent));
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, never()).deleteEvents(mTable, "2");
 		verify(storage, never()).deleteTable(mTable);
@@ -300,7 +300,7 @@ public class ReportServiceTest {
 		config.setBulkSize(2);
 		when(storage.addEvent(mTable, DATA)).thenReturn(2);
 		Intent intent = newReport(SdkEvent.ENQUEUE, reportMap);
-		reportService.handleReport(intent);
+		mFlushDatabaseService.handleReport(intent);
 		verify(storage, times(1)).addEvent(mTable, DATA);
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 	}
@@ -331,7 +331,7 @@ public class ReportServiceTest {
 		when(storage.count(mTable)).thenReturn(1, 0);
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok);
 		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
-		reportService.handleReport(intent);
+		mFlushDatabaseService.handleReport(intent);
 		verify(storage, times(2)).getEvents(mTable, 2);
 		verify(storage, times(1)).getEvents(mTable, 1);
 		verify(storage, times(1)).deleteTable(mTable);
@@ -344,11 +344,11 @@ public class ReportServiceTest {
 			Exception {
 		when(client.post(any(String.class), any(String.class))).thenReturn(ok);
 		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
-		assertEquals(reportService.handleReport(intent), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.HANDLED);
 		JSONObject report = new JSONObject(reportMap);
-		String token = reportMap.get(ReportData.TOKEN);
-		report.put(ReportData.AUTH, Utils.auth(report.getString(ReportData.DATA), report.getString(ReportData.TOKEN)))
-		      .remove(ReportData.TOKEN);
+		String token = reportMap.get(Report.TOKEN);
+		report.put(Report.AUTH, Utils.auth(report.getString(Report.DATA), report.getString(Report.TOKEN)))
+		      .remove(Report.TOKEN);
 		verify(client, times(1)).post(eq(report.toString()), anyString());
 	}
 

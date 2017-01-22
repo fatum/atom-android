@@ -9,7 +9,7 @@ import android.os.Build;
  * Created on 08/11/2016.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class ReportJobService
+public class SendReportJobService
 		extends JobService {
 
 	private static final String TAG = "ReportJobService";
@@ -18,8 +18,8 @@ public class ReportJobService
 
 	@Override
 	public boolean onStartJob(JobParameters jobParameters) {
-		Logger.log(TAG, "Requesting ReportService to flush events", Logger.SDK_DEBUG);
-		ReportService.sendReport(this, new ReportData(SdkEvent.FLUSH_QUEUE));
+		Logger.log(TAG, "Requesting FlushDatabaseService to flush...", Logger.SDK_DEBUG);
+		FlushDatabaseService.flush(this);
 
 		// The only purpose of this job is to start the service - so our work is done
 		return false;
