@@ -13,7 +13,7 @@ public class ReportDataTest {
 	@Test
 	public void testSetters() {
 		Report report = new Report();
-		report.setEndPoint("bla");
+		report.setEndpoint("bla");
 		report.setTable("bla");
 		report.setToken("bla");
 		report.setData("bla");

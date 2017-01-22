@@ -12,7 +12,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -36,8 +35,7 @@ public class IronSourceAtomFactoryTest {
 	TestsUtils.MockReport mSpyReport = spy(new TestsUtils.MockReport());
 	final IronSourceAtomTracker mTracker = new IronSourceAtomTracker(mock(MockContext.class), mToken) {
 		@Override
-		public Report newReport(int eventCode) {
-			mSpyReport.mType = eventCode;
+		public Report newReport() {
 			return mSpyReport;
 		}
 	};
@@ -74,7 +72,6 @@ public class IronSourceAtomFactoryTest {
 		verify(mSpyReport, times(10)).setToken(mToken);
 		verify(mSpyReport, times(10)).setTable("table");
 		verify(mSpyReport, times(10)).setData("hello world");
-		assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
 	}
 
 	@Test
@@ -88,7 +85,6 @@ public class IronSourceAtomFactoryTest {
 		verify(mSpyReport, times(10)).setToken(mToken);
 		verify(mSpyReport, times(10)).setTable("table");
 		verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-		assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
 	}
 
 	@Test
@@ -102,7 +98,6 @@ public class IronSourceAtomFactoryTest {
 		verify(mSpyReport, times(10)).setToken(mToken);
 		verify(mSpyReport, times(10)).setTable("table");
 		verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-		assertEquals(mSpyReport.mType, SdkEvent.ENQUEUE);
 	}
 
 	@Test
@@ -113,7 +108,6 @@ public class IronSourceAtomFactoryTest {
 		verify(mSpyReport, times(10)).setToken(mToken);
 		verify(mSpyReport, times(10)).setTable("table");
 		verify(mSpyReport, times(10)).setData("hello world");
-		assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
 	}
 
 	@Test
@@ -127,7 +121,6 @@ public class IronSourceAtomFactoryTest {
 		verify(mSpyReport, times(10)).setToken(mToken);
 		verify(mSpyReport, times(10)).setTable("table");
 		verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-		assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
 	}
 
 	@Test
@@ -141,13 +134,11 @@ public class IronSourceAtomFactoryTest {
 		verify(mSpyReport, times(10)).setToken(mToken);
 		verify(mSpyReport, times(10)).setTable("table");
 		verify(mSpyReport, times(10)).setData("{\"hello\":\"world\"}");
-		assertEquals(mSpyReport.mType, SdkEvent.POST_SYNC);
 	}
 
 	@Test
 	public void flushEvents() {
 		mTracker.flush();
-		assertEquals(mSpyReport.mType, SdkEvent.FLUSH_QUEUE);
 	}
 
 	@Test

@@ -14,7 +14,7 @@ class Report {
 		POST_SYNC,
 		// error on report
 		ERROR,
-		// report and error to sdk error stream
+		// report an error to sdk error stream
 		REPORT_ERROR
 	}
 

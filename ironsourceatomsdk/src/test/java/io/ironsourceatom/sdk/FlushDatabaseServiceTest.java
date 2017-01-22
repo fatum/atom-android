@@ -1,7 +1,6 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
-import android.content.Intent;
 
 import org.json.JSONObject;
 import org.junit.Before;
@@ -14,12 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.FlushDatabaseService.HandleStatus;
+import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
 
-import static io.ironsourceatom.sdk.TestsUtils.newReport;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.any;
@@ -53,7 +51,7 @@ public class FlushDatabaseServiceTest {
 	final Context              context               = mock(Context.class);
 	final FlushDatabaseService mFlushDatabaseService = new FlushDatabaseService() {
 		@Override
-		protected RemoteConnection getClient() {
+		protected RemoteConnection getHttpClient() {
 			return client;
 		}
 
@@ -74,9 +72,9 @@ public class FlushDatabaseServiceTest {
 	};
 	final String               TABLE                 = "ib_table", TOKEN = "ib_token", DATA = "hello world";
 	final Map<String, String> reportMap = new HashMap<String, String>() {{
-		put(Report.DATA, DATA);
-		put(Report.TOKEN, TOKEN);
-		put(Report.TABLE, TABLE);
+		put(Report.DATA_KEY, DATA);
+		put(Report.TOKEN_KEY, TOKEN);
+		put(Report.TABLE_KEY, TABLE);
 	}};
 	final Table               mTable    = new Table(TABLE, TOKEN) {
 		@Override
@@ -104,8 +102,7 @@ public class FlushDatabaseServiceTest {
 	public void trackOnly() throws
 			Exception {
 		config.setBulkSize(Integer.MAX_VALUE);
-		Intent intent = newReport(SdkEvent.ENQUEUE, reportMap);
-		mFlushDatabaseService.handleReport(intent);
+		mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
 		verify(storage, times(1)).addEvent(mTable, DATA);
 		verify(client, never()).post(anyString(), anyString());
 	}
@@ -118,9 +115,8 @@ public class FlushDatabaseServiceTest {
 			Exception {
 		String url = "http://host.com/post";
 		when(client.post(anyString(), anyString())).thenReturn(ok);
-		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
 		when(config.getAtomEndPoint(anyString())).thenReturn(url);
-		assertTrue(mFlushDatabaseService.handleReport(intent) == FlushDatabaseService.HandleStatus.HANDLED);
+		assertTrue(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC) == FlushDatabaseService.HandleStatus.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -138,8 +134,7 @@ public class FlushDatabaseServiceTest {
 			code = 401;
 			body = "Unauthorized";
 		}});
-		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
-		assertEquals(mFlushDatabaseService.handleReport(intent), FlushDatabaseService.HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), FlushDatabaseService.HandleStatus.HANDLED);
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, never()).addEvent(mTable, DATA);
@@ -151,10 +146,9 @@ public class FlushDatabaseServiceTest {
 	public void postWithoutNetwork() throws
 			Exception {
 		when(netManager.isOnline()).thenReturn(false);
-		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
 		// no idle time, but should try it out 10 times
 		when(config.getNumOfRetries()).thenReturn(10);
-		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.RETRY);
+		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), HandleStatus.RETRY);
 		verify(netManager, times(1)).isOnline();
 		verify(client, never()).post(anyString(), anyString());
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -165,13 +159,13 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void postOnRoaming() throws
 			Exception {
-		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
 		when(config.isAllowedOverRoaming()).thenReturn(false, false, true);
 		when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
 		when(client.post(anyString(), anyString())).thenReturn(ok);
-		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.HANDLED);
-		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.RETRY);
-		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.HANDLED);
+		final JSONObject jsonObject = new JSONObject(reportMap);
+		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), HandleStatus.RETRY);
+		assertEquals(mFlushDatabaseService.handleReport(jsonObject, Report.Action.POST_SYNC), HandleStatus.HANDLED);
 		verify(client, times(2)).post(anyString(), anyString());
 	}
 
@@ -180,7 +174,6 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void isNetworkTypeAllowed() throws
 			Exception {
-		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
 		int WIFI = IronSourceAtomFactory.NETWORK_WIFI, MOBILE = IronSourceAtomFactory.NETWORK_MOBILE;
 		// List of scenarios, each member contains:
 		// configResult, networkTypeResult and the expected behavior.
@@ -196,7 +189,7 @@ public class FlushDatabaseServiceTest {
 		for (TestScenario test : scenarios) {
 			when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
 			when(netManager.getNetworkAtomType()).thenReturn(test.networkStatus);
-			assertEquals(mFlushDatabaseService.handleReport(intent), test.expected);
+			assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), test.expected);
 		}
 	}
 
@@ -204,8 +197,7 @@ public class FlushDatabaseServiceTest {
 	// Should do nothing and return true.
 	@Test
 	public void flushNothing() {
-		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
-		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(intent));
+		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(1)).getTables();
 	}
 
@@ -245,10 +237,9 @@ public class FlushDatabaseServiceTest {
 		when(storage.deleteEvents(mTable, "2")).thenReturn(2);
 		when(storage.deleteEvents(mTable1, "4")).thenReturn(1);
 		when(storage.count(mTable)).thenReturn(1);
-		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
-		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(intent));
+		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(2)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
 		verify(storage, times(1)).deleteEvents(mTable, "3");
@@ -266,8 +257,7 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void flushNoItems() throws
 			Exception {
-		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
-		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(intent));
+		assertEquals(HandleStatus.HANDLED, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(1)).getTables();
 		verify(storage, never()).getEvents(any(Table.class), anyInt());
 	}
@@ -277,7 +267,6 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void flushFailed() throws
 			Exception {
-		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
 		// Batch result
 		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("2", new ArrayList<String>() {{
 			add("foo");
@@ -287,7 +276,7 @@ public class FlushDatabaseServiceTest {
 			add(mTable);
 		}});
 		when(client.post(anyString(), anyString())).thenReturn(fail);
-		assertEquals(HandleStatus.RETRY, mFlushDatabaseService.handleReport(intent));
+		assertEquals(HandleStatus.RETRY, mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE));
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, never()).deleteEvents(mTable, "2");
 		verify(storage, never()).deleteTable(mTable);
@@ -299,8 +288,7 @@ public class FlushDatabaseServiceTest {
 	public void trackCauseFlush() {
 		config.setBulkSize(2);
 		when(storage.addEvent(mTable, DATA)).thenReturn(2);
-		Intent intent = newReport(SdkEvent.ENQUEUE, reportMap);
-		mFlushDatabaseService.handleReport(intent);
+		mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
 		verify(storage, times(1)).addEvent(mTable, DATA);
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 	}
@@ -330,8 +318,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.deleteEvents(eq(mTable), anyString())).thenReturn(1);
 		when(storage.count(mTable)).thenReturn(1, 0);
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok);
-		Intent intent = newReport(SdkEvent.FLUSH_QUEUE, new HashMap<String, String>());
-		mFlushDatabaseService.handleReport(intent);
+		mFlushDatabaseService.handleReport(new JSONObject(), Report.Action.FLUSH_QUEUE);
 		verify(storage, times(2)).getEvents(mTable, 2);
 		verify(storage, times(1)).getEvents(mTable, 1);
 		verify(storage, times(1)).deleteTable(mTable);
@@ -343,12 +330,11 @@ public class FlushDatabaseServiceTest {
 	public void dataFormat() throws
 			Exception {
 		when(client.post(any(String.class), any(String.class))).thenReturn(ok);
-		Intent intent = newReport(SdkEvent.POST_SYNC, reportMap);
-		assertEquals(mFlushDatabaseService.handleReport(intent), HandleStatus.HANDLED);
+		assertEquals(mFlushDatabaseService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC), HandleStatus.HANDLED);
 		JSONObject report = new JSONObject(reportMap);
-		String token = reportMap.get(Report.TOKEN);
-		report.put(Report.AUTH, Utils.auth(report.getString(Report.DATA), report.getString(Report.TOKEN)))
-		      .remove(Report.TOKEN);
+		String token = reportMap.get(Report.TOKEN_KEY);
+		report.put(Report.AUTH_KEY, Utils.auth(report.getString(Report.DATA_KEY), report.getString(Report.TOKEN_KEY)))
+		      .remove(Report.TOKEN_KEY);
 		verify(client, times(1)).post(eq(report.toString()), anyString());
 	}
 

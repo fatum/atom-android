@@ -24,6 +24,8 @@ import java.util.List;
 
 import static io.ironsourceatom.sdk.Report.Action.FLUSH_QUEUE;
 import static io.ironsourceatom.sdk.Report.Action.REPORT_ERROR;
+import static io.ironsourceatom.sdk.ReportService.EXTRA_REPORT_ACTION_ENUM_ORDINAL;
+import static io.ironsourceatom.sdk.ReportService.EXTRA_REPORT_JSON;
 import static java.lang.Math.ceil;
 
 /**
@@ -32,17 +34,11 @@ import static java.lang.Math.ceil;
 public class FlushDatabaseService
 		extends IntentService {
 
-	private static final String TAG = "SendReportService";
-
-	private static final String PACKAGE = FlushDatabaseService.class.getPackage()
-	                                                                .getName();
-
-	static final String EXTRA_REPORT_JSON                = PACKAGE + ".EXTRA_REPORT_JSON";
-	static final String EXTRA_REPORT_ACTION_ENUM_ORDINAL = PACKAGE + ".EXTRA_REPORT_ACTION_ENUM_ORDINAL";
+	private static final String TAG = "FlushDatabaseService";
 
 	private   NetworkManager   networkManager;
 	private   StorageApi       storage;
-	private   RemoteConnection client;
+	private   RemoteConnection httpClient;
 	private   IsaConfig        config;
 	protected BackOff          backOff;
 
@@ -71,7 +67,7 @@ public class FlushDatabaseService
 
 	void init(Context context) {
 		backOff = BackOff.getInstance(context);
-		client = getClient();
+		httpClient = getHttpClient();
 		config = getConfig(context);
 		storage = getStorage(context);
 		networkManager = getNetManager(context);
@@ -93,7 +89,7 @@ public class FlushDatabaseService
 		}
 
 		final Report.Action action = Report.Action.values()[intent.getExtras()
-		                                                  .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal());
+		                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal())];
 
 		try {
 			final HandleStatus status = handleReport(reportJsonObject, action);
@@ -262,7 +258,7 @@ public class FlushDatabaseService
 		Logger.log(TAG, "Tracking data:" + data, Logger.SDK_DEBUG);
 		while (nRetry-- > 0) {
 			try {
-				RemoteConnection.Response response = client.post(data, url);
+				RemoteConnection.Response response = httpClient.post(data, url);
 				if (response.code == HttpURLConnection.HTTP_OK) {
 					Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
 					return SendStatus.SUCCESS;
@@ -389,10 +385,9 @@ public class FlushDatabaseService
 		alarmManager.set(AlarmManager.RTC, epochTime, PendingIntent.getService(this, 0, flushIntent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
-	/**
-	 * For testing purpose. to allow mocking this behavior.
-	 */
-	protected RemoteConnection getClient() {
+	//////////////////// For testing purpose - to allow mocking this behavior /////////////////////
+
+	protected RemoteConnection getHttpClient() {
 		return HttpClient.getInstance();
 	}
 
@@ -411,15 +406,15 @@ public class FlushDatabaseService
 	////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static void flush(Context context) {
-
-		// PENDING: Since one flush may be stuck, any incoming reports must wait in the intents queue
-		// PENDING: until the flush is released - so if device reboots or process stops, we may lose reports
-
-		// PENDING: Might be better to save to DB before starting the intent service
-
 		final Intent intent = new Intent(context, FlushDatabaseService.class);
-		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
 		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
+		context.startService(intent);
+	}
+
+	public static void reportError(Context context, Report report) {
+		final Intent intent = new Intent(context, FlushDatabaseService.class);
+		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal());
+		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
 		context.startService(intent);
 	}
 }
