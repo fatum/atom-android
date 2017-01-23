@@ -65,7 +65,7 @@ public class ReportService
 	void handleReport(JSONObject reportJsonObject, Report.Action action) {
 		boolean shouldFlush = saveReport(reportJsonObject);
 
-		// If report was sync posted - flushTable immediately
+		// If report was sync posted or enqueue reached bulk size - flush database
 		if (action == POST_SYNC || shouldFlush) {
 			flushDatabase();
 		}
@@ -73,13 +73,12 @@ public class ReportService
 
 	private boolean saveReport(JSONObject dataObject) {
 		final StorageApi.Table table = new StorageApi.Table(dataObject.optString(Report.TABLE_KEY), dataObject.optString(Report.TOKEN_KEY));
-		int numberOfRowsBeforeInsert = storage.count(table);
 		final int dbRowCount = storage.addEvent(table, dataObject.optString(Report.DATA_KEY));
-		boolean addSuccessful = dbRowCount == numberOfRowsBeforeInsert + 1;
+		boolean addSuccessful = dbRowCount != -1;
 		if (addSuccessful) {
 			Logger.log(TAG, "Added event to " + table + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
-			if (dbRowCount > config.getBulkSize()) {
-				Logger.log(TAG, "Exceeded configured bulk size (" + config.getBulkSize() + " rows) - flushing data", Logger.SDK_DEBUG);
+			if (storage.countAll() >= config.getBulkSize()) {
+				Logger.log(TAG, "Reached configured bulk size (" + config.getBulkSize() + " rows) - flushing database", Logger.SDK_DEBUG);
 				return true;
 			}
 		}

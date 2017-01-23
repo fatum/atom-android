@@ -5,7 +5,6 @@ import android.app.PendingIntent;
 import io.ironsourceatom.sdk.ReportHandler;
 import io.ironsourceatom.sdk.ReportIntent;
 import io.ironsourceatom.sdk.ReportService;
-import io.ironsourceatom.sdk.SdkEvent;
 
 /**
  * Created by valentine.pavchuk on 12/13/16.

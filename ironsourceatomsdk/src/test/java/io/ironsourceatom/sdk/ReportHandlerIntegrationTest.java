@@ -134,13 +134,14 @@ public class ReportHandlerIntegrationTest {
 			event.put(Report.TABLE_KEY, TABLE2);
 			mReportService.handleReport(new JSONObject(event), Report.Action.ENQUEUE);
 		}
-		assertEquals(0, mAdapter.count(null));
+
+		assertEquals(0, mAdapter.countAll());
 		assertEquals(mAdapter.getTables()
 		                     .size(), 0);
-		assertEquals(mClient.mBackedMock.get(TABLE1)
-		                                .size(), 2);
-		assertEquals(mClient.mBackedMock.get(TABLE2)
-		                                .size(), 2);
+		assertEquals(4, mClient.mBackedMock.get(TABLE1)
+		                                .size());
+		assertEquals(4, mClient.mBackedMock.get(TABLE2)
+		                                .size());
 	}
 
 	// Events to test

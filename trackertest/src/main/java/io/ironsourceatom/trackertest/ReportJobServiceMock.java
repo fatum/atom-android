@@ -8,7 +8,6 @@ import android.os.Build;
 
 import io.ironsourceatom.sdk.ReportHandler;
 import io.ironsourceatom.sdk.ReportJobService;
-import io.ironsourceatom.sdk.SdkEvent;
 
 /**
  * Created by g8y3e on 12/13/16.

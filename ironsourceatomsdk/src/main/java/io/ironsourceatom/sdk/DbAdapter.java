@@ -54,7 +54,7 @@ public class DbAdapter
 			Logger.log(TAG, "Database file is above the limit", Logger.SDK_ERROR);
 			vacuum();
 		}
-		int n = 0;
+		int n = -1;
 		try {
 			SQLiteDatabase db = mDb.getWritableDatabase();
 			ContentValues cv = new ContentValues();
@@ -80,6 +80,15 @@ public class DbAdapter
 			mDb.close();
 		}
 		return n;
+	}
+
+	/**
+	 * Get number of records that sit in the "reports" table
+	 *
+	 * @return number of records that sit in the "reports" table
+	 */
+	public int countAll() {
+		return count(null);
 	}
 
 	/**
