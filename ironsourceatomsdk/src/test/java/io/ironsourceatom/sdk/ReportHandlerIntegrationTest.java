@@ -76,7 +76,7 @@ public class ReportHandlerIntegrationTest {
 	@Test
 	public void testTrackError() throws
 			JSONException {
-		mReportService.handleReport(new JSONObject(event1), Report.Action.REPORT_ERROR);
+		mFlushDatabaseService.sendErrorReport(new JSONObject(event1));
 		assertEquals(mClient.get(TABLE1), new JSONArray("[{" +
 				"\"data\":\"ib-data\"," +
 				"\"table\":\"ib_test\"," +

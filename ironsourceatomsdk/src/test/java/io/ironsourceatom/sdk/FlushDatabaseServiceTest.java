@@ -135,14 +135,21 @@ public class FlushDatabaseServiceTest {
 			Exception {
 		final String url = "http://host.com/post";
 		when(client.post(anyString(), anyString())).thenReturn(ok);
-		when(config.getAtomEndPoint(anyString())).thenReturn(url);
+		when(config.getAtomBulkEndPoint(anyString())).thenReturn(url);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+		verify(storage, times(1)).addEvent(mTable, DATA);
+
+		final List<Table> tables = new ArrayList<>();
+		tables.add(mTable);
+		when(storage.getTables()).thenReturn(tables);
+		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", new ArrayList<String>() {
+			{
+				add("foo");
+			}
+		}));
 		assertTrue(mFlushDatabaseService.flushDatabase() == FlushResult.HANDLED);
 		verify(netManager, times(1)).isOnline();
-
-		// PENDING: There are no tables to flush so why should we expect post() to be invoked?
-		//verify(client, times(1)).post(anyString(), eq(url));
-		verify(storage, never()).addEvent(mTable, DATA);
+		verify(client, times(1)).post(anyString(), eq(url));
 	}
 
 	// When reportService get a post-event and we get an authentication error(40X) from Poster
@@ -152,16 +159,21 @@ public class FlushDatabaseServiceTest {
 			Exception {
 		String url = "http://host.com";
 		when(config.getNumOfRetries()).thenReturn(10);
-		when(config.getAtomEndPoint(TOKEN)).thenReturn(url);
+		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+
+		when(config.getAtomBulkEndPoint(TOKEN)).thenReturn(url);
 		when(client.post(anyString(), anyString())).thenReturn(new Response() {{
 			code = 401;
 			body = "Unauthorized";
 		}});
-		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
-		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
+		final List<Table> tables = new ArrayList<>();
+		tables.add(mTable);
+		when(storage.getTables()).thenReturn(tables);
+		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", new ArrayList<String>()));
+		assertEquals(FlushResult.RETRY, mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
-		verify(client, times(1)).post(anyString(), eq(url));
-		verify(storage, never()).addEvent(mTable, DATA);
+		verify(client, times(10)).post(anyString(), eq(url));
+		verify(storage, times(1)).addEvent(mTable, DATA);
 	}
 
 	// When reportService get a post-event(or flushTable), but the device not connected to internet.
@@ -187,6 +199,11 @@ public class FlushDatabaseServiceTest {
 		when(config.isAllowedOverRoaming()).thenReturn(false, false, true);
 		when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
 		when(client.post(anyString(), anyString())).thenReturn(ok);
+		final List<Table> tables = new ArrayList<>();
+		tables.add(mTable);
+		when(storage.getTables()).thenReturn(tables);
+		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", new ArrayList<String>()));
+
 		final JSONObject jsonObject = new JSONObject(reportMap);
 		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
 		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
@@ -317,6 +334,9 @@ public class FlushDatabaseServiceTest {
 	public void trackCauseFlush() {
 		config.setBulkSize(2);
 		when(storage.addEvent(mTable, DATA)).thenReturn(2);
+		final List<Table> tables = new ArrayList<>();
+		tables.add(mTable);
+		when(storage.getTables()).thenReturn(tables);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
 		mFlushDatabaseService.flushDatabase();
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -361,11 +381,20 @@ public class FlushDatabaseServiceTest {
 			Exception {
 		when(client.post(any(String.class), any(String.class))).thenReturn(ok);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
+
+		final List<Table> tables = new ArrayList<>();
+		tables.add(mTable);
+		when(storage.getTables()).thenReturn(tables);
+		final List<String> dataList = new ArrayList<>();
+		dataList.add(reportMap.get(Report.DATA_KEY));
+		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", dataList));
+
 		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
 		JSONObject report = new JSONObject(reportMap);
-		String token = reportMap.get(Report.TOKEN_KEY);
+		report.put(Report.DATA_KEY, dataList.toString());
 		report.put(Report.AUTH_KEY, Utils.auth(report.getString(Report.DATA_KEY), report.getString(Report.TOKEN_KEY)))
 		      .remove(Report.TOKEN_KEY);
+		report.put(Report.BULK_KEY, true);
 		verify(client, times(1)).post(eq(report.toString()), anyString());
 	}
 

@@ -239,36 +239,41 @@ public class FlushDatabaseService
 	 */
 	protected SendStatus send(String data, String url) {
 		int nRetry = config.getNumOfRetries();
+		RemoteConnection.Response response = null;
 
 		Logger.log(TAG, "Tracking data:" + data, Logger.SDK_DEBUG);
 		while (nRetry-- > 0) {
 			try {
-				RemoteConnection.Response response = httpClient.post(data, url);
+				response = httpClient.post(data, url);
 				if (response.code == HttpURLConnection.HTTP_OK) {
 					Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
 					return SendStatus.SUCCESS;
 				}
-
-				// PENDING: Are we sure we want to DELETE reports when getting here?
-				// PENDING: This problem is either permanent of temporary and is a result of the endpoint used
-				// PENDING: and not of the reports so deleting this batch shouldn't solve anything.
-				//				if (response.code >= HttpURLConnection.HTTP_BAD_REQUEST && response.code < HttpURLConnection.HTTP_INTERNAL_ERROR) {
-				//					Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
-				//					return SendStatus.DELETE;
-				//				}
+				// PENDING: Add expo backoff here?
 			} catch (SocketTimeoutException | UnknownHostException | SocketException e) {
 				Logger.log(TAG, "Connectivity error: " + e, Logger.SDK_DEBUG);
 			} catch (IOException e) {
 				Logger.log(TAG, "Service IronSourceAtomFactory is unavailable: " + e, Logger.SDK_DEBUG);
 			}
 		}
+
+		// Check if we've hit HTTP 40X multiple times (according to number of retries configured)
+		if (response.code >= HttpURLConnection.HTTP_BAD_REQUEST && response.code < HttpURLConnection.HTTP_INTERNAL_ERROR) {
+			Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
+			// PENDING: Are we sure we want to DELETE reports when getting here?
+			// PENDING: This problem is either permanent or temporary and is a result of the endpoint used
+			// PENDING: or the communication layer and not of the reports -
+			// PENDING: so deleting this batch shouldn't solve anything.
+			// return SendStatus.DELETE;
+		}
+
 		return SendStatus.RETRY;
 	}
 
 	/**
-	 * Check if the handler can use the network.
+	 * Check if we can use the network.
 	 *
-	 * @return
+	 * @return true if we can use the current active network
 	 */
 	private boolean canUseNetwork() {
 		if ((config.getAllowedNetworkTypes() & networkManager.getNetworkAtomType()) == 0) {
