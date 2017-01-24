@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Db Adapter class for local SQLite DB
- *
+ * <p>
  * PENDING: Consider notifying on SQL errors by throwing all SqlLiteExceptions instead of catching them
  */
 public class DbAdapter
@@ -49,7 +49,7 @@ public class DbAdapter
 	 * @param data  data to insert
 	 * @return number of rows in "reports" related to the given table.
 	 */
-	public int addEvent(Table table, String data) {
+	public synchronized int addEvent(Table table, String data) {
 		if (!this.belowDatabaseLimit()) {
 			Logger.log(TAG, "Database file is above the limit", Logger.SDK_ERROR);
 			vacuum();
@@ -62,6 +62,7 @@ public class DbAdapter
 			cv.put(KEY_DATA, data);
 			cv.put(KEY_CREATED_AT, System.currentTimeMillis());
 			db.insert(REPORTS_TABLE, null, cv);
+
 			String countQuery = "SELECT COUNT(*) FROM " + REPORTS_TABLE + " WHERE " + KEY_TABLE + "=?";
 			SQLiteStatement countStmt = db.compileStatement(countQuery);
 			countStmt.bindString(1, table.name);
@@ -98,7 +99,7 @@ public class DbAdapter
 	 * @param table db table
 	 * @return number of records that sit in the "reports" table and related to the given table
 	 */
-	public int count(Table table) {
+	public synchronized int count(Table table) {
 		int n = 0;
 		SQLiteDatabase db = null;
 		try {
@@ -132,7 +133,7 @@ public class DbAdapter
 	 * @return Batch object contains List of events and "lastId" as a String (that
 	 * will be used later to clean up this batch).
 	 */
-	public Batch getEvents(Table table, int limit) {
+	public synchronized Batch getEvents(Table table, int limit) {
 		Cursor cursor = null;
 		String lastId = null;
 		List<String> events = null;
@@ -165,12 +166,37 @@ public class DbAdapter
 		return null;
 	}
 
+	public synchronized String getTableLastRowId(Table table) {
+		Cursor cursor = null;
+		String lastId = null;
+		try {
+			final SQLiteDatabase db = mDb.getReadableDatabase();
+			String whereParams = KEY_TABLE + "=?";
+			String orderParam = KEY_CREATED_AT + " ASC";
+			cursor = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam);
+
+			if (cursor.moveToLast()) {
+				lastId = cursor.getString(cursor.getColumnIndex(REPORTS_TABLE + "_id"));
+			}
+		} catch (SQLiteException e) {
+			Logger.log(TAG, "Failed to get a events of table" + table.name, e, Logger.SDK_ERROR);
+			lastId = null;
+		} finally {
+			if (null != cursor) {
+				cursor.close();
+			}
+			mDb.close();
+		}
+
+		return lastId;
+	}
+
 	/**
 	 * Get list of all "destinations/tables/streams" that sit in "tables" table.
 	 *
 	 * @return List of tables contains "name" and "token"
 	 */
-	public List<Table> getTables() {
+	public synchronized List<Table> getTables() {
 		Cursor c = null;
 		List<Table> tables = new ArrayList<>();
 		try {
@@ -200,12 +226,17 @@ public class DbAdapter
 	 * @param lastId remove all events that are less than or equal to this id
 	 * @return the number of rows affected
 	 */
-	public int deleteEvents(Table table, String lastId) {
+	public synchronized int deleteEvents(Table table, String lastId) {
 		int n = 0;
 		try {
 			final SQLiteDatabase db = mDb.getWritableDatabase();
 			String deleteParams = KEY_TABLE + "=? AND " + REPORTS_TABLE + "_id <= ?";
 			n = db.delete(REPORTS_TABLE, deleteParams, new String[]{table.name, lastId});
+
+			// If after deletion table is empty, also remove table entry
+			if (count(table) == 0) {
+				deleteTable(table);
+			}
 		} catch (final SQLiteException e) {
 			Logger.log(TAG, "Failed to clean up events from table: " + table.name, e, Logger.SDK_ERROR);
 			mDb.delete();
@@ -220,7 +251,7 @@ public class DbAdapter
 	 *
 	 * @param table db table
 	 */
-	public void deleteTable(Table table) {
+	public synchronized void deleteTable(Table table) {
 		try {
 			final SQLiteDatabase db = mDb.getWritableDatabase();
 			String deleteParams = KEY_TABLE + "=?";
@@ -237,7 +268,7 @@ public class DbAdapter
 	 * Delete the oldest 20 percent rows from "Reports" table
 	 * and run vacuum, to reduces the file fragmentation.
 	 */
-	public void vacuum() {
+	public synchronized void vacuum() {
 		int nRows = count(null);
 		int limit = (int) (((double) nRows / 100) * 20);
 		try {

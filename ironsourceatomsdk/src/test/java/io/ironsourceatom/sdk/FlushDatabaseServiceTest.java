@@ -286,16 +286,12 @@ public class FlushDatabaseServiceTest {
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
 		assertTrue(mFlushDatabaseService.flushDatabase());
-		verify(storage, times(2)).getEvents(mTable, config.getBulkSize());
+		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
-		verify(storage, times(1)).deleteEvents(mTable, "3");
 		// In the second and the third time, it assume that the table is empty
 		// because NUMBER_OF_DELETES < NUMBER_OF_DESIRED
-		verify(storage, times(1)).count(mTable);
-		verify(storage, times(1)).deleteTable(mTable);
 		verify(storage, times(1)).getEvents(mTable1, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable1, "4");
-		verify(storage, times(1)).deleteTable(mTable1);
 	}
 
 	// When reportService get a flushTable-event, and there's no tables to drain(i.e: no event)

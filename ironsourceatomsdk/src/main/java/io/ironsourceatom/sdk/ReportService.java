@@ -74,7 +74,7 @@ public class ReportService
 		boolean addSuccessful = dbRowCount != -1;
 		if (addSuccessful) {
 			Logger.log(TAG, "Added event to " + table.name + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
-			if (storage.countAll() >= config.getBulkSize()) {
+			if (storage.countAll() == config.getBulkSize()) {
 				Logger.log(TAG, "Reached configured bulk size (" + config.getBulkSize() + " rows) - flushing database", Logger.SDK_DEBUG);
 				return true;
 			}

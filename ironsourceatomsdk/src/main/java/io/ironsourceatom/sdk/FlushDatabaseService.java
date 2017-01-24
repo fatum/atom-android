@@ -120,7 +120,7 @@ public class FlushDatabaseService
 	boolean flushDatabase() {
 		try {
 			final boolean connectedToValidNetwork = networkManager.isOnline() && canUseNetwork();
-			Logger.log(TAG, "Requested to flushTable database", Logger.SDK_DEBUG);
+			Logger.log(TAG, "Requested to flush database", Logger.SDK_DEBUG);
 			if (connectedToValidNetwork) {
 				final List<StorageApi.Table> tables = storage.getTables();
 				// Flush all tables in database
@@ -154,15 +154,19 @@ public class FlushDatabaseService
 			Exception {
 		int bulkSize = config.getBulkSize();
 		StorageApi.Batch batch;
+		boolean exceededMaxRequestLimit = false;
 		while (true) {
 			batch = storage.getEvents(table, bulkSize);
 			if (batch != null && batch.events.size() > 1) {
-				int byteSize = batch.events.toString()
+				int eventsByteSize = batch.events.toString()
 				                           .getBytes("UTF-8").length;
-				if (byteSize <= config.getMaximumRequestLimit()) {
+				if (eventsByteSize <= config.getMaximumRequestLimit()) {
+					// We didn't reach the max request limit
 					break;
 				}
-				bulkSize = (int) (bulkSize / ceil(byteSize / config.getMaximumRequestLimit()));
+				Logger.log(TAG, "Batch size exceeds max request limit (" + eventsByteSize + " > " + config.getMaximumRequestLimit() + "). Splitting batch", Logger.SDK_DEBUG);
+				bulkSize = (int) (bulkSize / ceil(eventsByteSize / config.getMaximumRequestLimit()));
+				exceededMaxRequestLimit = true;
 			}
 			else {
 				break;
@@ -179,16 +183,15 @@ public class FlushDatabaseService
 			final SendStatus res = send(createMessage(event, true), config.getAtomBulkEndPoint(table.token));
 
 			if (res == SendStatus.DELETE || res == SendStatus.SUCCESS) {
-				if (storage.deleteEvents(table, batch.lastId) < bulkSize || storage.count(table) == 0) {
-					storage.deleteTable(table);
-				}
-				else {
+				storage.deleteEvents(table, batch.lastId);
+				// If batch was split due to MaxRequestLimit limitation we'll need to re-invoke flushTable
+				if (exceededMaxRequestLimit) {
 					flushTable(table);
 				}
 			}
 			else {
-				// This will be caught by handleReport() and return a HandleStatus.RETRY
-				throw new IllegalStateException("Failed flushTable entries for table: " + table.name + ". Retrying");
+				// This will be caught by handleReport() and return false
+				throw new IllegalStateException("Failed to flush entries for table: " + table.name + ". Retrying");
 			}
 		}
 	}
@@ -384,7 +387,7 @@ public class FlushDatabaseService
 		final Intent flushIntent = new Intent(context, FlushDatabaseService.class);
 		flushIntent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
 
-		if (delayInMillis >= 0) {
+		if (delayInMillis > 0) {
 			Logger.log(TAG, "Scheduling flush database in " + (delayInMillis / 1000) + " seconds...", Logger.SDK_DEBUG);
 			final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 			alarmManager.set(AlarmManager.RTC, epochTime, PendingIntent.getService(context, 0, flushIntent, PendingIntent.FLAG_UPDATE_CURRENT));
