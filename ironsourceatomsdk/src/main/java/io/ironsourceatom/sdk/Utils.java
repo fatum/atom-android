@@ -18,7 +18,6 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * Util class with helper methods
  */
-
 class Utils {
 
 	/**
@@ -28,7 +27,7 @@ class Utils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static byte[] getBytes(final InputStream in) throws
+	static byte[] getBytes(final InputStream in) throws
 			IOException {
 		final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		int bytesRead;
@@ -48,7 +47,7 @@ class Utils {
 	 * @param key
 	 * @return auth string
 	 */
-	public static String auth(String data, String key) {
+	static String auth(String data, String key) {
 		try {
 			SecretKeySpec secret_key = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA256");
 			Mac sha256_HMAC = Mac.getInstance("HmacSHA256");

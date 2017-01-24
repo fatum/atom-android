@@ -16,7 +16,7 @@ import static io.ironsourceatom.sdk.Report.Action.POST_SYNC;
 public class ReportService
 		extends IntentService {
 
-	private static final String TAG = "SaveReportService";
+	private static final String TAG = "ReportService";
 
 	private static final String PACKAGE = FlushDatabaseService.class.getPackage()
 	                                                                .getName();
@@ -24,8 +24,8 @@ public class ReportService
 	static final String EXTRA_REPORT_JSON                = PACKAGE + ".EXTRA_REPORT_JSON";
 	static final String EXTRA_REPORT_ACTION_ENUM_ORDINAL = PACKAGE + ".EXTRA_REPORT_ACTION_ENUM_ORDINAL";
 
-	private IsaConfig      config;
-	private StorageApi     storage;
+	private IsaConfig  config;
+	private StorageApi storage;
 
 
 	public ReportService() {
@@ -63,12 +63,9 @@ public class ReportService
 	}
 
 	void handleReport(JSONObject reportJsonObject, Report.Action action) {
-		boolean shouldFlush = saveReport(reportJsonObject);
-
-		// If report was sync posted or enqueue reached bulk size - flush database
-		if (action == POST_SYNC || shouldFlush) {
-			flushDatabase();
-		}
+		final boolean exceededBulkSize = saveReport(reportJsonObject);
+		final boolean flushNow = exceededBulkSize || action == POST_SYNC;
+		flushDatabase(flushNow ? 0 : config.getFlushInterval());
 	}
 
 	private boolean saveReport(JSONObject dataObject) {
@@ -76,7 +73,7 @@ public class ReportService
 		final int dbRowCount = storage.addEvent(table, dataObject.optString(Report.DATA_KEY));
 		boolean addSuccessful = dbRowCount != -1;
 		if (addSuccessful) {
-			Logger.log(TAG, "Added event to " + table + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
+			Logger.log(TAG, "Added event to " + table.name + " table (size: " + dbRowCount + " rows)", Logger.SDK_DEBUG);
 			if (storage.countAll() >= config.getBulkSize()) {
 				Logger.log(TAG, "Reached configured bulk size (" + config.getBulkSize() + " rows) - flushing database", Logger.SDK_DEBUG);
 				return true;
@@ -90,10 +87,11 @@ public class ReportService
 		return false;
 	}
 
-	//////////////////// For testing purpose - to allow mocking this behavior /////////////////////
+	//////////////////// Allow overriding for testing purposes - to allow mocking this behavior /////////////////////
 
-	void flushDatabase() {
-		FlushDatabaseService.flushTable(this);
+	void flushDatabase(long delay) {
+		final long flushAtEpoch = System.currentTimeMillis() + delay;
+		FlushDatabaseService.flushDatabase(this, flushAtEpoch);
 	}
 
 	protected IsaConfig getConfig(Context context) {
@@ -107,7 +105,7 @@ public class ReportService
 	////////////////////////////////////////////////////////////////////////////////////////////
 
 	public static void report(Context context, Report report, Report.Action reportAction) {
-		final Intent intent = new Intent(context, FlushDatabaseService.class);
+		final Intent intent = new Intent(context, ReportService.class);
 		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, reportAction.ordinal());
 		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
 		context.startService(intent);

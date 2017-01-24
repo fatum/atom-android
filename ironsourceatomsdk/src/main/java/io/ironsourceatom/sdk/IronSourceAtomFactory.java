@@ -16,10 +16,11 @@ import java.util.Map;
  */
 public class IronSourceAtomFactory {
 
-	private static final String TAG                 = "IronSourceAtomFactory";
-	private static final Object sInstanceLockObject = new Object();
+	private static final String TAG = "IronSourceAtomFactory";
 
 	private static IronSourceAtomFactory sInstance;
+
+	static final String VERSION_NAME = BuildConfig.VERSION_NAME;
 
 	public static final int NETWORK_MOBILE = 1;
 	public static final int NETWORK_WIFI   = 2;
@@ -42,15 +43,15 @@ public class IronSourceAtomFactory {
 		return sInstance;
 	}
 
-	public static IronSourceAtomFactory getInstance(Context context) {
-		if (null == context) {
+	public static synchronized IronSourceAtomFactory getInstance(Context context) {
+		if (context == null) {
 			throw new IllegalArgumentException("`context` should be valid Context object");
 		}
-		synchronized (sInstanceLockObject) {
-			if (sInstance == null) {
-				sInstance = new IronSourceAtomFactory(context.getApplicationContext());
-			}
+
+		if (sInstance == null) {
+			sInstance = new IronSourceAtomFactory(context.getApplicationContext());
 		}
+
 		return sInstance;
 	}
 
@@ -191,7 +192,7 @@ public class IronSourceAtomFactory {
 				errorReport.put("details", errorString);
 				errorReport.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH).format(Calendar.getInstance()
 				                                                                                                        .getTime()));
-				errorReport.put("sdk_version", Consts.VER);
+				errorReport.put("sdk_version", IronSourceAtomFactory.VERSION_NAME);
 				errorReport.put("connection", NetworkManager.getInstance(context)
 				                                            .getConnectedNetworkType());
 				errorReport.put("platform", "Android");

@@ -14,12 +14,12 @@ public class SendReportJobService
 
 	private static final String TAG = "ReportJobService";
 
-	public static final int JOB_ID = 1700;
+	static final int JOB_ID = 1700;
 
 	@Override
 	public boolean onStartJob(JobParameters jobParameters) {
 		Logger.log(TAG, "Requesting FlushDatabaseService to flushTable...", Logger.SDK_DEBUG);
-		FlushDatabaseService.flushTable(this);
+		FlushDatabaseService.flushDatabase(this);
 
 		// The only purpose of this job is to start the service - so our work is done
 		return false;

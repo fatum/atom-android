@@ -100,10 +100,10 @@ public class ISAConfigTest {
 		assertEquals(isaConfig.getAtomBulkEndPoint(token), IsaConfig.DEFAULT_BULK_URL);
 	}
 
-	IsaPrefService mPrefService = mock(IsaPrefService.class);
+	IsaPrefUtils mPrefService = mock(IsaPrefUtils.class);
 	public IsaConfig isaConfig = new IsaConfig(RuntimeEnvironment.application) {
 		@Override
-		protected IsaPrefService getPrefService(Context context) {
+		protected IsaPrefUtils getPrefService(Context context) {
 			return mPrefService;
 		}
 	};

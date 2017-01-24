@@ -3,28 +3,27 @@ package io.ironsourceatom.sdk;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-class IsaPrefService {
+class IsaPrefUtils {
 
+	private static final String SHARED_PREF_FILENAME = "ironsourceatom.prefs";
+	private static IsaPrefUtils sInstance;
 
-	private static final Object sInstanceLock = new Object();
-	static IsaPrefService sInstance;
-	Context mContext;
+	private Context mContext;
 
-	public IsaPrefService(Context context) {
+	private IsaPrefUtils(Context context) {
 		mContext = context;
 	}
 
-	public static IsaPrefService getInstance(Context context) {
-		synchronized (sInstanceLock) {
-			if (null == sInstance) {
-				sInstance = new IsaPrefService(context);
-			}
+	public static synchronized IsaPrefUtils getInstance(Context context) {
+		if (sInstance == null) {
+			sInstance = new IsaPrefUtils(context);
 		}
+
 		return sInstance;
 	}
 
 	public String load(String key, String defVal) {
-		SharedPreferences pr = mContext.getSharedPreferences(Consts.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+		SharedPreferences pr = mContext.getSharedPreferences(SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
 		if (null != pr) {
 			return pr.getString(key, defVal);
 		}
@@ -56,7 +55,7 @@ class IsaPrefService {
 	}
 
 	public <T> void save(String key, T value) {
-		SharedPreferences pr = mContext.getSharedPreferences(Consts.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+		SharedPreferences pr = mContext.getSharedPreferences(SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
 		if (null != pr) {
 			SharedPreferences.Editor editor = pr.edit();
 			editor.putString(key, value.toString());
@@ -65,7 +64,7 @@ class IsaPrefService {
 	}
 
 	public boolean delete(String key) {
-		SharedPreferences pr = mContext.getSharedPreferences(Consts.SHARED_PREF_NAME, Context.MODE_PRIVATE);
+		SharedPreferences pr = mContext.getSharedPreferences(SHARED_PREF_FILENAME, Context.MODE_PRIVATE);
 		if (null != pr) {
 			return pr.edit()
 			         .remove(key)

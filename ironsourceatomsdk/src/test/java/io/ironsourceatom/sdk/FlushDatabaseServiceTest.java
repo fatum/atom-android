@@ -13,12 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.ironsourceatom.sdk.FlushDatabaseService.FlushResult;
 import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -84,7 +84,7 @@ public class FlushDatabaseServiceTest {
 		}
 
 		@Override
-		void flushDatabase() {
+		void flushDatabase(long delay) {
 			//mFlushDatabaseService.flushDatabase();
 		}
 	};
@@ -147,7 +147,7 @@ public class FlushDatabaseServiceTest {
 				add("foo");
 			}
 		}));
-		assertTrue(mFlushDatabaseService.flushDatabase() == FlushResult.HANDLED);
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(1)).post(anyString(), eq(url));
 	}
@@ -170,7 +170,7 @@ public class FlushDatabaseServiceTest {
 		tables.add(mTable);
 		when(storage.getTables()).thenReturn(tables);
 		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", new ArrayList<String>()));
-		assertEquals(FlushResult.RETRY, mFlushDatabaseService.flushDatabase());
+		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
 		verify(client, times(10)).post(anyString(), eq(url));
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -185,7 +185,7 @@ public class FlushDatabaseServiceTest {
 		// no idle time, but should try it out 10 times
 		when(config.getNumOfRetries()).thenReturn(10);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
-		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.RETRY);
+		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
 		verify(client, never()).post(anyString(), anyString());
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -206,11 +206,11 @@ public class FlushDatabaseServiceTest {
 
 		final JSONObject jsonObject = new JSONObject(reportMap);
 		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
-		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
-		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.RETRY);
+		assertFalse(mFlushDatabaseService.flushDatabase());
 		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
-		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(client, times(2)).post(anyString(), anyString());
 	}
 
@@ -223,13 +223,13 @@ public class FlushDatabaseServiceTest {
 		// List of scenarios, each member contains:
 		// configResult, networkTypeResult and the expected behavior.
 		List<TestScenario> scenarios = new ArrayList<>();
-		scenarios.add(new TestScenario(~0, MOBILE, FlushResult.HANDLED));
-		scenarios.add(new TestScenario(WIFI | MOBILE, MOBILE, FlushResult.HANDLED));
-		scenarios.add(new TestScenario(WIFI | MOBILE, WIFI, FlushResult.HANDLED));
-		scenarios.add(new TestScenario(WIFI, WIFI, FlushResult.HANDLED));
-		scenarios.add(new TestScenario(MOBILE, MOBILE, FlushResult.HANDLED));
-		scenarios.add(new TestScenario(WIFI, MOBILE, FlushResult.RETRY));
-		scenarios.add(new TestScenario(MOBILE, WIFI, FlushResult.RETRY));
+		scenarios.add(new TestScenario(~0, MOBILE, true));
+		scenarios.add(new TestScenario(WIFI | MOBILE, MOBILE, true));
+		scenarios.add(new TestScenario(WIFI | MOBILE, WIFI, true));
+		scenarios.add(new TestScenario(WIFI, WIFI, true));
+		scenarios.add(new TestScenario(MOBILE, MOBILE, true));
+		scenarios.add(new TestScenario(WIFI, MOBILE, false));
+		scenarios.add(new TestScenario(MOBILE, WIFI, false));
 		when(client.post(anyString(), anyString())).thenReturn(ok);
 		for (TestScenario test : scenarios) {
 			when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
@@ -243,7 +243,7 @@ public class FlushDatabaseServiceTest {
 	// Should do nothing and return true.
 	@Test
 	public void flushNothing() {
-		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.flushDatabase());
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getTables();
 	}
 
@@ -285,7 +285,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.count(mTable)).thenReturn(1);
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
-		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.flushDatabase());
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(2)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
 		verify(storage, times(1)).deleteEvents(mTable, "3");
@@ -303,7 +303,7 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void flushNoItems() throws
 			Exception {
-		assertEquals(FlushResult.HANDLED, mFlushDatabaseService.flushDatabase());
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getTables();
 		verify(storage, never()).getEvents(any(Table.class), anyInt());
 	}
@@ -322,7 +322,7 @@ public class FlushDatabaseServiceTest {
 			add(mTable);
 		}});
 		when(client.post(anyString(), anyString())).thenReturn(fail);
-		assertEquals(FlushResult.RETRY, mFlushDatabaseService.flushDatabase());
+		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, never()).deleteEvents(mTable, "2");
 		verify(storage, never()).deleteTable(mTable);
@@ -389,7 +389,7 @@ public class FlushDatabaseServiceTest {
 		dataList.add(reportMap.get(Report.DATA_KEY));
 		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", dataList));
 
-		assertEquals(mFlushDatabaseService.flushDatabase(), FlushResult.HANDLED);
+		assertTrue(mFlushDatabaseService.flushDatabase());
 		JSONObject report = new JSONObject(reportMap);
 		report.put(Report.DATA_KEY, dataList.toString());
 		report.put(Report.AUTH_KEY, Utils.auth(report.getString(Report.DATA_KEY), report.getString(Report.TOKEN_KEY)))
@@ -404,11 +404,11 @@ public class FlushDatabaseServiceTest {
 	// Helper class, used inside "isNetworkAllowed" test case.
 	class TestScenario {
 
-		int         configStatus;
-		int         networkStatus;
-		FlushResult expected;
+		int     configStatus;
+		int     networkStatus;
+		boolean expected;
 
-		TestScenario(int config, int network, FlushResult exp) {
+		TestScenario(int config, int network, boolean exp) {
 			configStatus = config;
 			networkStatus = network;
 			expected = exp;

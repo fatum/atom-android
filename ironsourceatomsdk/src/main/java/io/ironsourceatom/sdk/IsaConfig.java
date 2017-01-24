@@ -38,7 +38,7 @@ public class IsaConfig {
 
 	private static IsaConfig sInstance;
 
-	IsaPrefService isaPrefService;
+	IsaPrefUtils mIsaPrefUtils;
 	private boolean                 isEnableErrorReporting;
 	private boolean                 isAllowedOverRoaming;
 	private int                     allowedNetworkTypes;
@@ -73,18 +73,18 @@ public class IsaConfig {
 	 * @param context
 	 */
 	void loadConfig(Context context) {
-		isaPrefService = getPrefService(context);
+		mIsaPrefUtils = getPrefService(context);
 		atomEndPoint = new HashMap<>();
 		atomBulkEndPoint = new HashMap<>();
-		isEnableErrorReporting = isaPrefService.load(KEY_ENABLE_ERROR_REPORTING, false);
-		isAllowedOverRoaming = isaPrefService.load(KEY_ALLOWED_OVER_ROAMING, true);
-		allowedNetworkTypes = isaPrefService.load(KEY_ALLOWED_NETWORK_TYPES, DEFAULT_ALLOWED_NETWORK_TYPES);
-		flushInterval = isaPrefService.load(KEY_FLUSH_INTERVAL, DEFAULT_FLUSH_INTERVAL);
-		maximumRequestLimit = isaPrefService.load(KEY_MAX_REQUEST_LIMIT, DEFAULT_MAX_REQUEST_LIMIT);
-		maximumDatabaseLimit = isaPrefService.load(KEY_MAX_DATABASE_LIMIT, DEFAUL_MAX_DATABASE_LIMIT);
-		bulkSize = isaPrefService.load(KEY_BULK_SIZE, DEFAULT_BULK_SIZE);
-		sdkErrorStream = isaPrefService.load(KEY_ERROR_STREAM, DEFAULT_SDK_ERROR_STREAM);
-		sdkErrorStreamAuthKey = isaPrefService.load(KEY_ERROR_STREAM_AUTH, DEFAULT_SDK_ERROR_STREAM_AUTH_KEY);
+		isEnableErrorReporting = mIsaPrefUtils.load(KEY_ENABLE_ERROR_REPORTING, false);
+		isAllowedOverRoaming = mIsaPrefUtils.load(KEY_ALLOWED_OVER_ROAMING, true);
+		allowedNetworkTypes = mIsaPrefUtils.load(KEY_ALLOWED_NETWORK_TYPES, DEFAULT_ALLOWED_NETWORK_TYPES);
+		flushInterval = mIsaPrefUtils.load(KEY_FLUSH_INTERVAL, DEFAULT_FLUSH_INTERVAL);
+		maximumRequestLimit = mIsaPrefUtils.load(KEY_MAX_REQUEST_LIMIT, DEFAULT_MAX_REQUEST_LIMIT);
+		maximumDatabaseLimit = mIsaPrefUtils.load(KEY_MAX_DATABASE_LIMIT, DEFAUL_MAX_DATABASE_LIMIT);
+		bulkSize = mIsaPrefUtils.load(KEY_BULK_SIZE, DEFAULT_BULK_SIZE);
+		sdkErrorStream = mIsaPrefUtils.load(KEY_ERROR_STREAM, DEFAULT_SDK_ERROR_STREAM);
+		sdkErrorStreamAuthKey = mIsaPrefUtils.load(KEY_ERROR_STREAM_AUTH, DEFAULT_SDK_ERROR_STREAM_AUTH_KEY);
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class IsaConfig {
 		if (atomEndPoint.containsKey(token)) {
 			return atomEndPoint.get(token);
 		}
-		String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT, token));
+		String url = mIsaPrefUtils.load(String.format("%s_%s", KEY_IB_END_POINT, token));
 		if (URLUtil.isValidUrl(url)) {
 			atomEndPoint.put(token, url);
 			return url;
@@ -113,7 +113,7 @@ public class IsaConfig {
 	 */
 	protected void setAtomEndPoint(String token, String url) {
 		atomEndPoint.put(token, url);
-		isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT, token), url);
+		mIsaPrefUtils.save(String.format("%s_%s", KEY_IB_END_POINT, token), url);
 	}
 
 	/**
@@ -126,7 +126,7 @@ public class IsaConfig {
 		if (atomBulkEndPoint.containsKey(token)) {
 			return atomBulkEndPoint.get(token);
 		}
-		String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT_BULK, token));
+		String url = mIsaPrefUtils.load(String.format("%s_%s", KEY_IB_END_POINT_BULK, token));
 		if (URLUtil.isValidUrl(url)) {
 			atomBulkEndPoint.put(token, url);
 			Logger.log(TAG, "SENDING TO URL: " + url, Logger.SDK_DEBUG);
@@ -145,7 +145,7 @@ public class IsaConfig {
 	 */
 	protected void setAtomBulkEndPoint(String authToken, String url) {
 		atomBulkEndPoint.put(authToken, url);
-		isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT_BULK, authToken), url);
+		mIsaPrefUtils.save(String.format("%s_%s", KEY_IB_END_POINT_BULK, authToken), url);
 	}
 
 	/**
@@ -164,7 +164,7 @@ public class IsaConfig {
 	 */
 	public void setBulkSize(int size) {
 		bulkSize = size > 0 ? size : bulkSize;
-		isaPrefService.save(KEY_BULK_SIZE, bulkSize);
+		mIsaPrefUtils.save(KEY_BULK_SIZE, bulkSize);
 	}
 
 	/**
@@ -178,7 +178,7 @@ public class IsaConfig {
 
 	public void setFlushInterval(int ms) {
 		flushInterval = ms;
-		isaPrefService.save(KEY_FLUSH_INTERVAL, flushInterval);
+		mIsaPrefUtils.save(KEY_FLUSH_INTERVAL, flushInterval);
 	}
 
 	public long getMaximumRequestLimit() {
@@ -187,7 +187,7 @@ public class IsaConfig {
 
 	void setMaximumRequestLimit(long bytes) {
 		maximumRequestLimit = bytes >= KILOBYTE ? bytes : maximumRequestLimit;
-		isaPrefService.save(KEY_MAX_REQUEST_LIMIT, maximumRequestLimit);
+		mIsaPrefUtils.save(KEY_MAX_REQUEST_LIMIT, maximumRequestLimit);
 	}
 
 	/**
@@ -199,7 +199,7 @@ public class IsaConfig {
 
 	void setMaximumDatabaseLimit(long bytes) {
 		maximumDatabaseLimit = bytes >= (KILOBYTE * KILOBYTE) ? bytes : maximumDatabaseLimit;
-		isaPrefService.save(KEY_MAX_DATABASE_LIMIT, maximumDatabaseLimit);
+		mIsaPrefUtils.save(KEY_MAX_DATABASE_LIMIT, maximumDatabaseLimit);
 	}
 
 	/**
@@ -214,7 +214,7 @@ public class IsaConfig {
 	 */
 	public void enableErrorReporting() {
 		isEnableErrorReporting = true;
-		isaPrefService.save(KEY_ENABLE_ERROR_REPORTING, isEnableErrorReporting);
+		mIsaPrefUtils.save(KEY_ENABLE_ERROR_REPORTING, isEnableErrorReporting);
 	}
 
 	/**
@@ -240,7 +240,7 @@ public class IsaConfig {
 	 */
 	public void setAllowedOverRoaming(boolean allowed) {
 		isAllowedOverRoaming = allowed;
-		isaPrefService.save(KEY_ALLOWED_OVER_ROAMING, isAllowedOverRoaming);
+		mIsaPrefUtils.save(KEY_ALLOWED_OVER_ROAMING, isAllowedOverRoaming);
 	}
 
 	/**
@@ -249,7 +249,7 @@ public class IsaConfig {
 	 */
 	public void setAllowedNetworkTypes(int flags) {
 		allowedNetworkTypes = flags;
-		isaPrefService.save(KEY_ALLOWED_NETWORK_TYPES, allowedNetworkTypes);
+		mIsaPrefUtils.save(KEY_ALLOWED_NETWORK_TYPES, allowedNetworkTypes);
 	}
 
 	protected int getAllowedNetworkTypes() {
@@ -262,7 +262,7 @@ public class IsaConfig {
 
 	public void setSdkErrorStream(String sdkErrorStream) {
 		this.sdkErrorStream = sdkErrorStream;
-		isaPrefService.save(KEY_ERROR_STREAM, sdkErrorStream);
+		mIsaPrefUtils.save(KEY_ERROR_STREAM, sdkErrorStream);
 	}
 
 	public String getSdkErrorStreamAuthKey() {
@@ -271,7 +271,7 @@ public class IsaConfig {
 
 	public void setSdkErrorStreamAuthKey(String sdkErrorStreamAuthKey) {
 		this.sdkErrorStreamAuthKey = sdkErrorStreamAuthKey;
-		isaPrefService.save(KEY_ERROR_STREAM_AUTH, sdkErrorStreamAuthKey);
+		mIsaPrefUtils.save(KEY_ERROR_STREAM_AUTH, sdkErrorStreamAuthKey);
 	}
 
 	@Override
@@ -285,7 +285,7 @@ public class IsaConfig {
 	 * @param context application Context
 	 * @return SharePrefService
 	 */
-	protected IsaPrefService getPrefService(Context context) {
-		return IsaPrefService.getInstance(context);
+	protected IsaPrefUtils getPrefService(Context context) {
+		return IsaPrefUtils.getInstance(context);
 	}
 }

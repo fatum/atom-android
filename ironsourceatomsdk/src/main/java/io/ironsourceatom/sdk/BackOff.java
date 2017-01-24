@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  */
 class BackOff {
 
-	private IsaPrefService prefService;
+	private IsaPrefUtils prefService;
 	private final String KEY_LAST_TICK   = "retry_last_tick";
 	private final String KEY_RETRY_COUNT = "retry_count";
 
@@ -90,7 +90,7 @@ class BackOff {
 		return System.currentTimeMillis();
 	}
 
-	protected IsaPrefService getPrefService(Context context) {
-		return IsaPrefService.getInstance(context);
+	protected IsaPrefUtils getPrefService(Context context) {
+		return IsaPrefUtils.getInstance(context);
 	}
 }

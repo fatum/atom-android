@@ -24,12 +24,12 @@ import static org.mockito.Mockito.when;
 public class BackOffTest {
 
 
-	private long           currentMills = 0L;
-	final   Context        context      = mock(MockContext.class);
-	final   IsaPrefService sharedPref   = mock(IsaPrefService.class);
+	private long         currentMills = 0L;
+	final   Context      context      = mock(MockContext.class);
+	final   IsaPrefUtils sharedPref   = mock(IsaPrefUtils.class);
 	BackOff backOff = new BackOff(context) {
 		@Override
-		protected IsaPrefService getPrefService(Context context) { return sharedPref; }
+		protected IsaPrefUtils getPrefService(Context context) { return sharedPref; }
 
 		@Override
 		protected long currentTimeMillis() { return currentMills; }

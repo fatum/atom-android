@@ -168,8 +168,11 @@ public class ReportHandlerIntegrationTest {
 		}
 
 		@Override
-		void flushDatabase() {
-			mFlushDatabaseService.flushDatabase();
+		void flushDatabase(long delay) {
+			// We only test immediate flush - not testing flush interval
+			if(delay==0) {
+				mFlushDatabaseService.flushDatabase();
+			}
 		}
 	};
 

@@ -15,15 +15,15 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class IsaPrefServiceTest {
+public class IsaPrefUtilsTest {
 
 	final Context context = mock(MockContext.class);
-	private IsaPrefService service;
+	private IsaPrefUtils service;
 
 	@Before
 	public void setUp() {
 		try {
-			Field field = IsaPrefService.class.getDeclaredField("sInstance");
+			Field field = IsaPrefUtils.class.getDeclaredField("sInstance");
 			field.setAccessible(true);
 			field.set(null, null);
 		} catch (Exception ex) {
@@ -32,14 +32,14 @@ public class IsaPrefServiceTest {
 
 	@Test
 	public void testLoadIntDef() {
-		service = IsaPrefService.getInstance(context);
+		service = IsaPrefUtils.getInstance(context);
 		assertEquals(service.load("test key", 12), 12);
 
 	}
 
 	@Test
 	public void testLoadLongDef() {
-		service = IsaPrefService.getInstance(context);
+		service = IsaPrefUtils.getInstance(context);
 		assertEquals(service.load("test key", 12L), 12L);
 	}
 
@@ -49,7 +49,7 @@ public class IsaPrefServiceTest {
 		when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs);
 		when(sharedPrefs.getString(anyString(), anyString())).thenReturn("test return");
 
-		service = IsaPrefService.getInstance(context);
+		service = IsaPrefUtils.getInstance(context);
 		assertEquals(service.load("test key", 12), 12);
 	}
 
@@ -59,13 +59,13 @@ public class IsaPrefServiceTest {
 		when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs);
 		when(sharedPrefs.getString(anyString(), anyString())).thenReturn("test return");
 
-		service = IsaPrefService.getInstance(context);
+		service = IsaPrefUtils.getInstance(context);
 		assertEquals(service.load("test key", 12L), 12L);
 	}
 
 	@Test
 	public void testDeleteFalse() {
-		service = IsaPrefService.getInstance(context);
+		service = IsaPrefUtils.getInstance(context);
 		assertEquals(service.delete("test key"), false);
 	}
 
@@ -80,7 +80,7 @@ public class IsaPrefServiceTest {
 
 		when(context.getSharedPreferences(anyString(), anyInt())).thenReturn(sharedPrefs);
 
-		service = IsaPrefService.getInstance(context);
+		service = IsaPrefUtils.getInstance(context);
 		assertEquals(service.delete("test key"), true);
 	}
 }

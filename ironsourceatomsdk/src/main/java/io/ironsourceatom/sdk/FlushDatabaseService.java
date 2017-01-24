@@ -22,6 +22,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.List;
 
+import static io.ironsourceatom.sdk.FlushDatabaseService.SendStatus.RETRY;
 import static io.ironsourceatom.sdk.Report.Action.FLUSH_QUEUE;
 import static io.ironsourceatom.sdk.Report.Action.REPORT_ERROR;
 import static io.ironsourceatom.sdk.ReportService.EXTRA_REPORT_ACTION_ENUM_ORDINAL;
@@ -46,12 +47,6 @@ public class FlushDatabaseService
 		SUCCESS,
 		DELETE,
 		RETRY
-	}
-
-	public enum FlushResult {
-		HANDLED,
-		RETRY,
-		FLUSH_INTERVAL
 	}
 
 	public FlushDatabaseService() {
@@ -94,17 +89,12 @@ public class FlushDatabaseService
 				}
 			}
 			else {
-				final FlushResult status = flushDatabase();
-				switch (status) {
-					case RETRY:
-						retrySendReport();
-						break;
-					case FLUSH_INTERVAL:
-						scheduleAlarm(System.currentTimeMillis() + config.getFlushInterval());
-						// Intentional fall-through
-					case HANDLED:
-						backOff.reset();
-						break;
+				final boolean flushSuccessful = flushDatabase();
+				if (flushSuccessful) {
+					backOff.reset();
+				}
+				else {
+					retrySendReport();
 				}
 			}
 		} catch (Throwable th) {
@@ -127,7 +117,7 @@ public class FlushDatabaseService
 	 *
 	 * @return result of the handleReport if success true or failed false
 	 */
-	FlushResult flushDatabase() {
+	boolean flushDatabase() {
 		try {
 			final boolean connectedToValidNetwork = networkManager.isOnline() && canUseNetwork();
 			Logger.log(TAG, "Requested to flushTable database", Logger.SDK_DEBUG);
@@ -140,14 +130,14 @@ public class FlushDatabaseService
 			}
 			else {
 				Logger.log(TAG, "Device is offline or cannot use network", Logger.SDK_DEBUG);
-				return FlushResult.RETRY;
+				return false;
 			}
 		} catch (Exception e) {
 			Logger.log(TAG, e.getMessage(), Logger.SDK_DEBUG);
-			return FlushResult.RETRY;
+			return false;
 		}
 
-		return FlushResult.HANDLED;
+		return true;
 	}
 
 	/**
@@ -267,7 +257,7 @@ public class FlushDatabaseService
 			// return SendStatus.DELETE;
 		}
 
-		return SendStatus.RETRY;
+		return RETRY;
 	}
 
 	/**
@@ -352,7 +342,7 @@ public class FlushDatabaseService
 		if (backOff.hasNext()) {
 			final boolean backoffExpired = backOff.getNextBackoffTime() < System.currentTimeMillis();
 			if (backoffExpired) {
-				scheduleAlarm(backOff.next());
+				flushDatabase(this, backOff.next());
 			}
 			else {
 				final long backoffSecondsLeft = (backOff.getNextBackoffTime() - System.currentTimeMillis()) / 1000;
@@ -363,16 +353,6 @@ public class FlushDatabaseService
 			Logger.log(TAG, "Reached max retry attempts", Logger.SDK_DEBUG);
 			backOff.reset();
 		}
-	}
-
-	private void scheduleAlarm(long epochTime) {
-		final long delayInMillis = epochTime - System.currentTimeMillis();
-		Logger.log(TAG, "Scheduling to retry flushing data in " + (delayInMillis / 1000) + " seconds...", Logger.SDK_DEBUG);
-		final Intent flushIntent = new Intent(this, FlushDatabaseService.class);
-		flushIntent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
-
-		final AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-		alarmManager.set(AlarmManager.RTC, epochTime, PendingIntent.getService(this, 0, flushIntent, PendingIntent.FLAG_UPDATE_CURRENT));
 	}
 
 	//////////////////// For testing purpose - to allow mocking this behavior /////////////////////
@@ -395,11 +375,26 @@ public class FlushDatabaseService
 
 	////////////////////////////////////////////////////////////////////////////////////////////
 
-	public static void flushTable(Context context) {
-		final Intent intent = new Intent(context, FlushDatabaseService.class);
-		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
-		context.startService(intent);
+	public static void flushDatabase(Context context) {
+		flushDatabase(context, 0);
 	}
+
+	public static void flushDatabase(Context context, long epochTime) {
+		final long delayInMillis = epochTime - System.currentTimeMillis();
+		final Intent flushIntent = new Intent(context, FlushDatabaseService.class);
+		flushIntent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
+
+		if (delayInMillis >= 0) {
+			Logger.log(TAG, "Scheduling flush database in " + (delayInMillis / 1000) + " seconds...", Logger.SDK_DEBUG);
+			final AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+			alarmManager.set(AlarmManager.RTC, epochTime, PendingIntent.getService(context, 0, flushIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+		}
+		else {
+			Logger.log(TAG, "Requesting flush database...", Logger.SDK_DEBUG);
+			context.startService(flushIntent);
+		}
+	}
+
 
 	public static void reportError(Context context, Report report) {
 		final Intent intent = new Intent(context, FlushDatabaseService.class);

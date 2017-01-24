@@ -109,7 +109,7 @@ public class IronSourceAtomTracker {
 	 * Flush immediately all reports
 	 */
 	public void flush() {
-		FlushDatabaseService.flushTable(context);
+		FlushDatabaseService.flushDatabase(context);
 	}
 
 	/**

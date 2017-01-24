@@ -21,7 +21,7 @@ public class DbAdapter
 		implements StorageApi {
 
 	/**
-	 * Do not call directly. You should use DbAdapter.getInstance()
+	 * Intended for testing - do not call directly. You should use DbAdapter.getInstance()
 	 */
 	DbAdapter(Context context) {
 		mDb = getSQLHandler(context);
@@ -366,6 +366,5 @@ public class DbAdapter
 			}
 			return true;
 		}
-
 	}
 }
