@@ -367,7 +367,6 @@ public class FlushDatabaseServiceTest {
 		mFlushDatabaseService.flushDatabase();
 		verify(storage, times(2)).getEvents(mTable, 2);
 		verify(storage, times(1)).getEvents(mTable, 1);
-		verify(storage, times(1)).deleteTable(mTable);
 	}
 
 	// Test data format

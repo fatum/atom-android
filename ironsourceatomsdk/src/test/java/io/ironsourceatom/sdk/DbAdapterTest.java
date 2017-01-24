@@ -133,7 +133,11 @@ public class DbAdapterTest {
 	@Test
 	public void deleteEvents() {
 		SQLiteDatabase db = mock(SQLiteDatabase.class);
+		SQLiteStatement statement = mock(SQLiteStatement.class);
+		when(db.compileStatement(anyString())).thenReturn(statement);
 		when(handler.getWritableDatabase()).thenReturn(db);
+		when(handler.getReadableDatabase()).thenReturn(db);
+		
 		dbAdapter.deleteEvents(table, "100");
 		verify(db, times(1)).delete(eq(DbAdapter.REPORTS_TABLE), anyString(), any(String[].class));
 	}
