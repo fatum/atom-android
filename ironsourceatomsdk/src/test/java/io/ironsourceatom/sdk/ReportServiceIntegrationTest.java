@@ -23,7 +23,7 @@ import static junit.framework.Assert.assertEquals;
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class, emulateSdk = 18, manifest = Config.NONE)
 
-public class ReportHandlerIntegrationTest {
+public class ReportServiceIntegrationTest {
 
 	@Before
 	public void reset() {

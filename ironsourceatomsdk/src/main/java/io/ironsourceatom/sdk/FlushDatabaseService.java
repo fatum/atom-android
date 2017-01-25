@@ -76,7 +76,6 @@ public class FlushDatabaseService
 		}
 
 		try {
-
 			final Report.Action action = Report.Action.values()[intent.getExtras()
 			                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal())];
 
@@ -112,10 +111,8 @@ public class FlushDatabaseService
 	}
 
 	/**
-	 * handleReport responsible to handle the given ReportIntent based on the
-	 * event-type(that could be one of the 3: FLUSH, ENQUEUE, REPORT_ERROR or POST_SYNC).
 	 *
-	 * @return result of the handleReport if success true or failed false
+	 * @return true if successfully flushed and sent to server
 	 */
 	boolean flushDatabase() {
 		try {
@@ -126,6 +123,7 @@ public class FlushDatabaseService
 				// Flush all tables in database
 				for (StorageApi.Table table : tables) {
 					flushTable(table);
+					Logger.log(TAG, "Table " + table.name + " size after flush: " + storage.count(table), Logger.SDK_DEBUG);
 				}
 			}
 			else {
@@ -141,10 +139,10 @@ public class FlushDatabaseService
 	}
 
 	/**
-	 * First, we peek the batch the fits with the `MaximumRequestLimit`
+	 * First, we peek the batch that fits with the `MaximumRequestLimit`
 	 * after that we prepare the request and send it.
 	 * if the send failed, we stop here, and "continue later".
-	 * if everything goes-well, we do it recursively until wil drain and
+	 * if everything goes-well, we do it recursively until we drain and
 	 * delete the table.
 	 *
 	 * @param table
@@ -154,21 +152,22 @@ public class FlushDatabaseService
 			Exception {
 		int bulkSize = config.getBulkSize();
 		StorageApi.Batch batch;
-		boolean exceededMaxRequestLimit = false;
 		while (true) {
 			batch = storage.getEvents(table, bulkSize);
 			if (batch != null && batch.events.size() > 1) {
 				int eventsByteSize = batch.events.toString()
-				                           .getBytes("UTF-8").length;
+				                                 .getBytes("UTF-8").length;
 				if (eventsByteSize <= config.getMaximumRequestLimit()) {
 					// We didn't reach the max request limit
 					break;
 				}
 				Logger.log(TAG, "Batch size exceeds max request limit (" + eventsByteSize + " > " + config.getMaximumRequestLimit() + "). Splitting batch", Logger.SDK_DEBUG);
-				bulkSize = (int) (bulkSize / ceil(eventsByteSize / config.getMaximumRequestLimit()));
-				exceededMaxRequestLimit = true;
+				bulkSize = Math.max((int) (bulkSize / ceil((double) eventsByteSize / config.getMaximumRequestLimit())), 1);
 			}
 			else {
+				// We might reach here if:
+				// 1.There are not more reports in the table
+				// 2.We got a single event from the table (as a result of reducing the bulkSize to 1 due to max request limit or it is was initially configure to 1)
 				break;
 			}
 		}
@@ -184,13 +183,13 @@ public class FlushDatabaseService
 
 			if (res == SendStatus.DELETE || res == SendStatus.SUCCESS) {
 				storage.deleteEvents(table, batch.lastId);
-				// If batch was split due to MaxRequestLimit limitation we'll need to re-invoke flushTable
-				if (exceededMaxRequestLimit) {
+				// If batch was split due to MaxRequestLimit or more reports were added in the background we'll need to re-invoke flushTable
+				if (storage.count(table) > 0) {
 					flushTable(table);
 				}
 			}
 			else {
-				// This will be caught by handleReport() and return false
+				// This will be caught by flushDatabase() and return false
 				throw new IllegalStateException("Failed to flush entries for table: " + table.name + ". Retrying");
 			}
 		}

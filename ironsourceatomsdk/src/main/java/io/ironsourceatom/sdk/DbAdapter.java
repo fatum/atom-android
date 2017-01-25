@@ -17,7 +17,7 @@ import java.util.List;
  * <p>
  * PENDING: Consider notifying on SQL errors by throwing all SqlLiteExceptions instead of catching them
  */
-public class DbAdapter
+class DbAdapter
 		implements StorageApi {
 
 	/**
@@ -164,31 +164,6 @@ public class DbAdapter
 			return new Batch(lastId, events);
 		}
 		return null;
-	}
-
-	public synchronized String getTableLastRowId(Table table) {
-		Cursor cursor = null;
-		String lastId = null;
-		try {
-			final SQLiteDatabase db = mDb.getReadableDatabase();
-			String whereParams = KEY_TABLE + "=?";
-			String orderParam = KEY_CREATED_AT + " ASC";
-			cursor = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam);
-
-			if (cursor.moveToLast()) {
-				lastId = cursor.getString(cursor.getColumnIndex(REPORTS_TABLE + "_id"));
-			}
-		} catch (SQLiteException e) {
-			Logger.log(TAG, "Failed to get a events of table" + table.name, e, Logger.SDK_ERROR);
-			lastId = null;
-		} finally {
-			if (null != cursor) {
-				cursor.close();
-			}
-			mDb.close();
-		}
-
-		return lastId;
 	}
 
 	/**

@@ -282,7 +282,7 @@ public class FlushDatabaseServiceTest {
 		}}));
 		when(storage.deleteEvents(mTable, "2")).thenReturn(2);
 		when(storage.deleteEvents(mTable1, "4")).thenReturn(1);
-		when(storage.count(mTable)).thenReturn(1);
+		when(storage.count(mTable)).thenReturn(0);
 		// All success
 		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
 		assertTrue(mFlushDatabaseService.flushDatabase());
@@ -318,6 +318,7 @@ public class FlushDatabaseServiceTest {
 			add(mTable);
 		}});
 		when(client.post(anyString(), anyString())).thenReturn(fail);
+		when(config.getMaximumRequestLimit()).thenReturn(1024L * 1024L);
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, never()).deleteEvents(mTable, "2");

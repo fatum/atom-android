@@ -137,7 +137,7 @@ public class DbAdapterTest {
 		when(db.compileStatement(anyString())).thenReturn(statement);
 		when(handler.getWritableDatabase()).thenReturn(db);
 		when(handler.getReadableDatabase()).thenReturn(db);
-		
+
 		dbAdapter.deleteEvents(table, "100");
 		verify(db, times(1)).delete(eq(DbAdapter.REPORTS_TABLE), anyString(), any(String[].class));
 	}

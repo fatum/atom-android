@@ -34,7 +34,7 @@ public class IronSourceAtomFactory {
 	 * Do not call directly.
 	 * You should use IronSourceAtomFactory.getInstance()
 	 */
-	public IronSourceAtomFactory(Context context) {
+	IronSourceAtomFactory(Context context) {
 		this.context = context;
 		config = IsaConfig.getInstance(context);
 	}
