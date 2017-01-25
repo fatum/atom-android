@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 android {
-    compileSdkVersion 24
+    compileSdkVersion 25
     buildToolsVersion "25.0.2"
 
     defaultConfig {
         applicationId "io.ironsourceatom.sdk.tester"
-        minSdkVersion 10
-        targetSdkVersion 22
+        minSdkVersion 16
+        targetSdkVersion 25
     }
 
     buildTypes {
