@@ -397,7 +397,6 @@ public class FlushDatabaseService
 		}
 	}
 
-
 	public static void reportError(Context context, Report report) {
 		final Intent intent = new Intent(context, FlushDatabaseService.class);
 		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal());
