@@ -108,7 +108,6 @@ public class FlushDatabaseServiceTest {
 		// reset mocks
 		reset(storage, client, config);
 		// add default configuration
-		when(config.getNumOfRetries()).thenReturn(1);
 		when(config.getAllowedNetworkTypes()).thenReturn(-1);
 		when(netManager.getNetworkAtomType()).thenReturn(-1);
 		when(netManager.isOnline()).thenReturn(true);
@@ -158,7 +157,6 @@ public class FlushDatabaseServiceTest {
 	public void postAuthFailed() throws
 			Exception {
 		String url = "http://host.com";
-		when(config.getNumOfRetries()).thenReturn(10);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
 
 		when(config.getAtomBulkEndPoint(TOKEN)).thenReturn(url);
@@ -172,7 +170,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", new ArrayList<String>()));
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
-		verify(client, times(10)).post(anyString(), eq(url));
+		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, times(1)).addEvent(mTable, DATA);
 	}
 
@@ -182,8 +180,6 @@ public class FlushDatabaseServiceTest {
 	public void postWithoutNetwork() throws
 			Exception {
 		when(netManager.isOnline()).thenReturn(false);
-		// no idle time, but should try it out 10 times
-		when(config.getNumOfRetries()).thenReturn(10);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();

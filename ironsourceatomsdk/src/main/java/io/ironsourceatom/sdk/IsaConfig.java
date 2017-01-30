@@ -15,7 +15,6 @@ public class IsaConfig {
 	protected static final String DEFAULT_BULK_URL                  = "http://track.atom-data.io/bulk";
 	protected static final int    KILOBYTE                          = 1024;
 	protected static final int    DEFAULT_BULK_SIZE                 = 4;
-	protected static final int    DEFAULT_NUM_OF_RETRIES            = 2;
 	protected static final int    DEFAULT_FLUSH_INTERVAL            = 10 * 1000;
 	protected static final int    DEFAULT_MAX_REQUEST_LIMIT         = KILOBYTE * KILOBYTE;
 	protected static final int    DEFAUL_MAX_DATABASE_LIMIT         = KILOBYTE * KILOBYTE * 10;
@@ -200,13 +199,6 @@ public class IsaConfig {
 	void setMaximumDatabaseLimit(long bytes) {
 		maximumDatabaseLimit = bytes >= (KILOBYTE * KILOBYTE) ? bytes : maximumDatabaseLimit;
 		mIsaPrefUtils.save(KEY_MAX_DATABASE_LIMIT, maximumDatabaseLimit);
-	}
-
-	/**
-	 * @return sdk num of retries on sending report failed
-	 */
-	public int getNumOfRetries() {
-		return DEFAULT_NUM_OF_RETRIES;
 	}
 
 	/**
