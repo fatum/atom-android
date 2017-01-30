@@ -40,6 +40,12 @@ android {
     buildToolsVersion "25.0.2"
 
     /**
+     * Needed since we use the basic HTTP url connection
+     */
+    useLibrary 'org.apache.http.legacy'
+
+
+    /**
      * The defaultConfig {} block encapsulates default settings and entries for all
      * build variants, and can override some attributes in main/AndroidManifest.xml
      * dynamically from the build system. You can configure product flavors to override

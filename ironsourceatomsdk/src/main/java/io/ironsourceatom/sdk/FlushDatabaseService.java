@@ -231,7 +231,7 @@ public class FlushDatabaseService
 	protected SendStatus send(String data, String url) {
 		Logger.log(TAG, "Sending data: " + data, Logger.SDK_DEBUG);
 		try {
-			RemoteConnection.Response response = httpClient.post(data, url);
+			RemoteConnection.Response response = httpClient.post(this, data, url);
 			Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
 			if (response.code == HttpURLConnection.HTTP_OK) {
 				return SendStatus.SUCCESS;
