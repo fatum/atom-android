@@ -3,7 +3,7 @@ package io.ironsourceatom.sdk;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class Report {
+public class Report {
 
 	enum Action {
 		// save report
@@ -16,16 +16,16 @@ class Report {
 		REPORT_ERROR
 	}
 
-	static final String TABLE_KEY    = "table";
-	static final String TOKEN_KEY    = "token";
-	static final String ENDPOINT_KEY = "endpoint";
-	static final String BULK_KEY     = "bulk";
-	static final String DATA_KEY     = "data";
-	static final String AUTH_KEY     = "auth";
+	public static final String TABLE_KEY    = "table";
+	public static final String TOKEN_KEY    = "token";
+	public static final String ENDPOINT_KEY = "endpoint";
+	public static final String BULK_KEY     = "bulk";
+	public static final String DATA_KEY     = "data";
+	public static final String AUTH_KEY     = "auth";
 
 	private JSONObject reportJsonObject;
 
-	Report() {
+	protected Report() {
 		reportJsonObject = new JSONObject();
 	}
 

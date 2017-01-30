@@ -17,13 +17,13 @@ import java.util.List;
  * <p>
  * PENDING: Consider notifying on SQL errors by throwing all SqlLiteExceptions instead of catching them
  */
-class DbAdapter
+public class DbAdapter
 		implements StorageApi {
 
 	/**
 	 * Intended for testing - do not call directly. You should use DbAdapter.getInstance()
 	 */
-	DbAdapter(Context context) {
+	public DbAdapter(Context context) {
 		mDb = getSQLHandler(context);
 	}
 

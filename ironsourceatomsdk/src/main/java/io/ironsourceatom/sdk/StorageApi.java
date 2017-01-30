@@ -2,7 +2,7 @@ package io.ironsourceatom.sdk;
 
 import java.util.List;
 
-interface StorageApi {
+public interface StorageApi {
 
 	List<Table> getTables();
 

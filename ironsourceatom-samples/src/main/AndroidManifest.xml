@@ -16,6 +16,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
 
+        <service android:name="io.ironsourceatom.sdk.ReportService" />
         <service android:name="io.ironsourceatom.sdk.FlushDatabaseService" />
 
         <!--The Report Job Service should be added from Android API version 21 and above-->

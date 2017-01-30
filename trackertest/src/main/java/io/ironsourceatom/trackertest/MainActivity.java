@@ -7,131 +7,135 @@ import android.os.Bundle;
 import android.util.Log;
 
 import io.ironsourceatom.sdk.DbAdapter;
+import io.ironsourceatom.sdk.FlushDatabaseService;
 import io.ironsourceatom.sdk.IronSourceAtomFactory;
 import io.ironsourceatom.sdk.IronSourceAtomTracker;
 import io.ironsourceatom.sdk.IsaConfig;
-import io.ironsourceatom.sdk.Logger;
-import io.ironsourceatom.sdk.RemoteService;
-import io.ironsourceatom.sdk.ReportHandler;
-import io.ironsourceatom.sdk.StorageService;
+import io.ironsourceatom.sdk.RemoteConnection;
+import io.ironsourceatom.sdk.Report;
+import io.ironsourceatom.sdk.ReportService;
+import io.ironsourceatom.sdk.StorageApi;
 
-public class MainActivity extends Activity {
-    protected static final String TAG = "TrackerTest";
+public class MainActivity
+		extends Activity {
 
-    protected Boolean isFlushCalled = false;
-    protected Boolean isHandleReportCalled = false;
+	protected static final String TAG = "TrackerTest";
 
-    protected int currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
+	protected Boolean isFlushCalled        = false;
+	protected Boolean isHandleReportCalled = false;
 
-    public void setHandlerFlushed(Boolean isFlushCalled) {
-        this.isFlushCalled = isFlushCalled;
-    }
+	protected int currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
 
-    public void setHandlerReported(Boolean isHandleReportCalled) {
-        this.isHandleReportCalled = isHandleReportCalled;
-    }
+	public void setHandlerFlushed(Boolean isFlushCalled) {
+		this.isFlushCalled = isFlushCalled;
+	}
 
-    public int getAndroidAPIVersion() {
-        return currentAndroidAPIVersion;
-    }
+	public void setHandlerReported(Boolean isHandleReportCalled) {
+		this.isHandleReportCalled = isHandleReportCalled;
+	}
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+	public int getAndroidAPIVersion() {
+		return currentAndroidAPIVersion;
+	}
 
-        final TestsUtils.MockPoster httpClient = new TestsUtils.MockPoster();
-        final StorageService dbAdapter = new DbAdapter(this);
-        final IsaConfig isaConfig = IsaConfig.getInstance(this);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        ReportHandler reportHandler = new ReportHandler(this) {
-            @Override
-            protected StorageService getStorage(Context context) {
-                return dbAdapter;
-            }
+		final TestsUtils.MockPoster httpClient = new TestsUtils.MockPoster();
+		final StorageApi dbAdapter = new DbAdapter(this);
+		final IsaConfig isaConfig = IsaConfig.getInstance(this);
 
-            @Override
-            protected RemoteService getClient() {
-                return httpClient;
-            }
+		ReportService reportHandler = new ReportService() {
+			@Override
+			protected StorageApi getStorage(Context context) {
+				return dbAdapter;
+			}
 
-            @Override
-            protected IsaConfig getConfig(Context context) {
-                return isaConfig;
-            }
-        };
+			@Override
+			protected IsaConfig getConfig(Context context) {
+				return isaConfig;
+			}
+		};
 
-        isaConfig.setBulkSize(3);
-        isaConfig.setFlushInterval(1000);
+		FlushDatabaseService flushDatabaseService = new FlushDatabaseService() {
+			@Override
+			protected RemoteConnection getHttpClient() {
+				return httpClient;
+			}
+		};
 
-        ReportJobServiceMock.setReportHandler(reportHandler);
-        ReportServiceMock.setReportHandler(reportHandler);
+		isaConfig.setBulkSize(3);
+		isaConfig.setFlushInterval(1000);
 
-        String authKey = "";
-        final IronSourceAtomTracker tracker = new IronSourceAtomTracker(this, authKey) {
-            @Override
-            protected Report openReport(Context context, int event_code) {
-                int currentApiVersion = getAndroidAPIVersion();
+		String authKey = "";
+		final IronSourceAtomTracker tracker = new IronSourceAtomTracker(this, authKey) {
+			@Override
+			protected Report newReport() {
+				int currentApiVersion = getAndroidAPIVersion();
 
-                if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    return new ReportJobIntentMock(context, event_code);
-                } else {
-                    return new ReportIntentMock(context, event_code);
-                }
-            }
-        };
+				if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+					return new ReportJobIntentMock();
+				}
+				else {
+					return new ReportIntentMock();
+				}
+			}
+		};
 
-        IronSourceAtomFactory trackerFactory = IronSourceAtomFactory.getInstance(this);
-        IronSourceAtomTracker t = trackerFactory.newTracker("");
+		IronSourceAtomFactory trackerFactory = IronSourceAtomFactory.getInstance(this);
+		IronSourceAtomTracker t = trackerFactory.newTracker("");
 
-        //Logger.setPrintErrorStackTrace(true);
-        isaConfig.enableErrorReporting();
+		//Logger.setPrintErrorStackTrace(true);
+		isaConfig.enableErrorReporting();
 
-        // Check immediately track API 21
-        currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
-        tracker.track("TRACKNOW_API21", "N1", true);
+		// Check immediately track API 21
+		currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
+		tracker.track("TRACKNOW_API21", "N1", true);
 
-        currentAndroidAPIVersion = Build.VERSION_CODES.JELLY_BEAN;
-        tracker.track("TRACKNOW_API18", "N1", true);
+		currentAndroidAPIVersion = Build.VERSION_CODES.JELLY_BEAN;
+		tracker.track("TRACKNOW_API18", "N1", true);
 
-        currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
-        tracker.track("TRACK_BULK_SIZE_API21", "S1");
-        tracker.track("TRACK_BULK_SIZE_API21", "S2");
-        tracker.track("TRACK_BULK_SIZE_API21", "S3");
+		currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
+		tracker.track("TRACK_BULK_SIZE_API21", "S1");
+		tracker.track("TRACK_BULK_SIZE_API21", "S2");
+		tracker.track("TRACK_BULK_SIZE_API21", "S3");
 
-        currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
-        tracker.track("TRACK_TIMER_API21", "T1");
+		currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
+		tracker.track("TRACK_TIMER_API21", "T1");
 
-        currentAndroidAPIVersion = Build.VERSION_CODES.JELLY_BEAN;
-        tracker.track("TRACK_TIMER_API18", "T2");
+		currentAndroidAPIVersion = Build.VERSION_CODES.JELLY_BEAN;
+		tracker.track("TRACK_TIMER_API18", "T2");
 
-        // 400 error
-        currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
-        tracker.track("TRACK_400_ERROR_API21", "E1");
+		// 400 error
+		currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
+		tracker.track("TRACK_400_ERROR_API21", "E1");
 
-        currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
-        tracker.track("TRACK_503_ERROR_API21", "ER1");
+		currentAndroidAPIVersion = Build.VERSION_CODES.LOLLIPOP;
+		tracker.track("TRACK_503_ERROR_API21", "ER1");
 
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    sleep(20000);
+		Thread thread = new Thread() {
+			@Override
+			public void run() {
+				try {
+					sleep(20000);
 
-                    if (!TestsUtils.MockPoster.isAllTrackerTasksCompleted()) {
-                        TestsUtils.MockPoster.printTrackerTaskStatus();
+					if (!TestsUtils.MockPoster.isAllTrackerTasksCompleted()) {
+						TestsUtils.MockPoster.printTrackerTaskStatus();
 
-                        Log.e(TAG, "Can't done all tasks!");
-                    } else {
-                        Log.i(TAG, "All tasks done!");
-                    }
+						Log.e(TAG, "Can't done all tasks!");
+					}
+					else {
+						Log.i(TAG, "All tasks done!");
+					}
 
-                   // System.exit(0);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
+					// System.exit(0);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		};
 
-        thread.start();
-    }
+		thread.start();
+	}
 }
