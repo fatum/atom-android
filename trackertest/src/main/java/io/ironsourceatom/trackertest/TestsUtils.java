@@ -1,5 +1,6 @@
 package io.ironsourceatom.trackertest;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -58,7 +59,7 @@ public class TestsUtils {
 		static int TRACKER_ERROR_503_COUNT = 0;
 
 		static {
-			TRACKER_TASKS = new TreeMap<String, Boolean>();
+			TRACKER_TASKS = new TreeMap<>();
 
 			TRACKER_TASKS.put("TRACKNOW_API18", false);
 			TRACKER_TASKS.put("TRACKNOW_API21", false);
@@ -142,7 +143,7 @@ public class TestsUtils {
 		}
 
 		@Override
-		public Response post(String data, String url) throws
+		public Response post(Context context, String data, String url) throws
 				IOException {
 			checkRequest(data);
 
@@ -192,7 +193,7 @@ public class TestsUtils {
 		}
 
 		// catch all incoming requests
-		final public Map<String, List<String>> mBackedMock = new HashMap<String, List<String>>();
+		final public Map<String, List<String>> mBackedMock = new HashMap<>();
 		private      int                       mCode       = 200;
 	}
 }

@@ -1,5 +1,6 @@
 package io.ironsourceatom.sdk;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -51,7 +52,7 @@ public class TestsUtils {
 			implements RemoteConnection {
 
 		@Override
-		public Response post(String data, String url) throws
+		public Response post(Context context, String data, String url) throws
 				IOException {
 			Response res = new Response();
 			if (mCode == 200) {
