@@ -6,6 +6,9 @@ import android.net.http.AndroidHttpClient;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -103,12 +106,14 @@ class HttpClient
 	/**
 	 * Post data using Gzip -
 	 * PENDING: Currently not supported on the server side
+	 *
 	 * @param context
 	 * @param data
 	 * @param url
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings("deprecation")
 	public Response postGzip(final Context context, final String data, final String url) throws
 			IOException {
 		Response response = new Response();
@@ -116,6 +121,11 @@ class HttpClient
 		try {
 			AndroidHttpClient httpClient = AndroidHttpClient.newInstance("atomSDK/0");
 			HttpPost httpPost = new HttpPost(url);
+			HttpParams httpParams = new BasicHttpParams();
+			HttpConnectionParams.setConnectionTimeout(httpParams, DEFAULT_CONNECT_TIMEOUT_MILLIS);
+			HttpConnectionParams.setSoTimeout(httpParams, DEFAULT_READ_TIMEOUT_MILLIS);
+			HttpConnectionParams.setTcpNoDelay(httpParams, true);
+			httpPost.setParams(httpParams);
 			AndroidHttpClient.modifyRequestToAcceptGzipResponse(httpPost);
 			setCompressedEntity(context, data, httpPost);
 
@@ -142,7 +152,7 @@ class HttpClient
 	 * @param content The string request params, ideally JSON string
 	 * @param postReq The HttpPost request object
 	 */
-	public static void setCompressedEntity(Context context, String content, HttpPost postReq) {
+	private void setCompressedEntity(Context context, String content, HttpPost postReq) {
 		try {
 			byte[] data = content.getBytes("UTF-8");
 
@@ -158,14 +168,12 @@ class HttpClient
 			// just returns a ByteArrayEntity
 			postReq.setEntity(AndroidHttpClient.getCompressedEntity(data, context.getContentResolver()));
 
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static String getIfCompressed(HttpResponse response) {
+	private String getIfCompressed(HttpResponse response) {
 		if (response == null) {
 			return null;
 		}
@@ -187,7 +195,7 @@ class HttpClient
 	 * @return
 	 * @throws IOException
 	 */
-	public static String streamToString(InputStream content) throws
+	private String streamToString(InputStream content) throws
 			IOException {
 		byte[] buffer = new byte[1024];
 		int numRead;
