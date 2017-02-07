@@ -15,90 +15,88 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
  * <p>
  * PENDING: Might be a good idea to allow supplying the implementation outside the SDK
  */
-class HttpClient
-		implements RemoteConnection {
+class HttpClient implements RemoteConnection {
 
-	private static final String TAG = "HttpClient";
+    private static final String TAG = "HttpClient";
 
-	private static final int DEFAULT_READ_TIMEOUT_MILLIS    = 15 * 1000; // 15s
-	private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000; // 10s
+    private static final int DEFAULT_READ_TIMEOUT_MILLIS = 15 * 1000; // 15s
+    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10 * 1000; // 10s
 
-	private static HttpClient sInstance;
+    private static HttpClient sInstance;
 
-	HttpClient() {
-		// Singelton but testing needs this
-	}
+    HttpClient() {
+        // Singelton but testing needs this
+    }
 
-	public static synchronized HttpClient getInstance() {
-		if (sInstance == null) {
-			sInstance = new HttpClient();
-		}
+    public static synchronized HttpClient getInstance() {
+        if (sInstance == null) {
+            sInstance = new HttpClient();
+        }
 
-		return sInstance;
-	}
+        return sInstance;
+    }
 
-	/**
-	 * Post String-data to the given url.
-	 *
-	 * @param data string with data to send
-	 * @param url  target url
-	 * @return RemoteService.Response that has code and body.
-	 */
-	public Response post(final String data, final String url) throws
-			IOException {
-		Response response = new Response();
-		HttpURLConnection connection = null;
-		DataOutputStream out = null;
-		InputStream in = null;
-		try {
-			connection = createConnection(url);
-			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setDoOutput(true);
+    /**
+     * Post String-data to the given url.
+     *
+     * @param data string with data to send
+     * @param url  target url
+     * @return RemoteService.Response that has code and body.
+     */
+    public Response post(final String data, final String url) throws
+            IOException {
+        Response response = new Response();
+        HttpURLConnection connection = null;
+        DataOutputStream out = null;
+        InputStream in = null;
+        try {
+            connection = createConnection(url);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
 
-			out = new DataOutputStream(connection.getOutputStream());
-			out.write(data.getBytes("UTF-8"));
-			out.flush();
-			out.close();
-			out = null;
+            out = new DataOutputStream(connection.getOutputStream());
+            out.write(data.getBytes("UTF-8"));
+            out.flush();
+            out.close();
+            out = null;
 
-			in = connection.getInputStream();
-			response.body = new String(Utils.getBytes(in), Charset.forName("UTF-8"));
-			response.code = connection.getResponseCode();
-			in.close();
-			in = null;
-		} catch (IOException e) {
-			if (connection != null && (response.code = connection.getResponseCode()) >= HTTP_BAD_REQUEST) {
-				Logger.log(TAG, "Failed post to Atom. StatusCode: " + response.code, Logger.SDK_DEBUG);
-			}
-			else {
-				throw e;
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		} finally {
-			if (null != connection) {
-				connection.disconnect();
-			}
-			if (null != out) {
-				out.close();
-			}
-			if (null != in) {
-				in.close();
-			}
-		}
-		return response;
-	}
+            in = connection.getInputStream();
+            response.body = new String(Utils.getBytes(in), Charset.forName("UTF-8"));
+            response.code = connection.getResponseCode();
+            in.close();
+            in = null;
+        } catch (IOException e) {
+            if (connection != null && (response.code = connection.getResponseCode()) >= HTTP_BAD_REQUEST) {
+                Logger.log(TAG, "Failed post to Atom. StatusCode: " + response.code, Logger.SDK_DEBUG);
+            } else {
+                throw e;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (null != connection) {
+                connection.disconnect();
+            }
+            if (null != out) {
+                out.close();
+            }
+            if (null != in) {
+                in.close();
+            }
+        }
+        return response;
+    }
 
-	/**
-	 * Returns new connection. referred to by given url.
-	 */
-	protected HttpURLConnection createConnection(String url) throws
-			IOException {
-		HttpURLConnection connection = (HttpURLConnection) (new URL(url)).openConnection();
-		connection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MILLIS);
-		connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MILLIS);
-		connection.setDoInput(true);
-		return connection;
-	}
+    /**
+     * Returns new connection. referred to by given url.
+     */
+    protected HttpURLConnection createConnection(String url) throws
+            IOException {
+        HttpURLConnection connection = (HttpURLConnection) (new URL(url)).openConnection();
+        connection.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT_MILLIS);
+        connection.setReadTimeout(DEFAULT_READ_TIMEOUT_MILLIS);
+        connection.setDoInput(true);
+        return connection;
+    }
 }
