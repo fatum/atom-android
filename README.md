@@ -61,20 +61,25 @@ and add dependency for Atom SDK
 ## Usage
 
 The SDK provides a tracker class which contains a local SQLite DB and tracks events based on certain parameters.
-The Report Job Service should be added from Android API version 21 and above:
+
+**The Report Job Service should be added from Android API version 21 and above:**
 
  ```xml
 <service android:name="io.ironsourceatom.sdk.ReportJobService"
          android:exported="true"
          android:permission="android.permission.BIND_JOB_SERVICE" />
 ```
+Note:  
+_RECEIVE_BOOT_COMPLETE_ permission is recommended to be used for the JobScheduler   
+to allow resending unsent reports after device reboots
 
-OR Report Service for API version less than 21:
+**OR Report Service for API version less than 21:**
 ```xml
 <service android:name="io.ironsourceatom.sdk.ReportService" />
 ```
 
-Add IronSourceAtom to your main activity. For example: 
+Add IronSourceAtom to your main activity. For example:
+
 ```java
 import io.ironsourceatom.sdk.IronSourceAtomFactory;
 import io.ironsourceatom.sdk.IronSourceAtomTracker;
