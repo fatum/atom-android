@@ -84,7 +84,7 @@ public class FlushDatabaseServiceTest {
 		}
 
 		@Override
-		void flushDatabase(long delay) {
+		protected void flushDatabase(long delay) {
 			//mFlushDatabaseService.flushDatabase();
 		}
 	};

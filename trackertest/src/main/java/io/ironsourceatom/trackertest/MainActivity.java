@@ -12,7 +12,6 @@ import io.ironsourceatom.sdk.IronSourceAtomFactory;
 import io.ironsourceatom.sdk.IronSourceAtomTracker;
 import io.ironsourceatom.sdk.IsaConfig;
 import io.ironsourceatom.sdk.RemoteConnection;
-import io.ironsourceatom.sdk.Report;
 import io.ironsourceatom.sdk.ReportService;
 import io.ironsourceatom.sdk.StorageApi;
 
@@ -46,6 +45,14 @@ public class MainActivity
 		final StorageApi dbAdapter = new DbAdapter(this);
 		final IsaConfig isaConfig = IsaConfig.getInstance(this);
 
+		final FlushDatabaseService flushDatabaseService = new FlushDatabaseService() {
+			@Override
+			protected RemoteConnection getHttpClient() {
+				return httpClient;
+			}
+		};
+
+
 		ReportService reportHandler = new ReportService() {
 			@Override
 			protected StorageApi getStorage(Context context) {
@@ -56,32 +63,21 @@ public class MainActivity
 			protected IsaConfig getConfig(Context context) {
 				return isaConfig;
 			}
-		};
 
-		FlushDatabaseService flushDatabaseService = new FlushDatabaseService() {
 			@Override
-			protected RemoteConnection getHttpClient() {
-				return httpClient;
+			protected void flushDatabase(long delay) {
+				if(delay==0) {
+					//flushDatabaseService.flushDatabase();
+				}
 			}
 		};
+
 
 		isaConfig.setBulkSize(3);
 		isaConfig.setFlushInterval(1000);
 
 		String authKey = "";
-		final IronSourceAtomTracker tracker = new IronSourceAtomTracker(this, authKey) {
-			@Override
-			protected Report newReport() {
-				int currentApiVersion = getAndroidAPIVersion();
-
-				if (currentApiVersion >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-					return new ReportJobIntentMock();
-				}
-				else {
-					return new ReportIntentMock();
-				}
-			}
-		};
+		final IronSourceAtomTracker tracker = new IronSourceAtomTracker(this, authKey);
 
 		IronSourceAtomFactory trackerFactory = IronSourceAtomFactory.getInstance(this);
 		IronSourceAtomTracker t = trackerFactory.newTracker("");

@@ -168,7 +168,7 @@ public class ReportServiceIntegrationTest {
 		}
 
 		@Override
-		void flushDatabase(long delay) {
+		protected void flushDatabase(long delay) {
 			// We only test immediate flush - not testing flush interval
 			if(delay==0) {
 				mFlushDatabaseService.flushDatabase();

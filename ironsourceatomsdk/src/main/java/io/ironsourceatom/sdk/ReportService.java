@@ -89,7 +89,7 @@ public class ReportService
 
 	//////////////////// Allow overriding for testing purposes - to allow mocking this behavior /////////////////////
 
-	void flushDatabase(long delay) {
+	protected void flushDatabase(long delay) {
 		final long flushAtEpoch = System.currentTimeMillis() + delay;
 		FlushDatabaseService.flushDatabase(this, flushAtEpoch);
 	}
