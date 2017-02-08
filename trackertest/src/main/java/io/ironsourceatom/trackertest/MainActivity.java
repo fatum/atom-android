@@ -100,7 +100,7 @@ public class MainActivity
 					if (!TestsUtils.MockPoster.isAllTrackerTasksCompleted()) {
 						TestsUtils.MockPoster.printTrackerTaskStatus();
 
-						Log.e(TAG, "Can't done all tasks!");
+						Log.e(TAG, "Test error, not all tasks completed");
 					}
 					else {
 						Log.i(TAG, "All tasks done!");
