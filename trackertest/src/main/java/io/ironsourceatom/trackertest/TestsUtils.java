@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import io.ironsourceatom.sdk.RemoteConnection;
 import io.ironsourceatom.sdk.RemoteService;
 import io.ironsourceatom.sdk.Report;
 import io.ironsourceatom.sdk.ReportIntent;
@@ -57,7 +58,7 @@ public class TestsUtils {
         public int mType;
     }
 
-    static class MockPoster implements RemoteService {
+    static class MockPoster implements RemoteConnection {
         static final String TAG = "TrackerTest";
 
         public static final Map<String, Boolean> TRACKER_TASKS;
