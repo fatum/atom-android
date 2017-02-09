@@ -17,8 +17,8 @@ public class IronSourceAtomTracker {
 
     private static final String TAG = "IronSourceAtomTracker";
 
-    private String auth;
     private Context context;
+    private String auth;
     private IsaConfig config;
 
     /**
@@ -33,7 +33,7 @@ public class IronSourceAtomTracker {
      * @param context current context object
      * @param auth    pre shared auth key for Atom cluster
      */
-    public IronSourceAtomTracker(Context context, String auth) {
+    IronSourceAtomTracker(Context context, String auth) {
         this.context = context;
         this.auth = auth;
         config = IsaConfig.getInstance(context);
@@ -178,8 +178,7 @@ public class IronSourceAtomTracker {
             String url = parameters[1];
 
             try {
-                HttpClient client = HttpClient.getInstance();
-                client.post(message, url);
+                IronSourceAtomFactory.getInstance(context).getHttpClient().post(message, url);
             } catch (IOException ex) {
                 Logger.log(TAG, ex.toString(), Logger.SDK_DEBUG);
             }

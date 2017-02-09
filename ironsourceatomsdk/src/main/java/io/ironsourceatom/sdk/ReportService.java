@@ -37,11 +37,11 @@ public class ReportService
 
     private static final String TAG = "ReportService";
 
-    private NetworkManager networkManager;
-    private StorageApi storage;
-    private RemoteConnection client;
-    private IsaConfig config;
-    protected BackOff backOff;
+    private   NetworkManager networkManager;
+    private   StorageApi     storage;
+    private   HttpClient     client;
+    private   IsaConfig      config;
+    protected BackOff        backOff;
 
     public enum SendStatus {
         SUCCESS,
@@ -255,7 +255,7 @@ public class ReportService
         Logger.log(TAG, "Tracking data:" + data, Logger.SDK_DEBUG);
         while (nRetry-- > 0) {
             try {
-                RemoteConnection.Response response = client.post(data, url);
+                HttpClient.Response response = client.post(data, url);
                 if (response.code == HttpURLConnection.HTTP_OK) {
                     Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
                     return SendStatus.SUCCESS;
@@ -374,8 +374,8 @@ public class ReportService
     /**
      * For testing purpose. to allow mocking this behavior.
      */
-    protected RemoteConnection getClient() {
-        return HttpClient.getInstance();
+    protected HttpClient getClient() {
+        return IronSourceAtomFactory.getInstance(this).getHttpClient();
     }
 
     protected IsaConfig getConfig(Context context) {

@@ -53,7 +53,7 @@ public class TestsUtils {
         }
     }
 
-    static class MockPoster implements RemoteConnection {
+    static class MockPoster implements HttpClient {
 
         @Override
         public Response post(String data, String url) throws IOException {

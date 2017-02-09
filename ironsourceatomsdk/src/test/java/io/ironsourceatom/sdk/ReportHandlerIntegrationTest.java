@@ -159,7 +159,7 @@ public class ReportHandlerIntegrationTest {
         }
 
         @Override
-        protected RemoteConnection getClient() {
+        protected HttpClient getClient() {
             return mClient;
         }
     };

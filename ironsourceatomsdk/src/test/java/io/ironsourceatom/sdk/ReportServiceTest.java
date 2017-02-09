@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.ironsourceatom.sdk.RemoteConnection.Response;
+import io.ironsourceatom.sdk.HttpClient.Response;
 import io.ironsourceatom.sdk.ReportService.HandleStatus;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
@@ -37,23 +37,23 @@ import static org.mockito.Mockito.when;
 public class ReportServiceTest {
 
 	// Two different responses
-	final Response         ok            = new RemoteConnection.Response() {{
+	final Response       ok            = new HttpClient.Response() {{
 		code = 200;
 		body = "OK";
 	}};
-	final Response         fail          = new RemoteConnection.Response() {{
+	final Response       fail          = new HttpClient.Response() {{
 		code = 503;
 		body = "Service Unavailable";
 	}};
 	// Mocking
-	final NetworkManager   netManager    = mock(NetworkManager.class);
-	final StorageApi       storage       = mock(DbAdapter.class);
-	final RemoteConnection client        = mock(HttpClient.class);
-	final IsaConfig        config        = mock(IsaConfig.class);
-	final Context          context       = mock(Context.class);
-	final ReportService    reportService = new ReportService() {
+	final NetworkManager netManager    = mock(NetworkManager.class);
+	final StorageApi     storage       = mock(DbAdapter.class);
+	final HttpClient     client        = mock(DefaultHttpClient.class);
+	final IsaConfig      config        = mock(IsaConfig.class);
+	final Context        context       = mock(Context.class);
+	final ReportService  reportService = new ReportService() {
 		@Override
-		protected RemoteConnection getClient() {
+		protected HttpClient getClient() {
 			return client;
 		}
 
@@ -72,7 +72,7 @@ public class ReportServiceTest {
 			return netManager;
 		}
 	};
-	final String           TABLE         = "ib_table", TOKEN = "ib_token", DATA = "hello world";
+	final String         TABLE         = "ib_table", TOKEN = "ib_token", DATA = "hello world";
 	final Map<String, String> reportMap = new HashMap<String, String>() {{
 		put(ReportData.DATA, DATA);
 		put(ReportData.TOKEN, TOKEN);

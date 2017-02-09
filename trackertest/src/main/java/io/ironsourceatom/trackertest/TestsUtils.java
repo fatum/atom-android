@@ -1,6 +1,5 @@
 package io.ironsourceatom.trackertest;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.ironsourceatom.sdk.RemoteConnection;
+import io.ironsourceatom.sdk.HttpClient;
 import io.ironsourceatom.sdk.Report;
 import io.ironsourceatom.sdk.ReportData;
 
@@ -59,7 +58,7 @@ public class TestsUtils {
 	}
 
 	static class MockPoster
-			implements RemoteConnection {
+			implements HttpClient {
 
 		static final String TAG = "TrackerTest";
 
@@ -69,18 +68,11 @@ public class TestsUtils {
 		static int TRACKER_ERROR_503_COUNT = 0;
 
 		static {
-			TRACKER_TASKS = new TreeMap<String, Boolean>();
-
-			TRACKER_TASKS.put("TRACKNOW_API18", false);
+			TRACKER_TASKS = new HashMap<>();
 			TRACKER_TASKS.put("TRACKNOW_API21", false);
-
 			TRACKER_TASKS.put("TRACK_BULK_SIZE_API21", false);
-
 			TRACKER_TASKS.put("TRACK_TIMER_API21", false);
-			TRACKER_TASKS.put("TRACK_TIMER_API18", false);
-
 			TRACKER_TASKS.put("TRACK_400_ERROR_API21", false);
-
 			TRACKER_TASKS.put("TRACK_503_ERROR_API21", false);
 		}
 
