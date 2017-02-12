@@ -225,6 +225,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
                     'RemoteService.class',
                     'ExternalVars.class',
                     'Utils.class',
+                    'ErrorTracker.class',
                     'Db*.class',
                     'IronSource*.class',
                     'Isa*.class',
