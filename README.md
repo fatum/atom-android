@@ -60,7 +60,19 @@ and add dependency for Atom SDK
 
 ## Usage
 
+### Tracker Description
 The SDK provides a tracker class which contains a local SQLite DB and tracks events based on certain parameters.
+
+You can use track() method in order to track the events to an Atom Stream.
+The tracker accumulates The tracker accumulates events and flushes them when it meets one of the following conditions:
+events and flushes them when it meets one of the following conditions:
+ 
+1. Flush Interval has been reached (default: 10 seconds).
+2. Bulk Length has been reached (default: 4 events).
+3. Maximum Request Limit has been reached (default: 1MB).
+
+In case of failure the tracker will preform an exponential back-off with jitter.
+The tracker stores events in a local SQLITE database.
 
 **The Report Job Service should be added from Android API version 21 and above:**
 
@@ -69,6 +81,7 @@ The SDK provides a tracker class which contains a local SQLite DB and tracks eve
          android:exported="true"
          android:permission="android.permission.BIND_JOB_SERVICE" />
 ```
+
 Note:  
 _RECEIVE_BOOT_COMPLETE_ permission is recommended to be used for the JobScheduler   
 to allow resending unsent reports after device reboots
@@ -78,6 +91,7 @@ to allow resending unsent reports after device reboots
 <service android:name="io.ironsourceatom.sdk.ReportService" />
 ```
 
+### Tracking events
 Add IronSourceAtom to your main activity. For example:
 
 ```java
@@ -141,19 +155,6 @@ public class BaseMainActivity extends Activity {
     }
 }
 ```
-
-The Tracker process:
-
-You can use track() method in order to track the events to an Atom Stream.
-The tracker accumulates events and flushes them when it meets one of the following conditions:
- 
-1. Flush Interval is reached (default: 10 seconds).
-2. Bulk Length is reached (default: 4 events).
-3. Maximum Request Limit is reached (default: 1MB).
-
-In case of failure the tracker will preform an exponential backoff with jitter.
-The tracker stores events in a local SQLITE database.
-
 
 ### Error tracking:
 The sdk supports an option to track internal errors to a separate stream in order to be able  
