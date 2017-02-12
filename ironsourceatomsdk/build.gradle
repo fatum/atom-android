@@ -36,8 +36,8 @@ android {
      * utilities, and compiler that Gradle should use to build your app. You need to
      * download the build tools using the SDK Manager.
      */
-    compileSdkVersion 22
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
 
     /**
      * The defaultConfig {} block encapsulates default settings and entries for all
@@ -58,13 +58,13 @@ android {
         minSdkVersion 10
 
         // Specifies the API level used to test the app.
-        targetSdkVersion 22
+        targetSdkVersion 25
 
         // Defines the version number of your app.
-        versionCode 1
+        versionCode 130
 
         // Defines a user-friendly version name for your app.
-        versionName "1.1.0"
+        versionName "1.3.0"
 
         project.version = versionName
         project.archivesBaseName = "atom-android"
@@ -186,16 +186,13 @@ task makeReleaseJar(type: Copy) {
     include('classes.jar')
     rename('classes.jar', "${archivesBaseName}-${version}.jar")
 }
+
 task makeDebugJar(type: Copy) {
     from('build/intermediates/bundles/debug/')
     into('../output/')
     include('classes.jar')
     rename('classes.jar', "${archivesBaseName}-${version}_debug.jar")
 }
-
-
-assembleRelease.dependsOn(clearJar, makeReleaseJar)
-assembleDebug.dependsOn(clearJar, makeDebugJar)
 
 /* Coverage and tests section */
 
@@ -219,10 +216,8 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
             dir: './build/intermediates/classes/debug/io/ironsourceatom/sdk',
             excludes: [
                     'SdkEvent.class',
-                    'SimpleReportService.class',
-                    'ReportService.class',
+                    'Report*.class',
                     'Consts.class',
-                    'SimpleReportHandler.class',
                     'SdkEvent.class',
                     'Report.class',
                     'Logger.class',
@@ -231,8 +226,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: "connectedDebugAndroidTest"
                     'ExternalVars.class',
                     'Utils.class',
                     'Db*.class',
-                    'IronSourceAtomFactory.class',
-                    'IronSourceAtomTracker.class',
+                    'IronSource*.class',
                     'Isa*.class',
                     'IS*.class',
                     'ReportHandler.class'
@@ -261,7 +255,6 @@ uploadArchives {
             groupId 'io.ironsourceatom.sdk'
             artifactId 'atom-sdk'
             version "${version}"
-
         }
     }
 }

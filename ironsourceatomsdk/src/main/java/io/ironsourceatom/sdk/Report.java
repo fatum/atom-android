@@ -1,20 +1,18 @@
 package io.ironsourceatom.sdk;
 
-import android.content.Intent;
+import android.os.Bundle;
 
-interface Report {
+public interface Report {
+
     Report setData(String value);
 
     Report setTable(String table);
 
     Report setToken(String token);
 
-    Report setEnpoint(String endpoint);
+    Report setEndPoint(String endpoint);
 
     Report setBulk(boolean b);
 
-    Intent getIntent();
-
-    void send();
-
+    Bundle getExtras();
 }

@@ -7,10 +7,10 @@ import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Locale;
 
-class IsaConfig {
+public class IsaConfig {
 
     private static final String TAG = IsaConfig.class.getSimpleName();
-    private static final Object sInstanceLock = new Object();
+
     protected static final String DEFAULT_URL = "http://track.atom-data.io/bulk";
     protected static final String DEFAULT_BULK_URL = "http://track.atom-data.io/bulk";
     protected static final int KILOBYTE = 1024;
@@ -20,6 +20,9 @@ class IsaConfig {
     protected static final int DEFAULT_MAX_REQUEST_LIMIT = KILOBYTE * KILOBYTE;
     protected static final int DEFAUL_MAX_DATABASE_LIMIT = KILOBYTE * KILOBYTE * 10;
     protected static final int DEFAULT_ALLOWED_NETWORK_TYPES = ~0;
+    protected static final String DEFAULT_SDK_ERROR_STREAM = "ironbeast_sdk"; // Error tracking stream
+    protected static final String DEFAULT_SDK_ERROR_STREAM_AUTH_KEY = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt"; // Error tracking
+
     // SharedPreferences keys for metadata
     protected static final String KEY_BULK_SIZE = "bulk_size";
     protected static final String KEY_IB_END_POINT = "ib_end_point";
@@ -30,9 +33,9 @@ class IsaConfig {
     protected static final String KEY_ENABLE_ERROR_REPORTING = "sdk_tracker_enabled";
     protected static final String KEY_ALLOWED_OVER_ROAMING = "allow_roaming_flush";
     protected static final String KEY_ALLOWED_NETWORK_TYPES = "allowed_network_types";
-    // IronSourceAtomFactory sTracker configuration
-    protected static String ATOM_TRACKER_TABLE = "ironbeast_sdk";
-    protected static String ATOM_TRACKER_TOKEN = "5ALP9S8DUSpnL3hm4N8BewFnzZqzKt";
+    protected static final String KEY_ERROR_STREAM = "error_stream";
+    protected static final String KEY_ERROR_STREAM_AUTH = "error_stream_auth";
+
     private static IsaConfig sInstance;
 
     IsaPrefService isaPrefService;
@@ -41,24 +44,25 @@ class IsaConfig {
     private int allowedNetworkTypes;
     private int bulkSize;
     private int flushInterval;
-    private HashMap<String, String> isaEndPoint;
-    private HashMap<String, String> isaEndPointBulk;
+    private HashMap<String, String> atomEndPoint;
+    private HashMap<String, String> atomBulkEndPoint;
     private long maximumRequestLimit;
     private long maximumDatabaseLimit;
+    private String sdkErrorStream;
+    private String sdkErrorStreamAuthKey;
 
     public enum LOG_TYPE {
-        PRODUCTION, DEBUG
+        PRODUCTION,
+        DEBUG
     }
 
     IsaConfig(Context context) {
         loadConfig(context);
     }
 
-    static IsaConfig getInstance(Context context) {
-        synchronized (sInstanceLock) {
-            if (null == sInstance) {
-                sInstance = new IsaConfig(context);
-            }
+    public static synchronized IsaConfig getInstance(Context context) {
+        if (sInstance == null) {
+            sInstance = new IsaConfig(context);
         }
         return sInstance;
     }
@@ -70,8 +74,8 @@ class IsaConfig {
      */
     void loadConfig(Context context) {
         isaPrefService = getPrefService(context);
-        isaEndPoint = new HashMap<>();
-        isaEndPointBulk = new HashMap<>();
+        atomEndPoint = new HashMap<>();
+        atomBulkEndPoint = new HashMap<>();
         isEnableErrorReporting = isaPrefService.load(KEY_ENABLE_ERROR_REPORTING, false);
         isAllowedOverRoaming = isaPrefService.load(KEY_ALLOWED_OVER_ROAMING, true);
         allowedNetworkTypes = isaPrefService.load(KEY_ALLOWED_NETWORK_TYPES, DEFAULT_ALLOWED_NETWORK_TYPES);
@@ -79,21 +83,23 @@ class IsaConfig {
         maximumRequestLimit = isaPrefService.load(KEY_MAX_REQUEST_LIMIT, DEFAULT_MAX_REQUEST_LIMIT);
         maximumDatabaseLimit = isaPrefService.load(KEY_MAX_DATABASE_LIMIT, DEFAUL_MAX_DATABASE_LIMIT);
         bulkSize = isaPrefService.load(KEY_BULK_SIZE, DEFAULT_BULK_SIZE);
+        sdkErrorStream = isaPrefService.load(KEY_ERROR_STREAM, DEFAULT_SDK_ERROR_STREAM);
+        sdkErrorStreamAuthKey = isaPrefService.load(KEY_ERROR_STREAM_AUTH, DEFAULT_SDK_ERROR_STREAM_AUTH_KEY);
     }
 
     /**
-     * Function provide custom end point url for report if was set or default IronSourceAtomFactory Url
+     * Get Atom endpoint
      *
      * @param token unique publisher token
      * @return url of tracker end point
      */
-    public String getISAEndPoint(String token) {
-        if (isaEndPoint.containsKey(token)) {
-            return isaEndPoint.get(token);
+    public String getAtomEndPoint(String token) {
+        if (atomEndPoint.containsKey(token)) {
+            return atomEndPoint.get(token);
         }
         String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT, token));
         if (URLUtil.isValidUrl(url)) {
-            isaEndPoint.put(token, url);
+            atomEndPoint.put(token, url);
             return url;
         }
         return DEFAULT_URL;
@@ -105,8 +111,8 @@ class IsaConfig {
      * @param token uniq publisher token
      * @param url   custom tracker URL
      */
-    protected void setISAEndPoint(String token, String url) {
-        isaEndPoint.put(token, url);
+    protected void setAtomEndPoint(String token, String url) {
+        atomEndPoint.put(token, url);
         isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT, token), url);
     }
 
@@ -116,28 +122,30 @@ class IsaConfig {
      * @param token unique publisher token
      * @return url of tracker end point if
      */
-    public String getISAEndPointBulk(String token) {
-        if (isaEndPointBulk.containsKey(token)) {
-            return isaEndPointBulk.get(token);
+    public String getAtomBulkEndPoint(String token) {
+        if (atomBulkEndPoint.containsKey(token)) {
+            return atomBulkEndPoint.get(token);
         }
         String url = isaPrefService.load(String.format("%s_%s", KEY_IB_END_POINT_BULK, token));
         if (URLUtil.isValidUrl(url)) {
-            isaEndPointBulk.put(token, url);
+            atomBulkEndPoint.put(token, url);
+            Logger.log(TAG, "SENDING TO URL: " + url, Logger.SDK_DEBUG);
             return url;
         }
+        Logger.log(TAG, "SENDING TO DEFAULT URL: " + DEFAULT_BULK_URL, Logger.SDK_DEBUG);
         return DEFAULT_BULK_URL;
     }
 
     /**
      * Function set custom URL for tracker
      *
-     * @param token unique publisher token
-     * @param url   custom tracker URL
+     * @param authToken unique publisher authToken
+     * @param url       custom tracker URL
      * @throws MalformedURLException
      */
-    protected void setISAEndPointBulk(String token, String url) {
-        isaEndPointBulk.put(token, url);
-        isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT_BULK, token), url);
+    protected void setAtomBulkEndPoint(String authToken, String url) {
+        atomBulkEndPoint.put(authToken, url);
+        isaPrefService.save(String.format("%s_%s", KEY_IB_END_POINT_BULK, authToken), url);
     }
 
     /**
@@ -154,7 +162,7 @@ class IsaConfig {
      *
      * @param size max number of reports in bulk
      */
-    void setBulkSize(int size) {
+    public void setBulkSize(int size) {
         bulkSize = size > 0 ? size : bulkSize;
         isaPrefService.save(KEY_BULK_SIZE, bulkSize);
     }
@@ -168,7 +176,7 @@ class IsaConfig {
         return flushInterval;
     }
 
-    void setFlushInterval(int ms) {
+    public void setFlushInterval(int ms) {
         flushInterval = ms;
         isaPrefService.save(KEY_FLUSH_INTERVAL, flushInterval);
     }
@@ -248,15 +256,28 @@ class IsaConfig {
         return allowedNetworkTypes;
     }
 
-    @Override
-    public String toString() {
-        return String.format(Locale.ENGLISH, "[%s] flushInterval %d " +
-                        "req limit %d db limit %s bSize %d error enable ",
-                TAG, flushInterval, maximumRequestLimit,
-                maximumDatabaseLimit, bulkSize) +
-                isEnableErrorReporting;
+    public String getSdkErrorStream() {
+        return sdkErrorStream;
     }
 
+    public void setSdkErrorStream(String sdkErrorStream) {
+        this.sdkErrorStream = sdkErrorStream;
+        isaPrefService.save(KEY_ERROR_STREAM, sdkErrorStream);
+    }
+
+    public String getSdkErrorStreamAuthKey() {
+        return sdkErrorStreamAuthKey;
+    }
+
+    public void setSdkErrorStreamAuthKey(String sdkErrorStreamAuthKey) {
+        this.sdkErrorStreamAuthKey = sdkErrorStreamAuthKey;
+        isaPrefService.save(KEY_ERROR_STREAM_AUTH, sdkErrorStreamAuthKey);
+    }
+
+    @Override
+    public String toString() {
+        return String.format(Locale.ENGLISH, "[%s] flushInterval %d " + "req limit %d db limit %s bSize %d error enable ", TAG, flushInterval, maximumRequestLimit, maximumDatabaseLimit, bulkSize) + isEnableErrorReporting;
+    }
 
     /**
      * Function provide Preference service to save and load IsaConfig data

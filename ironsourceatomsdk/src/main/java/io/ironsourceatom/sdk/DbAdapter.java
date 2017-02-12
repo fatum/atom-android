@@ -1,9 +1,5 @@
 package io.ironsourceatom.sdk;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,13 +8,19 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 
-class DbAdapter implements StorageService {
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Db Adapter class for local SQLite DB
+ */
+public class DbAdapter implements StorageApi {
 
     /**
      * Do not call directly. You should use DbAdapter.getInstance()
      */
-    public DbAdapter(Context context) {
+    DbAdapter(Context context) {
         mDb = getSQLHandler(context);
     }
 
@@ -26,7 +28,7 @@ class DbAdapter implements StorageService {
      * Use this to get a singleton instance of DbAdapter instead of creating
      * one directly for yourself.
      */
-    public static DbAdapter getInstance(Context context) {
+    static DbAdapter getInstance(Context context) {
         synchronized (sInstanceLock) {
             if (null == sInstance) {
                 sInstance = new DbAdapter(context);
@@ -37,16 +39,16 @@ class DbAdapter implements StorageService {
 
     /**
      * Insert event to "reports" table.
-     * if it's the first member that related to the given Table, we create
+     * if it's the first member that is related to the given table, we create
      * a new destination/table(contains name and token) in the "tables" table.
      *
-     * @param table
-     * @param data
-     * @return number of rows in "records" related to the given table.
+     * @param table db table
+     * @param data  data to insert
+     * @return number of rows in "reports" related to the given table.
      */
     public int addEvent(Table table, String data) {
         if (!this.belowDatabaseLimit()) {
-            Logger.log(TAG, "Database file is above the limit", Logger.SDK_DEBUG);
+            Logger.log(TAG, "Database file is above the limit", Logger.SDK_ERROR);
             vacuum();
         }
         int n = 0;
@@ -69,7 +71,7 @@ class DbAdapter implements StorageService {
                 db.insertWithOnConflict(TABLES_TABLE, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
             }
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to insert event to 'records' table", Logger.SDK_DEBUG);
+            Logger.log(TAG, "Failed to insert event to 'records' table", e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -78,11 +80,11 @@ class DbAdapter implements StorageService {
     }
 
     /**
-     * Get the number of records that sit in the "reports" table and related to
+     * Get number of records that sit in the "reports" table and relate to
      * to the given table.
      *
-     * @param table
-     * @return
+     * @param table db table
+     * @return number of records that sit in the "reports" table and related to the given table
      */
     public int count(Table table) {
         int n = 0;
@@ -103,7 +105,9 @@ class DbAdapter implements StorageService {
             Logger.log(TAG, "Failed to count records in table: " + table.name, Logger.SDK_DEBUG);
             mDb.delete();
         } finally {
-            if (null != db) db.close();
+            if (null != db) {
+                db.close();
+            }
         }
         return n;
     }
@@ -111,34 +115,36 @@ class DbAdapter implements StorageService {
     /**
      * Get table object and int as a limit, and return a "batch" of events.
      *
-     * @param table
-     * @param limit
-     * @return Batch object contains List of events and "lastId" as a String(that
+     * @param table db table
+     * @param limit number of events to get
+     * @return Batch object contains List of events and "lastId" as a String (that
      * will be used later to clean up this batch).
      */
     public Batch getEvents(Table table, int limit) {
-        Cursor c = null;
+        Cursor cursor = null;
         String lastId = null;
         List<String> events = null;
         try {
             final SQLiteDatabase db = mDb.getReadableDatabase();
             String whereParams = KEY_TABLE + "=?";
             String orderParam = KEY_CREATED_AT + " ASC";
-            c = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam, String.valueOf(limit));
+            cursor = db.query(REPORTS_TABLE, null, whereParams, new String[]{table.name}, null, null, orderParam, String.valueOf(limit));
 
             events = new ArrayList<>();
-            while (c.moveToNext()) {
-                if (c.isLast()) {
-                    lastId = c.getString(c.getColumnIndex(REPORTS_TABLE + "_id"));
+            while (cursor.moveToNext()) {
+                if (cursor.isLast()) {
+                    lastId = cursor.getString(cursor.getColumnIndex(REPORTS_TABLE + "_id"));
                 }
-                events.add(c.getString(c.getColumnIndex(KEY_DATA)));
+                events.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
             }
-        } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to get a events of table" + table.name, Logger.SDK_DEBUG);
+        } catch (SQLiteException e) {
+            Logger.log(TAG, "Failed to get a events of table" + table.name, e, Logger.SDK_ERROR);
             lastId = null;
             events = null;
         } finally {
-            if (null != c) c.close();
+            if (null != cursor) {
+                cursor.close();
+            }
             mDb.close();
         }
         if (lastId != null && events != null) {
@@ -148,7 +154,7 @@ class DbAdapter implements StorageService {
     }
 
     /**
-     * Get list of all "destinations/tables" that sit in "tables" table.
+     * Get list of all "destinations/tables/streams" that sit in "tables" table.
      *
      * @return List of tables contains "name" and "token"
      */
@@ -164,9 +170,11 @@ class DbAdapter implements StorageService {
                 tables.add(new Table(name, token));
             }
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to get all tables" + e.getMessage(), Logger.SDK_DEBUG);
+            Logger.log(TAG, "Failed to get all tables" + e.getMessage(), e, Logger.SDK_ERROR);
         } finally {
-            if (null != c) c.close();
+            if (null != c) {
+                c.close();
+            }
             mDb.close();
         }
         return tables;
@@ -174,10 +182,10 @@ class DbAdapter implements StorageService {
 
     /**
      * Remove events from records table that related to the given "table/destination"
-     * and with an id that less than or equal to the "lastId"
+     * and with an id that is less than or equal to the "lastId"
      *
-     * @param table
-     * @param lastId
+     * @param table  db table
+     * @param lastId remove all events that are less than or equal to this id
      * @return the number of rows affected
      */
     public int deleteEvents(Table table, String lastId) {
@@ -185,10 +193,9 @@ class DbAdapter implements StorageService {
         try {
             final SQLiteDatabase db = mDb.getWritableDatabase();
             String deleteParams = KEY_TABLE + "=? AND " + REPORTS_TABLE + "_id <= ?";
-            n = db.delete(REPORTS_TABLE, deleteParams,
-                    new String[]{table.name, lastId});
+            n = db.delete(REPORTS_TABLE, deleteParams, new String[]{table.name, lastId});
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to clean up events from table: " + table.name, Logger.SDK_DEBUG);
+            Logger.log(TAG, "Failed to clean up events from table: " + table.name, e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -199,7 +206,7 @@ class DbAdapter implements StorageService {
     /**
      * Getting table object and delete it from the "destinations/tables" table.
      *
-     * @param table
+     * @param table db table
      */
     public void deleteTable(Table table) {
         try {
@@ -207,7 +214,7 @@ class DbAdapter implements StorageService {
             String deleteParams = KEY_TABLE + "=?";
             db.delete(TABLES_TABLE, deleteParams, new String[]{table.name});
         } catch (final SQLiteException e) {
-            Logger.log(TAG, "Failed to delete table:" + table.name, Logger.SDK_DEBUG);
+            Logger.log(TAG, "Failed to delete table:" + table.name, e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -237,7 +244,7 @@ class DbAdapter implements StorageService {
             vacuumStmt.execute();
 
         } catch (SQLiteException e) {
-            Logger.log(TAG, "Failed to shrink and vacuum db:" + e, Logger.SDK_DEBUG);
+            Logger.log(TAG, "Failed to shrink and vacuum db:" + e, e, Logger.SDK_ERROR);
             mDb.delete();
         } finally {
             mDb.close();
@@ -272,8 +279,8 @@ class DbAdapter implements StorageService {
      * Private subclass that take care of opening(or creating), upgrading
      * or deleting the database.
      */
-    protected static class DatabaseHandler extends SQLiteOpenHelper {
-
+    protected static class DatabaseHandler
+            extends SQLiteOpenHelper {
 
         private final File databaseFile;
         private final IsaConfig mConfig;

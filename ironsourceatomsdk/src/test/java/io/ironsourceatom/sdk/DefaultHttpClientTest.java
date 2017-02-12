@@ -17,10 +17,11 @@ import static org.junit.Assert.*;
  * Basic HttpClientTest test cases
  */
 @RunWith(MockitoJUnitRunner.class)
-public class HttpClientTest {
+public class DefaultHttpClientTest {
 
     // Test post behavior
-    @Test public void postTest() throws Exception {
+    @Test
+    public void postTest() throws Exception {
         DataOutputStream outMock = mock(DataOutputStream.class);
         InputStream inMock = mock(InputStream.class);
         when(mMockConn.getOutputStream()).thenReturn(outMock);
@@ -46,30 +47,23 @@ public class HttpClientTest {
 
     @Test(expected = MalformedURLException.class)
     public void createConnectionWrongTest() throws IOException {
-        HttpClient mClient = new HttpClient();
+        DefaultHttpClient mClient = new DefaultHttpClient();
         mClient.createConnection("connectionString");
 
 
     }
+
     @Test
     public void createConnectionTest() throws IOException {
-        HttpClient mClient = new HttpClient();
+        DefaultHttpClient mClient = new DefaultHttpClient();
         mClient.createConnection("http://google.com");
 
 
     }
 
-    @Test
-    public void getInstanceTest() {
-        HttpClient client1 = HttpClient.getInstance();
-        HttpClient client2=HttpClient.getInstance();
-        assertTrue(client1==client2);
-
-    }
-
     // Mocking
     final HttpURLConnection mMockConn = mock(HttpURLConnection.class);
-    final HttpClient mClient = new HttpClient() {
+    final DefaultHttpClient mClient   = new DefaultHttpClient() {
         @Override
         protected HttpURLConnection createConnection(String url) throws IOException {
             return mMockConn;

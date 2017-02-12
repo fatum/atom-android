@@ -9,22 +9,21 @@ import android.net.NetworkInfo;
  */
 public class NetworkManager {
 
+    private static final String TAG = "NetworkManager";
+
+    private static NetworkManager sInstance;
 
     private Context context;
-    private static NetworkManager sInstance;
-    private static final Object sInstanceLock = new Object();
-    private static final String TAG = "NetworkManager";
 
     NetworkManager(Context context) {
         this.context = context;
     }
 
-    public static NetworkManager getInstance(Context context) {
-        synchronized (sInstanceLock) {
-            if (null == sInstance) {
-                sInstance = new NetworkManager(context);
-            }
+    public static synchronized NetworkManager getInstance(Context context) {
+        if (null == sInstance) {
+            sInstance = new NetworkManager(context);
         }
+
         return sInstance;
     }
 
@@ -57,7 +56,7 @@ public class NetworkManager {
     /**
      * Indicates whether the device is currently roaming on this network.
      *
-     * @return
+     * @return boolean
      */
     public boolean isDataRoamingEnabled() {
         NetworkInfo info = getNetworkInfo();
@@ -65,12 +64,12 @@ public class NetworkManager {
     }
 
     /**
-     * Get IronSourceAtomFactory network type based on the returned conectivity
+     * Get IronSourceAtomFactory network type based on the returned connectivity
      * network type.
      *
-     * @return
+     * @return int
      */
-    public int getNetworkIBType() {
+    public int getNetworkAtomType() {
         NetworkInfo info = getNetworkInfo();
         int networkType = info != null ? info.getType() : 0;
         switch (networkType) {

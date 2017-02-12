@@ -2,12 +2,18 @@ package io.ironsourceatom.sdk;
 
 import java.util.List;
 
-interface StorageService {
+public interface StorageApi {
+
     List<Table> getTables();
+
     void deleteTable(Table table);
+
     int count(Table table);
+
     Batch getEvents(Table table, int limit);
+
     int deleteEvents(Table table, String lastId);
+
     int addEvent(Table table, String data);
 
 
@@ -16,7 +22,8 @@ interface StorageService {
      * with its lastId to acknowledge them later
      */
     class Batch {
-        public String lastId;
+
+        public String       lastId;
         public List<String> events;
 
         Batch(String lastId, List<String> events) {
@@ -30,6 +37,7 @@ interface StorageService {
      * an ironSourceAtom destination/table
      */
     class Table {
+
         public String name;
         public String token;
 

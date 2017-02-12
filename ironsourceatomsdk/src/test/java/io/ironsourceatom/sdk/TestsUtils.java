@@ -19,8 +19,9 @@ import static org.mockito.Mockito.when;
 public class TestsUtils {
 
     static class MockReport implements Report {
-        @Override
-        public void send() {}
+
+        public int mType;
+
         @Override
         public MockReport setData(String value) {
             return this;
@@ -37,7 +38,7 @@ public class TestsUtils {
         }
 
         @Override
-        public Report setEnpoint(String endpoint) {
+        public Report setEndPoint(String endpoint) {
             return null;
         }
 
@@ -47,14 +48,12 @@ public class TestsUtils {
         }
 
         @Override
-        public Intent getIntent() {
+        public Bundle getExtras() {
             return null;
         }
-
-        public int mType;
     }
 
-    static class MockPoster implements RemoteService {
+    static class MockPoster implements HttpClient {
 
         @Override
         public Response post(String data, String url) throws IOException {
@@ -62,7 +61,7 @@ public class TestsUtils {
             if (mCode == 200) {
                 try {
                     JSONObject event = new JSONObject(data);
-                    String table = event.getString(ReportIntent.TABLE);
+                    String table = event.getString(ReportData.TABLE);
                     if (!mBackedMock.containsKey(table)) {
                         mBackedMock.put(table, new ArrayList<String>());
                     }
@@ -88,27 +87,30 @@ public class TestsUtils {
         // Hack to ignore keys ordering
         public String get(String key) {
             JSONArray events = new JSONArray();
-            for (String event :mBackedMock.get(key)) {
+            for (String event : mBackedMock.get(key)) {
                 try {
                     events.put(new JSONObject(event));
-                } catch(JSONException e) {}
+                } catch (JSONException e) {
+                }
             }
             return events.toString();
         }
 
         // catch all incoming requests
-        final public Map<String, List<String>> mBackedMock = new HashMap<String, List<String>>();
+        final public Map<String, List<String>> mBackedMock = new HashMap<>();
         private int mCode = 200;
     }
 
     // Helper method.
     // Take SdkEvent and Map and generate new MockReport
     public static Intent newReport(int event, Map<String, String> report) {
-        Intent intent = mock(Intent.class);
-        when(intent.getIntExtra(ReportIntent.EXTRA_SDK_EVENT, SdkEvent.ERROR))
-                .thenReturn(event);
         Bundle bundle = mock(Bundle.class);
-        for (String key: report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
+        for (String key : report.keySet()) {
+            when(bundle.get(key)).thenReturn(report.get(key));
+        }
+        when(bundle.getInt(ReportData.EXTRA_SDK_EVENT, SdkEvent.ERROR)).thenReturn(event);
+
+        Intent intent = mock(Intent.class);
         when(intent.getExtras()).thenReturn(bundle);
         return intent;
     }
@@ -118,7 +120,7 @@ public class TestsUtils {
     public static Intent newSimpleReport(Map<String, String> report) {
         Intent intent = mock(Intent.class);
         Bundle bundle = mock(Bundle.class);
-        for (String key: report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
+        for (String key : report.keySet()) when(bundle.get(key)).thenReturn(report.get(key));
         when(intent.getExtras()).thenReturn(bundle);
         return intent;
     }

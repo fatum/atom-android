@@ -1,10 +1,12 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.webkit.URLUtil;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Map;
 
 
@@ -13,9 +15,10 @@ import java.util.Map;
  */
 public class IronSourceAtomTracker {
 
+    private static final String TAG = "IronSourceAtomTracker";
 
-    private String auth;
     private Context context;
+    private String auth;
     private IsaConfig config;
 
     /**
@@ -45,11 +48,9 @@ public class IronSourceAtomTracker {
      * @param sendNow    flag if true report will send immediately else will postponed
      */
     public void track(String streamName, String data, boolean sendNow) {
-        openReport(context, sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE)
-                .setTable(streamName)
+        ReportService.sendReport(context, newReport(sendNow ? SdkEvent.POST_SYNC : SdkEvent.ENQUEUE).setTable(streamName)
                 .setToken(auth)
-                .setData(data)
-                .send();
+                .setData(data));
     }
 
     /**
@@ -108,12 +109,38 @@ public class IronSourceAtomTracker {
      * Flush immediately all reports
      */
     public void flush() {
-        openReport(context, SdkEvent.FLUSH_QUEUE)
-                .send();
+        ReportService.sendReport(context, newReport(SdkEvent.FLUSH_QUEUE));
     }
 
-    protected Report openReport(Context context, int event) {
-        return new ReportIntent(context, event);
+    /**
+     * Flush error info to error stream
+     */
+    public void trackError(String streamName, JSONObject data) {
+        try {
+            String dataStr = data.toString();
+            JSONObject message = new JSONObject();
+
+            if (!auth.isEmpty()) {
+                message.put(ReportData.AUTH, Utils.auth(dataStr, auth));
+            }
+            message.put(ReportData.TABLE, streamName);
+            message.put(ReportData.DATA, dataStr);
+
+            String url = config.getAtomEndPoint(auth);
+
+            // Cause of a bug in the Async task init
+            try {
+                new SendHttpRequestTask().execute(message.toString(), url);
+            } catch (IllegalStateException ex) {
+                new SendHttpRequestTask().execute(message.toString(), url);
+            }
+        } catch (Exception e) {
+            Logger.log(TAG, "Failed to create message" + e, Logger.SDK_DEBUG);
+        }
+    }
+
+    protected Report newReport(int eventCode) {
+        return new ReportData(eventCode);
     }
 
     /**
@@ -122,15 +149,40 @@ public class IronSourceAtomTracker {
      * @param url Custom publisher destination url.
      */
     public void setISAEndPoint(String url) {
-        if (URLUtil.isValidUrl(url)) config.setISAEndPoint(auth, url);
+        if (URLUtil.isValidUrl(url)) {
+            config.setAtomEndPoint(auth, url);
+        }
     }
 
     /**
      * Set custom bulk endpoint to send reports
+     *
      * @param url
      */
     public void setISABulkEndPoint(String url) {
-        if (URLUtil.isValidUrl(url)) config.setISAEndPointBulk(auth, url);
+        if (URLUtil.isValidUrl(url)) {
+            config.setAtomBulkEndPoint(auth, url);
+        }
     }
 
+    /**
+     * Class for Asynchronously sending HTTP requests (case of error in the SDK)
+     * Opens a separate thread
+     */
+    private class SendHttpRequestTask
+            extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected Void doInBackground(String... parameters) {
+            String message = parameters[0];
+            String url = parameters[1];
+
+            try {
+                IronSourceAtomFactory.getInstance(context).getHttpClient().post(message, url);
+            } catch (IOException ex) {
+                Logger.log(TAG, ex.toString(), Logger.SDK_DEBUG);
+            }
+            return null;
+        }
+    }
 }
