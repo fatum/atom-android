@@ -1,6 +1,5 @@
 package io.ironsourceatom.sdk;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -49,12 +48,12 @@ public class TestsUtils {
 	}
 
 	static class MockPoster
-			implements RemoteConnection {
+			implements HttpClient {
 
 		@Override
-		public Response post(Context context, String data, String url) throws
+		public HttpClient.Response post(String data, String url) throws
 				IOException {
-			Response res = new Response();
+			HttpClient.Response res = new HttpClient.Response();
 			if (mCode == 200) {
 				try {
 					JSONObject event = new JSONObject(data);

@@ -37,11 +37,11 @@ public class FlushDatabaseService
 
 	private static final String TAG = "FlushDatabaseService";
 
-	private   IsaConfig        config;
-	private   NetworkManager   networkManager;
-	private   StorageApi       storage;
-	private   RemoteConnection httpClient;
-	protected BackOff          backOff;
+	private   IsaConfig      config;
+	private   NetworkManager networkManager;
+	private   StorageApi     storage;
+	private   HttpClient     httpClient;
+	protected BackOff        backOff;
 
 	public enum SendStatus {
 		SUCCESS,
@@ -231,7 +231,7 @@ public class FlushDatabaseService
 	protected SendStatus send(String data, String url) {
 		Logger.log(TAG, "Sending data: " + data, Logger.SDK_DEBUG);
 		try {
-			RemoteConnection.Response response = httpClient.post(this, data, url);
+			HttpClient.Response response = httpClient.post(data, url);
 			Logger.log(TAG, "Server Response: HTTP " + response.code, Logger.SDK_DEBUG);
 			if (response.code == HttpURLConnection.HTTP_OK) {
 				return SendStatus.SUCCESS;
@@ -346,8 +346,9 @@ public class FlushDatabaseService
 
 	//////////////////// For testing purpose - to allow mocking this behavior /////////////////////
 
-	protected RemoteConnection getHttpClient() {
-		return HttpClient.getInstance();
+	protected HttpClient getHttpClient() {
+		return IronSourceAtomFactory.getInstance(this)
+		                            .getHttpClient();
 	}
 
 	protected IsaConfig getConfig(Context context) {

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -x
 TARGET_BRANCH="gh-pages"
 mkdir ${TARGET_BRANCH}
 cd ${TARGET_BRANCH}
@@ -14,5 +14,5 @@ git commit -m "Deploy to GitHub Pages"
 # Now that we're all set up, we can push.
 git push origin ${TARGET_BRANCH}
 
-cd ../../../
+cd ../../
 rm -r -f ${TARGET_BRANCH}

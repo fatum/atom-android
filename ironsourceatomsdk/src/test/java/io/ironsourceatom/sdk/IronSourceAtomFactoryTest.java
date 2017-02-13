@@ -154,11 +154,4 @@ public class IronSourceAtomFactoryTest {
 		ironSourceAtomFactory.setMaximumRequestLimit(3000);
 
 	}
-
-	@Test
-	public void getInstanceTest() {
-		IronSourceAtomFactory fac1 = IronSourceAtomFactory.getInstance();
-		IronSourceAtomFactory fac2 = IronSourceAtomFactory.getInstance();
-		assertTrue(fac1 == fac2);
-	}
 }

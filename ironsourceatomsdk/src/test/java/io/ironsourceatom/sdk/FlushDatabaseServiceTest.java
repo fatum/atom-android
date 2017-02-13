@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.ironsourceatom.sdk.RemoteConnection.Response;
 import io.ironsourceatom.sdk.StorageApi.Batch;
 import io.ironsourceatom.sdk.StorageApi.Table;
 
@@ -35,24 +34,24 @@ import static org.mockito.Mockito.when;
 public class FlushDatabaseServiceTest {
 
 	// Two different responses
-	final Response         ok         = new RemoteConnection.Response() {{
+	final HttpClient.Response ok         = new HttpClient.Response() {{
 		code = 200;
 		body = "OK";
 	}};
-	final Response         fail       = new RemoteConnection.Response() {{
+	final HttpClient.Response fail       = new HttpClient.Response() {{
 		code = 503;
 		body = "Service Unavailable";
 	}};
 	// Mocking
-	final NetworkManager   netManager = mock(NetworkManager.class);
-	final StorageApi       storage    = mock(DbAdapter.class);
-	final RemoteConnection client     = mock(HttpClient.class);
-	final IsaConfig        config     = mock(IsaConfig.class);
-	final Context          context    = mock(Context.class);
+	final NetworkManager      netManager = mock(NetworkManager.class);
+	final StorageApi          storage    = mock(DbAdapter.class);
+	final HttpClient          client     = mock(HttpClient.class);
+	final IsaConfig           config     = mock(IsaConfig.class);
+	final Context             context    = mock(Context.class);
 
 	final FlushDatabaseService mFlushDatabaseService = new FlushDatabaseService() {
 		@Override
-		protected RemoteConnection getHttpClient() {
+		protected HttpClient getHttpClient() {
 			return client;
 		}
 
@@ -123,7 +122,7 @@ public class FlushDatabaseServiceTest {
 		config.setBulkSize(Integer.MAX_VALUE);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.ENQUEUE);
 		verify(storage, times(1)).addEvent(mTable, DATA);
-		verify(client, never()).post(context, anyString(), anyString());
+		verify(client, never()).post(anyString(), anyString());
 	}
 
 	// When reportService get a post-event and everything goes well(connection available, and IronSourceAtomFactory responds OK).
@@ -133,7 +132,7 @@ public class FlushDatabaseServiceTest {
 	public void postSuccess() throws
 			Exception {
 		final String url = "http://host.com/post";
-		when(client.post(context, anyString(), anyString())).thenReturn(ok);
+		when(client.post(anyString(), anyString())).thenReturn(ok);
 		when(config.getAtomBulkEndPoint(anyString())).thenReturn(url);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
 		verify(storage, times(1)).addEvent(mTable, DATA);
@@ -148,7 +147,7 @@ public class FlushDatabaseServiceTest {
 		}));
 		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
-		verify(client, times(1)).post(context, anyString(), eq(url));
+		verify(client, times(1)).post(anyString(), eq(url));
 	}
 
 	// When reportService get a post-event and we get an authentication error(40X) from Poster
@@ -160,7 +159,7 @@ public class FlushDatabaseServiceTest {
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
 
 		when(config.getAtomBulkEndPoint(TOKEN)).thenReturn(url);
-		when(client.post(context, anyString(), anyString())).thenReturn(new Response() {{
+		when(client.post(anyString(), anyString())).thenReturn(new HttpClient.Response() {{
 			code = 401;
 			body = "Unauthorized";
 		}});
@@ -170,7 +169,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.getEvents(mTable, config.getBulkSize())).thenReturn(new Batch("4", new ArrayList<String>()));
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
-		verify(client, times(1)).post(context, anyString(), eq(url));
+		verify(client, times(1)).post(anyString(), eq(url));
 		verify(storage, times(1)).addEvent(mTable, DATA);
 	}
 
@@ -183,7 +182,7 @@ public class FlushDatabaseServiceTest {
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(netManager, times(1)).isOnline();
-		verify(client, never()).post(context, anyString(), anyString());
+		verify(client, never()).post(anyString(), anyString());
 		verify(storage, times(1)).addEvent(mTable, DATA);
 	}
 
@@ -194,7 +193,7 @@ public class FlushDatabaseServiceTest {
 			Exception {
 		when(config.isAllowedOverRoaming()).thenReturn(false, false, true);
 		when(netManager.isDataRoamingEnabled()).thenReturn(false, true, true);
-		when(client.post(context, anyString(), anyString())).thenReturn(ok);
+		when(client.post(anyString(), anyString())).thenReturn(ok);
 		final List<Table> tables = new ArrayList<>();
 		tables.add(mTable);
 		when(storage.getTables()).thenReturn(tables);
@@ -207,7 +206,7 @@ public class FlushDatabaseServiceTest {
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		mReportService.handleReport(jsonObject, Report.Action.POST_SYNC);
 		assertTrue(mFlushDatabaseService.flushDatabase());
-		verify(client, times(2)).post(context, anyString(), anyString());
+		verify(client, times(2)).post(anyString(), anyString());
 	}
 
 	// When reportService get a post-event(or flushTable), should test if the
@@ -226,7 +225,7 @@ public class FlushDatabaseServiceTest {
 		scenarios.add(new TestScenario(MOBILE, MOBILE, true));
 		scenarios.add(new TestScenario(WIFI, MOBILE, false));
 		scenarios.add(new TestScenario(MOBILE, WIFI, false));
-		when(client.post(context, anyString(), anyString())).thenReturn(ok);
+		when(client.post(anyString(), anyString())).thenReturn(ok);
 		for (TestScenario test : scenarios) {
 			when(config.getAllowedNetworkTypes()).thenReturn(test.configStatus);
 			when(netManager.getNetworkAtomType()).thenReturn(test.networkStatus);
@@ -280,7 +279,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.deleteEvents(mTable1, "4")).thenReturn(1);
 		when(storage.count(mTable)).thenReturn(0);
 		// All success
-		when(client.post(context, anyString(), anyString())).thenReturn(ok, ok, ok);
+		when(client.post(anyString(), anyString())).thenReturn(ok, ok, ok);
 		assertTrue(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
 		verify(storage, times(1)).deleteEvents(mTable, "2");
@@ -313,7 +312,7 @@ public class FlushDatabaseServiceTest {
 		when(storage.getTables()).thenReturn(new ArrayList<Table>() {{
 			add(mTable);
 		}});
-		when(client.post(context, anyString(), anyString())).thenReturn(fail);
+		when(client.post(anyString(), anyString())).thenReturn(fail);
 		when(config.getMaximumRequestLimit()).thenReturn(1024L * 1024L);
 		assertFalse(mFlushDatabaseService.flushDatabase());
 		verify(storage, times(1)).getEvents(mTable, config.getBulkSize());
@@ -360,7 +359,7 @@ public class FlushDatabaseServiceTest {
 		}}));
 		when(storage.deleteEvents(eq(mTable), anyString())).thenReturn(1);
 		when(storage.count(mTable)).thenReturn(1, 0);
-		when(client.post(context, anyString(), anyString())).thenReturn(ok, ok);
+		when(client.post(anyString(), anyString())).thenReturn(ok, ok);
 		mFlushDatabaseService.flushDatabase();
 		verify(storage, times(2)).getEvents(mTable, 2);
 		verify(storage, times(1)).getEvents(mTable, 1);
@@ -371,7 +370,7 @@ public class FlushDatabaseServiceTest {
 	@Test
 	public void dataFormat() throws
 			Exception {
-		when(client.post(context, any(String.class), any(String.class))).thenReturn(ok);
+		when(client.post(any(String.class), any(String.class))).thenReturn(ok);
 		mReportService.handleReport(new JSONObject(reportMap), Report.Action.POST_SYNC);
 
 		final List<Table> tables = new ArrayList<>();
@@ -387,7 +386,7 @@ public class FlushDatabaseServiceTest {
 		report.put(Report.AUTH_KEY, Utils.auth(report.getString(Report.DATA_KEY), report.getString(Report.TOKEN_KEY)))
 		      .remove(Report.TOKEN_KEY);
 		report.put(Report.BULK_KEY, true);
-		verify(client, times(1)).post(context, eq(report.toString()), anyString());
+		verify(client, times(1)).post(eq(report.toString()), anyString());
 	}
 
 	// Constant report arguments for testing

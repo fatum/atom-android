@@ -1,5 +1,6 @@
 package io.ironsourceatom.sdk;
 
+import android.content.Context;
 import android.util.Log;
 
 import java.io.PrintWriter;
@@ -7,16 +8,25 @@ import java.io.StringWriter;
 
 public class Logger {
 
+	private static final String LOG_TAG = "AtomSDK";
+
 	protected static final int     PRE_INIT        = 1;
 	public static final    int     SDK_ERROR       = 2;
 	public static final    int     NORMAL          = 3;
 	public static final    int     SDK_DEBUG       = 4;
 	private static final   boolean mIsSuperDevMode = BuildConfig.IS_SUPER_DEV_MODE;
-	private static final   String  LOG_TAG         = "AtomSDK";
+
 
 	public static IsaConfig.LOG_TYPE logLevel = IsaConfig.LOG_TYPE.PRODUCTION;
 
 	private static boolean PRINT_ERROR_STACK_TRACE = false;
+
+	private static Context sContext;
+
+	// Needed for for getting the error tracker
+	static void setContext(Context context) {
+		sContext = context;
+	}
 
 	/**
 	 * Set Atom Logger print error stack trace
@@ -60,7 +70,8 @@ public class Logger {
 				}
 				break;
 			case (SDK_ERROR):
-				IronSourceAtomFactory.getInstance()
+				IronSourceAtomFactory.getInstance(sContext)
+				                     .getErrorTracker()
 				                     .trackError(logString);
 			case (SDK_DEBUG):
 				if (!mIsSuperDevMode) {

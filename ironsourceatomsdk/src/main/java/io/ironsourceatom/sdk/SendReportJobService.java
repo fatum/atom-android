@@ -20,7 +20,6 @@ public class SendReportJobService
 	public boolean onStartJob(JobParameters jobParameters) {
 		Logger.log(TAG, "Requesting FlushDatabaseService to flushTable...", Logger.SDK_DEBUG);
 		FlushDatabaseService.flushDatabase(this);
-
 		// The only purpose of this job is to start the service - so our work is done
 		return false;
 	}

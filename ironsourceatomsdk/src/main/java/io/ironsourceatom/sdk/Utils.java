@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec;
  * Util class with helper methods
  */
 class Utils {
-
+	
 	/**
 	 * helper function that extract a buffer from the given inputStream
 	 *

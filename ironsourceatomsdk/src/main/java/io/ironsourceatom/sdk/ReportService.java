@@ -110,4 +110,5 @@ public class ReportService
 		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
 		context.startService(intent);
 	}
+
 }

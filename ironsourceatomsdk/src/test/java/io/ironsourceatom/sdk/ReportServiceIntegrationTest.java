@@ -178,7 +178,7 @@ public class ReportServiceIntegrationTest {
 
 	final FlushDatabaseService mFlushDatabaseService = new FlushDatabaseService() {
 		@Override
-		protected RemoteConnection getHttpClient() {
+		protected HttpClient getHttpClient() {
 			return mClient;
 		}
 

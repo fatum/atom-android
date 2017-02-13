@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 class IsaPrefUtils {
 
 	private static final String SHARED_PREF_FILENAME = "ironsourceatom.prefs";
+
 	private static IsaPrefUtils sInstance;
 
 	private Context mContext;
@@ -72,5 +73,4 @@ class IsaPrefUtils {
 		}
 		return false;
 	}
-
 }

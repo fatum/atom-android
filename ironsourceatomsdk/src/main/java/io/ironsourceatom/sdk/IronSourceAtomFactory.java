@@ -1,14 +1,8 @@
 package io.ironsourceatom.sdk;
 
 import android.content.Context;
-import android.os.Build;
 
-import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -27,21 +21,13 @@ public class IronSourceAtomFactory {
 
 	private final Map<String, IronSourceAtomTracker> sAvailableTrackers = new HashMap<>();
 
+	private Context context;
+
 	private IsaConfig config;
-	private Context   context;
 
-	/**
-	 * Do not call directly.
-	 * You should use IronSourceAtomFactory.getInstance()
-	 */
-	IronSourceAtomFactory(Context context) {
-		this.context = context;
-		config = IsaConfig.getInstance(context);
-	}
+	private HttpClient mHttpClient;
 
-	public static IronSourceAtomFactory getInstance() {
-		return sInstance;
-	}
+	private ErrorTracker mErrorTracker;
 
 	public static synchronized IronSourceAtomFactory getInstance(Context context) {
 		if (context == null) {
@@ -53,6 +39,13 @@ public class IronSourceAtomFactory {
 		}
 
 		return sInstance;
+	}
+
+	IronSourceAtomFactory(Context context) {
+		this.context = context;
+		config = IsaConfig.getInstance(context);
+		mHttpClient = new DefaultHttpClient();
+		mErrorTracker = new ErrorTracker(context);
 	}
 
 	/**
@@ -75,7 +68,7 @@ public class IronSourceAtomFactory {
 				tracker = sAvailableTrackers.get(auth);
 			}
 			else {
-				tracker = new IronSourceAtomTracker(sInstance.context, auth);
+				tracker = new IronSourceAtomTracker(context, auth);
 				sAvailableTrackers.put(auth, tracker);
 			}
 			return tracker;
@@ -174,49 +167,19 @@ public class IronSourceAtomFactory {
 	}
 
 	/**
-	 * Track all SDK-errors/crashes when error-tracker enabled.
+	 * Provides an external custom implementation of the HTTP communication layer
 	 *
-	 * @param errorString error info string
+	 * @param httpClient
 	 */
-	protected void trackError(String errorString) {
-		if (config.isErrorReportingEnabled()) {
-			String stream = config.getSdkErrorStream();
-			String authKey = config.getSdkErrorStreamAuthKey();
-
-			Logger.log(TAG, "TRACKING ERROR TO: " + stream + " / " + authKey, Logger.SDK_DEBUG);
-
-			IronSourceAtomTracker sdkTracker = this.newTracker(authKey);
-
-			try {
-				JSONObject errorReport = new JSONObject();
-				errorReport.put("details", errorString);
-				errorReport.put("timestamp", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH).format(Calendar.getInstance()
-				                                                                                                        .getTime()));
-				errorReport.put("sdk_version", IronSourceAtomFactory.VERSION_NAME);
-				errorReport.put("connection", NetworkManager.getInstance(context)
-				                                            .getConnectedNetworkType());
-				errorReport.put("platform", "Android");
-				errorReport.put("os", String.valueOf(Build.VERSION.SDK_INT));
-				errorReport.put("api_version", Build.VERSION.RELEASE);
-				errorReport.put("manufacturer", Build.MANUFACTURER);
-				errorReport.put("model", Build.MODEL);
-				Locale locale;
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-					locale = context.getResources()
-					                .getConfiguration()
-					                .getLocales()
-					                .get(0);
-				}
-				else {
-					locale = context.getResources()
-					                .getConfiguration().locale;
-				}
-				errorReport.put("locale", locale.toString());
-				sdkTracker.trackError(stream, errorReport);
-			} catch (Exception e) {
-				Logger.log(TAG, "Failed to track error: " + e, Logger.SDK_DEBUG);
-			}
-		}
+	public void setHttpClient(HttpClient httpClient) {
+		mHttpClient = httpClient;
 	}
 
+	public HttpClient getHttpClient() {
+		return mHttpClient;
+	}
+
+	ErrorTracker getErrorTracker() {
+		return mErrorTracker;
+	}
 }

@@ -130,7 +130,7 @@ public class IronSourceAtomTracker {
 
 			// Cause of a bug in the Async task init
 
-			new SendHttpRequestTask(context).execute(message.toString(), url);
+			new SendHttpRequestTask().execute(message.toString(), url);
 		} catch (Exception e) {
 			Logger.log(TAG, "Failed to create message" + e, Logger.SDK_DEBUG);
 		}
@@ -169,20 +169,15 @@ public class IronSourceAtomTracker {
 	private class SendHttpRequestTask
 			extends AsyncTask<String, Void, Void> {
 
-		private Context mContext;
-
-		public SendHttpRequestTask(Context context) {
-			mContext = context;
-		}
-
 		@Override
 		protected Void doInBackground(String... parameters) {
 			String message = parameters[0];
 			String url = parameters[1];
 
 			try {
-				HttpClient.getInstance()
-				          .post(mContext, message, url);
+				IronSourceAtomFactory.getInstance(context)
+				                     .getHttpClient()
+				                     .post(message, url);
 			} catch (IOException ex) {
 				Logger.log(TAG, ex.toString(), Logger.SDK_DEBUG);
 			}
