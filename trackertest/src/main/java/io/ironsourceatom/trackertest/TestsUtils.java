@@ -1,10 +1,5 @@
 package io.ironsourceatom.trackertest;
 
-<<<<<<< HEAD
-import android.content.Context;
-=======
-import android.os.Bundle;
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -16,26 +11,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-<<<<<<< HEAD
-import io.ironsourceatom.sdk.RemoteConnection;
-import io.ironsourceatom.sdk.Report;
-=======
 import io.ironsourceatom.sdk.HttpClient;
 import io.ironsourceatom.sdk.Report;
-import io.ironsourceatom.sdk.ReportData;
 
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 
 public class TestsUtils {
 
 	static class MockReport
-<<<<<<< HEAD
 			extends Report {
-=======
-			implements Report {
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 
 		@Override
 		public MockReport setData(String value) {
@@ -53,11 +37,7 @@ public class TestsUtils {
 		}
 
 		@Override
-<<<<<<< HEAD
 		public Report setEndpoint(String endpoint) {
-=======
-		public Report setEndPoint(String endpoint) {
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 			return null;
 		}
 
@@ -65,24 +45,11 @@ public class TestsUtils {
 		public Report setBulk(boolean b) {
 			return null;
 		}
-<<<<<<< HEAD
 	}
 
-	static class MockPoster
-			implements RemoteConnection {
-=======
-
-		@Override
-		public Bundle getExtras() {
-			return null;
-		}
-
-		public int mType;
-	}
 
 	static class MockPoster
 			implements HttpClient {
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 
 		static final String TAG = "TrackerTest";
 
@@ -92,26 +59,11 @@ public class TestsUtils {
 		static int TRACKER_ERROR_503_COUNT = 0;
 
 		static {
-<<<<<<< HEAD
-			TRACKER_TASKS = new TreeMap<>();
-
-			TRACKER_TASKS.put("TRACKNOW_API18", false);
-			TRACKER_TASKS.put("TRACKNOW_API21", false);
-
-			TRACKER_TASKS.put("TRACK_BULK_SIZE_API21", false);
-
-			TRACKER_TASKS.put("TRACK_TIMER_API21", false);
-			TRACKER_TASKS.put("TRACK_TIMER_API18", false);
-
-			TRACKER_TASKS.put("TRACK_400_ERROR_API21", false);
-
-=======
 			TRACKER_TASKS = new HashMap<>();
 			TRACKER_TASKS.put("TRACKNOW_API21", false);
 			TRACKER_TASKS.put("TRACK_BULK_SIZE_API21", false);
 			TRACKER_TASKS.put("TRACK_TIMER_API21", false);
 			TRACKER_TASKS.put("TRACK_400_ERROR_API21", false);
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 			TRACKER_TASKS.put("TRACK_503_ERROR_API21", false);
 		}
 
@@ -184,11 +136,8 @@ public class TestsUtils {
 		}
 
 		@Override
-<<<<<<< HEAD
-		public Response post(Context context, String data, String url) throws
-=======
+
 		public Response post(String data, String url) throws
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 				IOException {
 			checkRequest(data);
 
@@ -196,11 +145,7 @@ public class TestsUtils {
 			if (mCode == 200) {
 				try {
 					JSONObject event = new JSONObject(data);
-<<<<<<< HEAD
 					String table = event.getString(Report.TABLE_KEY);
-=======
-					String table = event.getString(ReportData.TABLE);
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
 					if (!mBackedMock.containsKey(table)) {
 						mBackedMock.put(table, new ArrayList<String>());
 					}
@@ -242,14 +187,7 @@ public class TestsUtils {
 		}
 
 		// catch all incoming requests
-<<<<<<< HEAD
 		final public Map<String, List<String>> mBackedMock = new HashMap<>();
 		private      int                       mCode       = 200;
 	}
 }
-=======
-		final public Map<String, List<String>> mBackedMock = new HashMap<String, List<String>>();
-		private      int                       mCode       = 200;
-	}
-}
->>>>>>> 8225b5074630b7f2184a1cc59f36a82074d3dce3
