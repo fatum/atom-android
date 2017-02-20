@@ -22,12 +22,6 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.List;
 
-import static io.ironsourceatom.sdk.FlushDatabaseService.SendStatus.RETRY;
-import static io.ironsourceatom.sdk.Report.Action.FLUSH_QUEUE;
-import static io.ironsourceatom.sdk.Report.Action.REPORT_ERROR;
-import static io.ironsourceatom.sdk.ReportService.EXTRA_REPORT_ACTION_ENUM_ORDINAL;
-import static io.ironsourceatom.sdk.ReportService.EXTRA_REPORT_JSON;
-import static java.lang.Math.ceil;
 
 /**
  * Intent service to handle tracker functionality
@@ -77,11 +71,11 @@ public class FlushDatabaseService
 
 		try {
 			final Report.Action action = Report.Action.values()[intent.getExtras()
-			                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal())];
+			                                                          .getInt(ReportService.EXTRA_REPORT_ACTION_ENUM_ORDINAL, Report.Action.REPORT_ERROR.ordinal())];
 
-			if (action == REPORT_ERROR) {
+			if (action == Report.Action.REPORT_ERROR) {
 				try {
-					final JSONObject errorReportJsonObject = new JSONObject(intent.getStringExtra(EXTRA_REPORT_JSON));
+					final JSONObject errorReportJsonObject = new JSONObject(intent.getStringExtra(ReportService.EXTRA_REPORT_JSON));
 					sendErrorReport(errorReportJsonObject);
 				} catch (JSONException e) {
 					Logger.log(TAG, "Failed to report error from json - exiting", Logger.SDK_DEBUG);
@@ -161,7 +155,7 @@ public class FlushDatabaseService
 					break;
 				}
 				Logger.log(TAG, "Batch size exceeds max request limit (" + eventsByteSize + " > " + config.getMaximumRequestLimit() + "). Splitting batch", Logger.SDK_DEBUG);
-				bulkSize = Math.max((int) (bulkSize / ceil((double) eventsByteSize / config.getMaximumRequestLimit())), 1);
+				bulkSize = Math.max((int) (bulkSize / Math.ceil((double) eventsByteSize / config.getMaximumRequestLimit())), 1);
 			}
 			else {
 				// We might reach here if:
@@ -242,7 +236,7 @@ public class FlushDatabaseService
 			Logger.log(TAG, "Service IronSourceAtomFactory is unavailable: " + e, Logger.SDK_DEBUG);
 		}
 
-		return RETRY;
+		return SendStatus.RETRY;
 	}
 
 	/**
@@ -372,7 +366,7 @@ public class FlushDatabaseService
 	public static void flushDatabase(Context context, long epochTime) {
 		final long delayInMillis = epochTime - System.currentTimeMillis();
 		final Intent flushIntent = new Intent(context, FlushDatabaseService.class);
-		flushIntent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, FLUSH_QUEUE.ordinal());
+		flushIntent.putExtra(ReportService.EXTRA_REPORT_ACTION_ENUM_ORDINAL, Report.Action.FLUSH_QUEUE.ordinal());
 
 		if (delayInMillis > 0) {
 			Logger.log(TAG, "Scheduling flush database in " + (delayInMillis / 1000) + " seconds...", Logger.SDK_DEBUG);
@@ -387,8 +381,8 @@ public class FlushDatabaseService
 
 	public static void reportError(Context context, Report report) {
 		final Intent intent = new Intent(context, FlushDatabaseService.class);
-		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, REPORT_ERROR.ordinal());
-		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
+		intent.putExtra(ReportService.EXTRA_REPORT_ACTION_ENUM_ORDINAL, Report.Action.REPORT_ERROR.ordinal());
+		intent.putExtra(ReportService.EXTRA_REPORT_JSON, report.asJsonString());
 		context.startService(intent);
 	}
 }

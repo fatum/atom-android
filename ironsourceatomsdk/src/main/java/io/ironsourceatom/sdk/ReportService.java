@@ -21,12 +21,11 @@ public class ReportService
 	private static final String PACKAGE = FlushDatabaseService.class.getPackage()
 	                                                                .getName();
 
-	static final String EXTRA_REPORT_JSON                = PACKAGE + ".EXTRA_REPORT_JSON";
-	static final String EXTRA_REPORT_ACTION_ENUM_ORDINAL = PACKAGE + ".EXTRA_REPORT_ACTION_ENUM_ORDINAL";
+	public static final String EXTRA_REPORT_JSON                = PACKAGE + ".EXTRA_REPORT_JSON";
+	public static final String EXTRA_REPORT_ACTION_ENUM_ORDINAL = PACKAGE + ".EXTRA_REPORT_ACTION_ENUM_ORDINAL";
 
 	private IsaConfig  config;
 	private StorageApi storage;
-
 
 	public ReportService() {
 		super(TAG);
@@ -110,5 +109,4 @@ public class ReportService
 		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
 		context.startService(intent);
 	}
-
 }

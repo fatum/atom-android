@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public class Report {
 
-	enum Action {
+	public enum Action {
 		// save report
 		ENQUEUE,
 		// send all reports from storage
