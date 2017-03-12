@@ -65,7 +65,7 @@ public class FlushDatabaseService
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent == null || intent.getExtras() == null) {
-			Logger.log(TAG, "Intent is null or no extras - exiting", Logger.SDK_DEBUG);
+			Logger.log(TAG, "Intent is null or no extras - exiting", Logger.SDK_ERROR);
 			return;
 		}
 
@@ -78,7 +78,7 @@ public class FlushDatabaseService
 					final JSONObject errorReportJsonObject = new JSONObject(intent.getStringExtra(ReportService.EXTRA_REPORT_JSON));
 					sendErrorReport(errorReportJsonObject);
 				} catch (JSONException e) {
-					Logger.log(TAG, "Failed to report error from json - exiting", Logger.SDK_DEBUG);
+					Logger.log(TAG, "Failed to report error from json - exiting", Logger.SDK_ERROR);
 				}
 			}
 			else {
@@ -100,7 +100,7 @@ public class FlushDatabaseService
 		final String url = config.getAtomEndPoint(errorReport.optString(Report.TOKEN_KEY));
 		final SendStatus sendStatus = send(message, url);
 		if (sendStatus != SendStatus.SUCCESS) {
-			Logger.log(TAG, "Failed to send error report to server", Logger.SDK_DEBUG);
+			Logger.log(TAG, "Failed to send error report to server", Logger.SDK_ERROR);
 		}
 	}
 
@@ -124,7 +124,7 @@ public class FlushDatabaseService
 				return false;
 			}
 		} catch (Exception e) {
-			Logger.log(TAG, e.getMessage(), Logger.SDK_DEBUG);
+			Logger.log(TAG, e.getMessage(), Logger.SDK_ERROR);
 			return false;
 		}
 
@@ -212,7 +212,7 @@ public class FlushDatabaseService
 			}
 			message = clone.toString();
 		} catch (Exception e) {
-			Logger.log(TAG, "Failed to create message" + e, Logger.SDK_DEBUG);
+			Logger.log(TAG, "Failed to create message" + e, Logger.SDK_ERROR);
 		}
 		return message;
 	}
@@ -233,7 +233,7 @@ public class FlushDatabaseService
 		} catch (SocketTimeoutException | UnknownHostException | SocketException e) {
 			Logger.log(TAG, "Connectivity error: " + e, Logger.SDK_DEBUG);
 		} catch (IOException e) {
-			Logger.log(TAG, "Service IronSourceAtomFactory is unavailable: " + e, Logger.SDK_DEBUG);
+			Logger.log(TAG, "Service IronSourceAtomFactory is unavailable: " + e, Logger.SDK_ERROR);
 		}
 
 		return SendStatus.RETRY;
@@ -315,7 +315,7 @@ public class FlushDatabaseService
 			}
 			else {
 				// Should never happen
-				Logger.log(TAG, "Failed to schedule with JobScheduler - bad parameters supplied to builder(Required network = " + desiredNetwork + ")...", Logger.SDK_DEBUG);
+				Logger.log(TAG, "Failed to schedule with JobScheduler - bad parameters supplied to builder(Required network = " + desiredNetwork + ")...", Logger.SDK_ERROR);
 				retryWithAlarmManager();
 			}
 		}

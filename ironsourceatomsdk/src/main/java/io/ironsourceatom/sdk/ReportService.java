@@ -45,19 +45,20 @@ public class ReportService
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		if (intent == null || intent.getExtras() == null) {
-			Logger.log(TAG, "Intent is null or no extras - exiting", Logger.SDK_DEBUG);
+		if (intent == null || intent.getExtras() == null || !intent.hasExtra(EXTRA_REPORT_JSON) || !intent.hasExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL)) {
+			Logger.log(TAG, "Intent is null, no extras or missing extras - exiting", Logger.SDK_ERROR);
 			return;
 		}
 
 		try {
+			// Intent returned null here on some rare cases resulting in an NPE
 			final JSONObject reportJsonObject = new JSONObject(intent.getStringExtra(EXTRA_REPORT_JSON));
 			final Report.Action action = Report.Action.values()[intent.getExtras()
 			                                                          .getInt(EXTRA_REPORT_ACTION_ENUM_ORDINAL, -1)];
 
 			handleReport(reportJsonObject, action);
-		} catch (JSONException e) {
-			Logger.log(TAG, "Failed to create report from json - exiting", Logger.SDK_DEBUG);
+		} catch (Exception e) {
+			Logger.log(TAG, "Failed to create report from json - exiting", Logger.SDK_ERROR);
 		}
 	}
 
