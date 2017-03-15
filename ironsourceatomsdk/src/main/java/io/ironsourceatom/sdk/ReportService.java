@@ -4,15 +4,12 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import static io.ironsourceatom.sdk.Report.Action.POST_SYNC;
 
 /**
  * Created on 19/01/2017 16:33.
  */
-
 public class ReportService
 		extends IntentService {
 
@@ -45,8 +42,8 @@ public class ReportService
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		if (intent == null || intent.getExtras() == null || !intent.hasExtra(EXTRA_REPORT_JSON) || !intent.hasExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL)) {
-			Logger.log(TAG, "Intent is null, no extras or missing extras - exiting", Logger.SDK_ERROR);
+		if (intent == null || intent.getExtras() == null || intent.getStringExtra(EXTRA_REPORT_JSON) != null || intent.getStringExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL) != null) {
+			Logger.log(TAG, "Intent is null, no extras, missing extras or extras are null - exiting", Logger.SDK_ERROR);
 			return;
 		}
 
@@ -64,7 +61,7 @@ public class ReportService
 
 	void handleReport(JSONObject reportJsonObject, Report.Action action) {
 		final boolean exceededBulkSize = saveReport(reportJsonObject);
-		final boolean flushNow = exceededBulkSize || action == POST_SYNC;
+		final boolean flushNow = exceededBulkSize || action == Report.Action.POST_SYNC;
 		flushDatabase(flushNow ? 0 : config.getFlushInterval());
 	}
 
@@ -107,7 +104,18 @@ public class ReportService
 	public static void report(Context context, Report report, Report.Action reportAction) {
 		final Intent intent = new Intent(context, ReportService.class);
 		intent.putExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL, reportAction.ordinal());
-		intent.putExtra(EXTRA_REPORT_JSON, report.asJsonString());
-		context.startService(intent);
+		final String reportAsJsonString = report.asJsonString();
+		if (reportAsJsonString != null) {
+			intent.putExtra(EXTRA_REPORT_JSON, reportAsJsonString);
+			context.startService(intent);
+		}
+		else {
+			// Trying to catch a corner case where the extra report json is received as null inside the service
+			final String streamName = report.getJsonObject()
+			                                .optString(Report.TABLE_KEY);
+			final String data = report.getJsonObject()
+			                          .optString(Report.DATA_KEY);
+			Logger.log(TAG, "Failed to convert Report to json using JSONObject.toString(). stream = " + streamName + ", data = " + data, Logger.SDK_ERROR);
+		}
 	}
 }

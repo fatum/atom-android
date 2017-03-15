@@ -75,6 +75,10 @@ public class Report {
 		}
 	}
 
+	JSONObject getJsonObject() {
+		return reportJsonObject;
+	}
+
 	public String asJsonString() {
 		return reportJsonObject.toString();
 	}
