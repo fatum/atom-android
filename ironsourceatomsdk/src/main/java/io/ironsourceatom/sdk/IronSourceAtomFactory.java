@@ -30,11 +30,11 @@ public class IronSourceAtomFactory {
 	private ErrorTracker mErrorTracker;
 
 	public static synchronized IronSourceAtomFactory getInstance(Context context) {
-		if (context == null) {
-			throw new IllegalArgumentException("`context` should be valid Context object");
-		}
-
 		if (sInstance == null) {
+			if (context == null) {
+				throw new IllegalArgumentException("`context` should be valid Context object");
+			}
+
 			sInstance = new IronSourceAtomFactory(context.getApplicationContext());
 		}
 
@@ -42,6 +42,8 @@ public class IronSourceAtomFactory {
 	}
 
 	IronSourceAtomFactory(Context context) {
+		// PENDING: Find a better way to init Logger
+		Logger.setContext(context);
 		this.context = context;
 		config = IsaConfig.getInstance(context);
 		mHttpClient = new DefaultHttpClient();
