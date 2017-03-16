@@ -42,7 +42,7 @@ public class ReportService
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		if (intent == null || intent.getExtras() == null || intent.getStringExtra(EXTRA_REPORT_JSON) != null || intent.getStringExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL) != null) {
+		if (intent == null || intent.getExtras() == null || intent.getStringExtra(EXTRA_REPORT_JSON) == null || intent.getStringExtra(EXTRA_REPORT_ACTION_ENUM_ORDINAL) == null) {
 			Logger.log(TAG, "Intent is null, no extras, missing extras or extras are null - exiting", Logger.SDK_ERROR);
 			return;
 		}

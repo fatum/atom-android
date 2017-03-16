@@ -67,10 +67,10 @@ android {
         targetSdkVersion 25
 
         // Defines the version number of your app.
-        versionCode 141
+        versionCode 142
 
         // Defines a user-friendly version name for your app.
-        versionName "1.4.1"
+        versionName "1.4.2"
 
         project.version = versionName
         project.archivesBaseName = "atom-android"
